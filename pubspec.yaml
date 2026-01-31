@@ -1,0 +1,61 @@
+name: vibeterm
+description: ChillShell - Terminal mobile pour vibe coder depuis n'importe où
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.10.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # === UI & Theming ===
+  google_fonts: ^6.1.0              # JetBrains Mono font
+  flutter_svg: ^2.0.9               # SVG support
+  
+  # === State Management ===
+  flutter_riverpod: ^2.4.9          # State management
+  riverpod_annotation: ^2.3.3       # Annotations Riverpod
+  
+  # === Terminal & SSH ===
+  dartssh2: ^2.13.0                 # Client SSH (Ed25519)
+  xterm: ^4.0.0                     # Rendu terminal
+
+  # === Cryptography ===
+  cryptography: ^2.7.0              # Génération clés Ed25519
+  pointycastle: ^3.7.3              # Génération clés RSA
+  
+  # === Storage & Security ===
+  flutter_secure_storage: ^9.0.0    # Stockage sécurisé clés SSH
+  local_auth: ^2.1.8                # Auth biométrique
+  shared_preferences: ^2.2.2        # Préférences utilisateur
+  
+  # === Utils ===
+  uuid: ^4.2.1                      # IDs uniques
+  path_provider: ^2.1.1             # Dossiers système
+  permission_handler: ^11.1.0       # Permissions
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  riverpod_generator: ^2.3.9
+  build_runner: ^2.4.7
+  custom_lint: ^0.5.7
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+  
+  fonts:
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/JetBrainsMono-SemiBold.ttf
+          weight: 600
