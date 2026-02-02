@@ -245,14 +245,16 @@ class _ShutdownButton extends ConsumerWidget {
     final os = detectedOS ?? 'linux';
 
     // Envoyer la commande shutdown via le provider
+    // Note: \r (carriage return) au lieu de \n pour que la commande soit exécutée
     final command = (os == 'linux' || os == 'macos')
-        ? 'sudo shutdown -h now\n'
-        : 'shutdown /s /t 0\n';
+        ? 'sudo shutdown -h now\r'
+        : 'shutdown /s /t 0\r';
 
     sshNotifier.write(command);
 
-    // Attendre un peu puis fermer l'onglet
-    await Future.delayed(const Duration(milliseconds: 500));
-    await sshNotifier.closeTab(currentTabId);
+    // NE PAS fermer l'onglet automatiquement car :
+    // 1. sudo peut demander un mot de passe
+    // 2. L'utilisateur doit voir le résultat
+    // La session se fermera d'elle-même quand le PC s'éteindra
   }
 }
