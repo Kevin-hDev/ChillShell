@@ -89,6 +89,21 @@
 - ✅ Navigation autre app → session active
 - ✅ Fermeture complète app → session retrouvée !
 
+### ✅ Wake-on-LAN (2 Fév 2026 nuit)
+
+**Feature complète** : Allumer son PC à distance avant de se connecter en SSH.
+
+- [x] **Bouton WOL START** - Sur l'écran d'accueil, lance le réveil du PC
+- [x] **Settings WOL** - 4ème onglet dans les paramètres avec toggle + configs
+- [x] **Formulaire config** - Nom, MAC, connexion SSH, options avancées
+- [x] **Écran animation** - Animation stylée pendant le réveil avec compteur
+- [x] **Polling SSH** - Tentatives toutes les 10s pendant 5 min max
+- [x] **WOL automatique** - Si connexion auto + WOL activé → réveil auto au lancement
+- [x] **Bouton extinction** - ⏻ dans la barre session pour éteindre le PC
+- [x] **Détection OS** - Auto-détection Linux/macOS/Windows pour shutdown
+
+**Package** : `wake_on_lan: ^4.1.1+3`
+
 ### ✅ Améliorations UI (1er Fév 2026)
 
 **Design System créé :**
@@ -106,7 +121,7 @@
 - [x] Scroll terminal qui déborde sur la barre d'infos (ClipRect)
 
 **Settings réorganisés :**
-- [x] 3 onglets : Connexion | Thème | Sécurité
+- [x] 4 onglets : Connexion | Thème | Sécurité | WOL
 - [x] Face ID et Empreinte séparés avec toggles indépendants
 - [x] Temps de verrouillage auto : 5min / 10min / 15min / 30min
 
@@ -227,6 +242,7 @@ flutter build apk --release
 | local_auth | 2.1.8 | Biométrie |
 | flutter_foreground_task | 9.2.0 | Connexions persistantes en arrière-plan |
 | flutter_pty | 0.4.2 | Shell local Android |
+| wake_on_lan | 4.1.1+3 | Réveil PC à distance (Magic Packet) |
 
 ### À investiguer pour V1.3+
 - `mosh` dart binding ou wrapper
@@ -234,4 +250,4 @@ flutter build apk --release
 
 ---
 
-*Dernière mise à jour: 2 Février 2026 (foreground service SSH + fix double Enter)*
+*Dernière mise à jour: 2 Février 2026 (Wake-on-LAN complet + foreground service SSH)*

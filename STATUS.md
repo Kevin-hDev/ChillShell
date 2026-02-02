@@ -4,6 +4,54 @@
 
 ---
 
+## Session 2 Février 2026 (nuit) - Wake-on-LAN
+
+### Feature complète : Allumer son PC à distance
+
+Nouvelle fonctionnalité permettant d'allumer un PC via Wake-on-LAN avant de se connecter en SSH.
+
+### Fonctionnalités implémentées
+
+| Feature | Description |
+|---------|-------------|
+| **Bouton WOL START** | Sur l'écran d'accueil, lance le réveil du PC |
+| **Settings WOL** | 4ème onglet dans les paramètres |
+| **Config WOL** | Nom, adresse MAC, connexion SSH associée |
+| **Options avancées** | Broadcast address, port UDP (pour WOL distant) |
+| **Animation** | Écran stylé pendant le réveil avec compteur |
+| **Polling SSH** | Tentatives toutes les 10s pendant 5 min max |
+| **WOL automatique** | Si connexion auto + WOL activé → réveil auto au lancement |
+| **Bouton extinction** | ⏻ dans la barre session pour éteindre le PC |
+| **Détection OS** | Auto-détection Linux/macOS/Windows pour commande shutdown |
+
+### Fichiers créés
+
+| Fichier | Description |
+|---------|-------------|
+| `lib/models/wol_config.dart` | Modèle de données |
+| `lib/services/wol_service.dart` | Envoi Magic Packet + polling |
+| `lib/features/settings/providers/wol_provider.dart` | État des configs |
+| `lib/features/settings/widgets/wol_section.dart` | Onglet Settings |
+| `lib/features/settings/widgets/add_wol_sheet.dart` | Formulaire ajout |
+| `lib/features/terminal/widgets/wol_start_screen.dart` | Écran animation |
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `pubspec.yaml` | +wake_on_lan ^4.1.1+3 |
+| `lib/models/app_settings.dart` | +wolEnabled |
+| `lib/features/settings/screens/settings_screen.dart` | 4ème onglet |
+| `lib/features/terminal/screens/terminal_screen.dart` | Bouton + WOL auto |
+| `lib/features/terminal/widgets/session_info_bar.dart` | Bouton extinction |
+| `lib/services/ssh_service.dart` | detectOS(), shutdown() |
+
+### Package utilisé
+
+- `wake_on_lan: ^4.1.1+3` - Envoi de Magic Packets UDP
+
+---
+
 ## Session 2 Février 2026 - Foreground Service SSH
 
 ### Problème résolu : Connexion SSH qui se coupe en arrière-plan
