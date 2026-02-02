@@ -4,6 +4,7 @@ import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../settings/providers/wol_provider.dart';
+import '../../settings/providers/settings_provider.dart';
 import '../providers/providers.dart';
 
 class SessionInfoBar extends ConsumerWidget {
@@ -15,13 +16,19 @@ class SessionInfoBar extends ConsumerWidget {
     final terminalState = ref.watch(terminalProvider);
     final theme = ref.watch(vibeTermThemeProvider);
     final wolNotifier = ref.read(wolProvider.notifier);
+    final settings = ref.watch(settingsProvider);
 
     if (session == null) {
       return const SizedBox.shrink();
     }
 
     // Vérifier si une config WOL est associée à cette session
-    final wolConfig = wolNotifier.getConfigForSshConnection(session.id);
+    // On cherche par host/username car session.id != savedConnection.id
+    final wolConfig = wolNotifier.getConfigForSession(
+      settings.savedConnections,
+      session.host,
+      session.username,
+    );
 
     // Afficher le temps d'exécution de la dernière commande terminée
     String? executionTimeText;
