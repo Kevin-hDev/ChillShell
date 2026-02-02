@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../services/ssh_service.dart';
 import '../../../services/secure_storage_service.dart';
+import '../../../services/local_shell_service.dart';
+import '../../../services/foreground_ssh_service.dart';
 
 enum SSHConnectionState { disconnected, connecting, connected, error, reconnecting }
 
@@ -41,6 +43,12 @@ class SSHState {
   final Map<String, bool> tabRunningState;
   /// Commande en cours par onglet (pour détecter si interactive)
   final Map<String, String> tabCurrentCommand;
+  /// IDs des onglets qui sont des shells locaux (pas SSH)
+  final Set<String> localTabIds;
+  /// Noms personnalisés des onglets
+  final Map<String, String> tabNames;
+  /// IDs des onglets dont la connexion est morte (stream fermé)
+  final Set<String> deadTabIds;
 
   const SSHState({
     this.connectionState = SSHConnectionState.disconnected,
@@ -51,9 +59,12 @@ class SSHState {
     this.reconnectAttempts = 0,
     this.currentTabId,
     this.tabIds = const [],
-    this.nextTabNumber = 2,  // Le premier onglet est "Terminal 1", le suivant sera "Terminal 2"
+    this.nextTabNumber = 1,  // Commence à 1, tous les onglets utilisent ce compteur
     this.tabRunningState = const {},
     this.tabCurrentCommand = const {},
+    this.localTabIds = const {},
+    this.tabNames = const {},
+    this.deadTabIds = const {},
   });
 
   int get tabCount => tabIds.length;
@@ -83,6 +94,9 @@ class SSHState {
     int? nextTabNumber,
     Map<String, bool>? tabRunningState,
     Map<String, String>? tabCurrentCommand,
+    Set<String>? localTabIds,
+    Map<String, String>? tabNames,
+    Set<String>? deadTabIds,
   }) {
     return SSHState(
       connectionState: connectionState ?? this.connectionState,
@@ -96,6 +110,9 @@ class SSHState {
       nextTabNumber: nextTabNumber ?? this.nextTabNumber,
       tabRunningState: tabRunningState ?? this.tabRunningState,
       tabCurrentCommand: tabCurrentCommand ?? this.tabCurrentCommand,
+      localTabIds: localTabIds ?? this.localTabIds,
+      tabNames: tabNames ?? this.tabNames,
+      deadTabIds: deadTabIds ?? this.deadTabIds,
     );
   }
 }
@@ -103,6 +120,8 @@ class SSHState {
 class SSHNotifier extends StateNotifier<SSHState> {
   /// Map des services SSH par ID stable (pas par index!)
   final Map<String, SSHService> _tabServices = {};
+  /// Map des services de shell local par ID
+  final Map<String, LocalShellService> _localTabServices = {};
 
   Timer? _reconnectTimer;
   Timer? _connectionCheckTimer;
@@ -140,6 +159,10 @@ class SSHNotifier extends StateNotifier<SSHState> {
 
   /// Retourne le flux de sortie d'un onglet spécifique par ID
   Stream<Uint8List>? getOutputStreamForTab(String tabId) {
+    // Vérifier si c'est un onglet local
+    if (state.localTabIds.contains(tabId)) {
+      return _localTabServices[tabId]?.outputStream;
+    }
     return _tabServices[tabId]?.session?.stdout;
   }
 
@@ -192,6 +215,10 @@ class SSHNotifier extends StateNotifier<SSHState> {
         );
 
         _startConnectionMonitor();
+        // Démarrer le foreground service pour maintenir la connexion
+        await ForegroundSSHService.start(
+          connectionInfo: 'Connecté à $host',
+        );
         return true;
       } else {
         state = state.copyWith(
@@ -212,6 +239,42 @@ class SSHNotifier extends StateNotifier<SSHState> {
         errorMessage: 'Erreur inattendue: $e',
       );
       return false;
+    }
+  }
+
+  /// Démarre un shell local (Android uniquement)
+  Future<void> connectLocal() async {
+    state = state.copyWith(connectionState: SSHConnectionState.connecting);
+
+    try {
+      final tabId = DateTime.now().millisecondsSinceEpoch.toString();
+      final tabNumber = state.nextTabNumber;
+
+      final localService = LocalShellService();
+      await localService.startShell();
+
+      _localTabServices[tabId] = localService;
+
+      state = state.copyWith(
+        connectionState: SSHConnectionState.connected,
+        currentTabId: tabId,
+        tabIds: [...state.tabIds, tabId],
+        localTabIds: {...state.localTabIds, tabId},
+        tabNames: {...state.tabNames, tabId: 'Local $tabNumber'},
+        nextTabNumber: tabNumber + 1,
+        errorMessage: null,
+      );
+
+      // Démarrer le foreground service
+      await ForegroundSSHService.start(
+        connectionInfo: 'Shell local actif',
+      );
+      debugPrint('Local shell connected: $tabId');
+    } catch (e) {
+      state = state.copyWith(
+        connectionState: SSHConnectionState.error,
+        errorMessage: 'Erreur shell local: $e',
+      );
     }
   }
 
@@ -307,6 +370,12 @@ class SSHNotifier extends StateNotifier<SSHState> {
   Future<void> closeTab(String tabId) async {
     if (!state.tabIds.contains(tabId)) return;
 
+    // Fermer le service local si c'est un onglet local
+    if (state.localTabIds.contains(tabId)) {
+      await _localTabServices[tabId]?.close();
+      _localTabServices.remove(tabId);
+    }
+
     // Déconnecter le service de cet onglet
     final serviceToClose = _tabServices[tabId];
     if (serviceToClose != null) {
@@ -319,6 +388,7 @@ class SSHNotifier extends StateNotifier<SSHState> {
 
     // Si c'était le dernier onglet, on est déconnecté
     if (newTabIds.isEmpty) {
+      await ForegroundSSHService.stop();
       state = const SSHState();
       return;
     }
@@ -334,6 +404,7 @@ class SSHNotifier extends StateNotifier<SSHState> {
     state = state.copyWith(
       tabIds: newTabIds,
       currentTabId: newCurrentTabId,
+      localTabIds: Set<String>.from(state.localTabIds)..remove(tabId),
     );
   }
 
@@ -476,10 +547,20 @@ class SSHNotifier extends StateNotifier<SSHState> {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
 
+    // Fermer les services SSH
     for (final service in _tabServices.values) {
       await service.disconnect();
     }
     _tabServices.clear();
+
+    // Fermer les services Local Shell
+    for (final service in _localTabServices.values) {
+      await service.close();
+    }
+    _localTabServices.clear();
+
+    // Arrêter le foreground service
+    await ForegroundSSHService.stop();
 
     state = const SSHState();
   }
@@ -494,13 +575,110 @@ class SSHNotifier extends StateNotifier<SSHState> {
     super.dispose();
   }
 
+  /// Marque un onglet comme ayant une connexion morte (stream fermé)
+  void markTabAsDead(String tabId) {
+    debugPrint('markTabAsDead: Tab $tabId marked as dead');
+    state = state.copyWith(
+      deadTabIds: {...state.deadTabIds, tabId},
+    );
+  }
+
+  /// Vérifie et reconnecte les onglets SSH si la connexion est perdue
+  /// Appelé quand l'app revient au premier plan
+  Future<void> checkAndReconnectIfNeeded() async {
+    debugPrint('checkAndReconnectIfNeeded: Checking SSH connections...');
+    debugPrint('checkAndReconnectIfNeeded: Dead tabs: ${state.deadTabIds}');
+
+    // Pour chaque onglet SSH (pas local)
+    for (final tabId in state.tabIds) {
+      if (state.localTabIds.contains(tabId)) continue; // Skip local tabs
+
+      // Vérifier si l'onglet est marqué comme mort
+      final isDead = state.deadTabIds.contains(tabId);
+      debugPrint('checkAndReconnectIfNeeded: Tab $tabId - isDead: $isDead');
+
+      if (isDead && state.lastConnectionInfo != null) {
+        debugPrint('checkAndReconnectIfNeeded: Tab $tabId needs reconnection');
+        // Tenter une reconnexion
+        final success = await _reconnectTab(tabId);
+        if (success) {
+          // Retirer de la liste des morts
+          state = state.copyWith(
+            deadTabIds: state.deadTabIds.where((id) => id != tabId).toSet(),
+          );
+        }
+      }
+    }
+  }
+
+  /// Reconnecte un onglet spécifique
+  Future<bool> _reconnectTab(String tabId) async {
+    final info = state.lastConnectionInfo;
+    if (info == null) return false;
+
+    try {
+      debugPrint('_reconnectTab: Reconnecting tab $tabId...');
+
+      final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
+      if (privateKey == null || privateKey.isEmpty) return false;
+
+      final service = _tabServices[tabId];
+      if (service == null) return false;
+
+      // Fermer l'ancienne connexion
+      await service.disconnect();
+
+      // Créer une nouvelle connexion
+      final newService = SSHService();
+      final success = await newService.connect(
+        host: info.host,
+        username: info.username,
+        privateKey: privateKey,
+        port: info.port,
+      );
+
+      if (success) {
+        await newService.startShell();
+        _tabServices[tabId] = newService;
+        debugPrint('_reconnectTab: Tab $tabId reconnected successfully');
+        return true;
+      }
+    } catch (e) {
+      debugPrint('_reconnectTab: Failed to reconnect tab $tabId: $e');
+    }
+    return false;
+  }
+
   void write(String data) {
-    service?.session?.stdin.add(Uint8List.fromList(utf8.encode(data)));
+    final currentTabId = state.currentTabId;
+    debugPrint('DEBUG write: data="${data.replaceAll('\n', '\\n')}", currentTabId=$currentTabId');
+    if (currentTabId != null) {
+      writeToTab(currentTabId, data);
+    } else {
+      debugPrint('DEBUG write: currentTabId is NULL, data not sent!');
+    }
   }
 
   /// Écrit vers un onglet spécifique par ID
   void writeToTab(String tabId, String data) {
-    _tabServices[tabId]?.session?.stdin.add(Uint8List.fromList(utf8.encode(data)));
+    debugPrint('DEBUG writeToTab: tabId=$tabId, isLocal=${state.localTabIds.contains(tabId)}');
+    if (state.localTabIds.contains(tabId)) {
+      final localService = _localTabServices[tabId];
+      debugPrint('DEBUG writeToTab: localService=${localService != null ? "EXISTS" : "NULL"}');
+      localService?.write(data);
+      return;
+    }
+    // SSH path
+    final sshService = _tabServices[tabId];
+    debugPrint('DEBUG writeToTab SSH: sshService=${sshService != null ? "EXISTS" : "NULL"}');
+    if (sshService != null) {
+      final session = sshService.session;
+      debugPrint('DEBUG writeToTab SSH: session=${session != null ? "EXISTS" : "NULL"}');
+      if (session != null) {
+        session.stdin.add(Uint8List.fromList(utf8.encode(data)));
+        debugPrint('DEBUG writeToTab SSH: Data sent to stdin');
+      }
+    }
   }
 
   /// Redimensionne le PTY de l'onglet actif
@@ -512,6 +690,10 @@ class SSHNotifier extends StateNotifier<SSHState> {
 
   /// Redimensionne le PTY d'un onglet spécifique par ID
   void resizeTerminalForTab(String tabId, int width, int height) {
+    if (state.localTabIds.contains(tabId)) {
+      _localTabServices[tabId]?.resize(width, height);
+      return;
+    }
     _tabServices[tabId]?.resizeTerminal(width, height);
   }
 
@@ -519,6 +701,9 @@ class SSHNotifier extends StateNotifier<SSHState> {
 
   /// Liste des commandes avec menu interactif (nécessitent flèches ↑/↓)
   static const _interactiveMenuCommands = <String>[
+    // AI Coding CLI (vibe coding tools)
+    'claude', 'opencode', 'aider', 'gemini', 'codex', 'cody',
+    'amazon-q', 'aws-q',
     // Fuzzy finders & selectors
     'fzf', 'fzy', 'sk', 'peco', 'percol',
     // Monitoring avec navigation
@@ -542,6 +727,9 @@ class SSHNotifier extends StateNotifier<SSHState> {
 
   /// Liste des commandes qui lancent des process long-running
   static const _longRunningCommands = <String>[
+    // AI Coding CLI (vibe coding tools)
+    'claude', 'opencode', 'aider', 'gemini', 'codex', 'cody',
+    'amazon-q', 'aws-q',
     // Serveurs & Dev
     'npm', 'npx', 'yarn', 'pnpm', 'node', 'nodemon', 'ts-node',
     'python', 'python3', 'py', 'flask', 'uvicorn', 'gunicorn', 'django',

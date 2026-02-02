@@ -21,6 +21,7 @@ dependencies:
   # === Terminal & SSH ===
   dartssh2: ^2.13.0                 # Client SSH (Ed25519)
   xterm: ^4.0.0                     # Rendu terminal
+  flutter_pty: ^0.4.2               # Terminal local (shell Android)
 
   # === Cryptography ===
   cryptography: ^2.7.0              # Génération clés Ed25519
@@ -35,6 +36,7 @@ dependencies:
   uuid: ^4.2.1                      # IDs uniques
   path_provider: ^2.1.1             # Dossiers système
   permission_handler: ^11.1.0       # Permissions
+  flutter_foreground_task: ^9.2.0   # Foreground service pour SSH
 
 dev_dependencies:
   flutter_test:

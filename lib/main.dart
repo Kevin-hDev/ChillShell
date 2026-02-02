@@ -6,9 +6,12 @@ import 'features/terminal/screens/terminal_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
 import 'features/auth/screens/lock_screen.dart';
 import 'features/settings/providers/settings_provider.dart';
+import 'features/terminal/providers/providers.dart';
 import 'services/biometric_service.dart';
+import 'services/foreground_ssh_service.dart';
 
 void main() {
+  ForegroundSSHService.init();
   runApp(const ProviderScope(child: VibeTermApp()));
 }
 
@@ -86,6 +89,9 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
         }
       }
       _backgroundTime = null;
+
+      // Vérifier et reconnecter les sessions SSH si nécessaire
+      ref.read(sshProvider.notifier).checkAndReconnectIfNeeded();
     }
   }
 
