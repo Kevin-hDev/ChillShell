@@ -1,15 +1,20 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../models/models.dart';
+import '../../../models/wol_config.dart';
 import '../../../shared/widgets/app_header.dart';
 import '../../../services/secure_storage_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../features/settings/providers/settings_provider.dart';
+import '../../../features/settings/providers/wol_provider.dart';
 import '../providers/providers.dart';
 import '../widgets/widgets.dart';
+import '../widgets/wol_start_screen.dart';
 
 class TerminalScreen extends ConsumerStatefulWidget {
   final VoidCallback? onSettingsTap;
@@ -85,8 +90,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final privateKey = await SecureStorageService.getPrivateKey(lastConnection.keyId);
     if (privateKey == null || privateKey.isEmpty) return;
 
+    // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
+    final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
     ref.read(sessionsProvider.notifier).addSession(
-      name: lastConnection.host,
+      name: 'Terminal $tabNumber',
       host: lastConnection.host,
       username: lastConnection.username,
       port: lastConnection.port,
@@ -253,6 +260,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
             ),
             const SizedBox(height: VibeTermSpacing.lg),
+            // Bouton WOL START
+            _buildWolStartButton(theme),
+            const SizedBox(height: VibeTermSpacing.md),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.accent,
@@ -268,6 +278,215 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Construit le bouton WOL START avec sa logique d'activation
+  Widget _buildWolStartButton(VibeTermThemeData theme) {
+    final settings = ref.watch(settingsProvider);
+    final wolState = ref.watch(wolProvider);
+
+    // Le bouton est grisé si WOL désactivé OU aucune config
+    final isEnabled = settings.appSettings.wolEnabled && wolState.configs.isNotEmpty;
+
+    return ElevatedButton.icon(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isEnabled ? theme.accent : theme.bgBlock,
+        foregroundColor: isEnabled ? theme.bg : theme.textMuted,
+        padding: const EdgeInsets.symmetric(
+          horizontal: VibeTermSpacing.lg,
+          vertical: VibeTermSpacing.md,
+        ),
+        side: isEnabled ? null : BorderSide(color: theme.border),
+      ),
+      onPressed: isEnabled ? _handleWolStartPress : null,
+      icon: Icon(
+        Icons.bolt,
+        color: isEnabled ? theme.bg : theme.textMuted,
+      ),
+      label: const Text('WOL START'),
+    );
+  }
+
+  /// Gère le clic sur le bouton WOL START
+  Future<void> _handleWolStartPress() async {
+    final wolState = ref.read(wolProvider);
+    final configs = wolState.configs;
+
+    if (configs.isEmpty) return;
+
+    if (configs.length == 1) {
+      // Une seule config → lancement direct
+      await _launchWolStartScreen(configs.first);
+    } else {
+      // Plusieurs configs → afficher le dialog de sélection
+      final selectedConfig = await _showWolSelectionDialog(configs);
+      if (selectedConfig != null) {
+        await _launchWolStartScreen(selectedConfig);
+      }
+    }
+  }
+
+  /// Affiche le dialog de sélection du PC à allumer
+  Future<WolConfig?> _showWolSelectionDialog(List<WolConfig> configs) async {
+    final theme = ref.read(vibeTermThemeProvider);
+    final storage = StorageService();
+    final savedConnections = await storage.getSavedConnections();
+
+    if (!mounted) return null;
+
+    return showDialog<WolConfig>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(VibeTermRadius.lg),
+          side: BorderSide(color: theme.border),
+        ),
+        title: Text(
+          'Allumer un PC',
+          style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: configs.length,
+            itemBuilder: (context, index) {
+              final config = configs[index];
+              // Trouver la connexion SSH associée pour afficher les infos
+              final sshConnection = savedConnections.firstWhere(
+                (c) => c.id == config.sshConnectionId,
+                orElse: () => const SavedConnection(
+                  id: '',
+                  name: 'Inconnu',
+                  host: 'Inconnu',
+                  username: 'Inconnu',
+                  keyId: '',
+                ),
+              );
+
+              return ListTile(
+                leading: Icon(
+                  Icons.computer,
+                  color: theme.accent,
+                ),
+                title: Text(
+                  config.name,
+                  style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                ),
+                subtitle: Text(
+                  '${sshConnection.username}@${sshConnection.host}',
+                  style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(VibeTermRadius.md),
+                ),
+                onTap: () => Navigator.of(context).pop(config),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: Text(
+              'Annuler',
+              style: TextStyle(color: theme.textMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Lance l'écran WolStartScreen avec la config sélectionnée
+  Future<void> _launchWolStartScreen(WolConfig config) async {
+    final storage = StorageService();
+    final savedConnections = await storage.getSavedConnections();
+
+    // Trouver la connexion SSH associée
+    final sshConnection = savedConnections.firstWhere(
+      (c) => c.id == config.sshConnectionId,
+      orElse: () => throw Exception('Connexion SSH non trouvée'),
+    );
+
+    if (!mounted) return;
+
+    // Naviguer vers WolStartScreen
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WolStartScreen(
+          config: config,
+          tryConnect: () => _tryConnectForWol(sshConnection),
+          onSuccess: () {
+            // Revenir à l'écran terminal (connexion établie)
+            Navigator.of(context).pop();
+          },
+          onCancel: () {
+            // Revenir à l'écran d'accueil
+            Navigator.of(context).pop();
+          },
+          onError: (error) {
+            // Revenir à l'écran d'accueil et afficher l'erreur
+            Navigator.of(context).pop();
+            _showWolErrorSnackBar(error);
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Tente une connexion SSH pour le WOL polling
+  Future<bool> _tryConnectForWol(SavedConnection connection) async {
+    final privateKey = await SecureStorageService.getPrivateKey(connection.keyId);
+    if (privateKey == null || privateKey.isEmpty) return false;
+
+    // Créer une session pour la connexion
+    final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
+    ref.read(sessionsProvider.notifier).addSession(
+      name: 'Terminal $tabNumber',
+      host: connection.host,
+      username: connection.username,
+      port: connection.port,
+    );
+
+    final sessions = ref.read(sessionsProvider);
+    final sessionId = sessions.last.id;
+
+    final success = await ref.read(sshProvider.notifier).connect(
+      host: connection.host,
+      username: connection.username,
+      privateKey: privateKey,
+      keyId: connection.keyId,
+      sessionId: sessionId,
+      port: connection.port,
+    );
+
+    if (success) {
+      ref.read(sessionsProvider.notifier).updateSessionStatus(
+        sessionId,
+        ConnectionStatus.connected,
+      );
+      await StorageService().updateConnectionLastConnected(connection.id);
+    } else {
+      // Nettoyer la session si échec
+      ref.read(sessionsProvider.notifier).removeSession(sessionId);
+    }
+
+    return success;
+  }
+
+  /// Affiche une SnackBar d'erreur WOL
+  void _showWolErrorSnackBar(String error) {
+    if (!mounted) return;
+    final theme = ref.read(vibeTermThemeProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(error),
+        backgroundColor: theme.danger,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -376,12 +595,21 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   }
 
   Future<void> _showConnectionDialog() async {
-    final result = await showDialog<ConnectionInfo>(
+    final result = await showDialog<dynamic>(
       context: context,
       builder: (context) => const ConnectionDialog(),
     );
 
-    if (result != null) {
+    // Gérer Local Shell
+    if (result is LocalShellRequest) {
+      if (!Platform.isIOS) {
+        ref.read(sshProvider.notifier).connectLocal();
+      }
+      return;
+    }
+
+    // Gérer connexion SSH normale
+    if (result != null && result is ConnectionInfo) {
       await _connect(result);
     }
   }
@@ -398,8 +626,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       return;
     }
 
+    // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
+    final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
     ref.read(sessionsProvider.notifier).addSession(
-      name: info.host,
+      name: 'Terminal $tabNumber',
       host: info.host,
       username: info.username,
       port: info.port,
