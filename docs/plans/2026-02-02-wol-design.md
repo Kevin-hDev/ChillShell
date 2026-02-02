@@ -374,16 +374,49 @@ Les configs WOL sont stockées dans `flutter_secure_storage` (comme les clés SS
 
 ---
 
+## Prérequis côté PC
+
+**Important** : Le WOL nécessite une configuration sur le PC cible. Voir le guide complet sur `chillshell.app/tutos/wol-setup.html`.
+
+### 1. BIOS/UEFI (tous OS)
+
+Activer l'option WOL dans le BIOS :
+- Chercher : "Wake on LAN", "Wake on PCI-E", "Power On by PME", "Resume by LAN"
+- Activer l'option → Save & Exit
+
+### 2. Configuration OS
+
+| OS | Commande vérification | Commande activation |
+|----|----------------------|---------------------|
+| **Linux** | `sudo ethtool <interface> \| grep Wake` | `sudo ethtool -s <interface> wol g` |
+| **Windows** | `Get-NetAdapterPowerManagement` | `Set-NetAdapterPowerManagement -Name "Ethernet" -WakeOnMagicPacket Enabled` |
+| **macOS** | `pmset -g \| grep womp` | `sudo pmset -a womp 1` |
+
+### 3. Extinction : sudo sans mot de passe (optionnel)
+
+Pour éviter de taper le mot de passe sudo à chaque extinction :
+```bash
+sudo visudo
+# Ajouter à la fin :
+# username ALL=(ALL) NOPASSWD: /sbin/shutdown
+```
+
+**Note** : La confirmation dans l'app protège déjà contre les clics accidentels.
+
+---
+
 ## Notes techniques
 
 ### WOL Local vs Distant
 
 | Mode | Configuration requise | Complexité |
 |------|----------------------|------------|
-| **Local** (même WiFi) | Rien, fonctionne directement | Simple |
-| **Distant** (Internet) | Port forwarding UDP 9 sur la box | Avancé |
+| **Local** (même WiFi) | Connexion Ethernet + config BIOS/OS | Simple |
+| **Distant** (Internet) | + Port forwarding UDP 9 sur la box | Avancé |
 
-Le guide complet pour le WOL distant sera disponible sur `chillshell.app/wol`.
+**Important** : Le WiFi ne supporte pas le WOL dans 95% des cas. Connexion Ethernet requise.
+
+Le guide complet pour le WOL distant sera disponible sur `chillshell.app/tutos/wol-setup.html`.
 
 ### Gestion d'erreurs
 
@@ -392,3 +425,27 @@ Le guide complet pour le WOL distant sera disponible sur `chillshell.app/wol`.
 | Timeout 5 min | "ERREUR: PC ÉTEINT - Le PC n'a pas répondu" |
 | MAC invalide | "Adresse MAC invalide" |
 | Réseau indisponible | "Pas de connexion réseau" |
+
+---
+
+## Tests de validation
+
+### Tests effectués (2 Fév 2026)
+
+| Test | Résultat |
+|------|----------|
+| Ajout d'un PC (formulaire) | ✅ Validé |
+| Bouton WOL START (PC allumé) | ✅ Validé - Connexion rapide (~2s) |
+| Bouton extinction ⏻ visible | ✅ Validé |
+| Popup confirmation extinction | ✅ Validé |
+| Commande shutdown envoyée | ✅ Validé (demande mot de passe sudo) |
+| PC s'éteint | ✅ Validé |
+
+### Tests à faire plus tard
+
+| Test | Status |
+|------|--------|
+| WOL START avec PC éteint (câblé Ethernet) | ⏳ À tester |
+| WOL distant (broadcast + port UDP forwarding) | ⏳ À tester |
+| WOL automatique au lancement | ⏳ À tester |
+| Détection OS automatique | ⏳ À tester
