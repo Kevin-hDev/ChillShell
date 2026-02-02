@@ -73,32 +73,93 @@
 
 ---
 
-## 🔄 V1.2 - Interactions avancées (En cours)
+## 🔄 V1.2 - Boutons & Mode Édition (En cours)
 
-### Priorité haute
-- [ ] **Mode terminal local** - Utiliser l'app sans connexion SSH
-- [ ] **Design raccourcis** - Comment intégrer Ctrl+D, Ctrl+R, etc. sans encombrer l'UI
+### ✅ Foreground Service SSH (2 Fév 2026)
 
-### Priorité moyenne
-- [ ] **Bouton Undo** - Revenir en arrière (10-20 actions)
-- [ ] **Déplacement curseur tactile** - Swipe pour déplacer le curseur
-- [ ] **Ctrl+D (EOF)** - Bouton discret pour quitter shell/programmes
-- [ ] **Recherche dans l'historique** - Ctrl+R style
+**Problème résolu** : Connexion SSH qui se coupait en arrière-plan Android.
 
-### Réflexion UX en cours
-Le terminal mobile nécessite des raccourcis difficiles à intégrer :
-- Ctrl+C ✅ (bouton Stop)
-- Tab ✅ (swipe droite ou bouton ghost)
-- Flèches ✅ (boutons ↑↓)
-- Ctrl+D ❓ (EOF - quitter programmes)
-- Ctrl+R ❓ (recherche historique)
-- Ctrl+L ❓ (clear)
-- Ctrl+Z ❓ (background)
+- [x] **Foreground Service** - Maintient les connexions SSH actives en arrière-plan
+- [x] **Suppression wakelock_plus** - Remplacé par le foreground service (plus efficace)
+- [x] **Persistance session** - L'onglet et la session restent actifs même après fermeture de l'app !
+- [x] **Fix double Enter** - Claude Code ne nécessite plus 2 Enter (`\n` → `\r`)
 
-Options envisagées :
-1. **Barre de raccourcis** style Termux
-2. **Menu contextuel** sur long-press
-3. **Boutons intelligents** qui apparaissent selon le contexte
+**Résultats testés** :
+- ✅ Téléphone verrouillé 3 min → session active
+- ✅ Navigation autre app → session active
+- ✅ Fermeture complète app → session retrouvée !
+
+### ✅ Améliorations UI (1er Fév 2026)
+
+**Design System créé :**
+- [x] `buttons.dart` - Constantes de tailles boutons
+- [x] `icons.dart` - Constantes de tailles icônes
+- [x] `animations.dart` - Durées et curves d'animation
+
+**Réduction tailles (~25%) :**
+- [x] Header : logo 36x36, boutons 33x33
+- [x] Onglets : hauteur 32px, font 12px
+- [x] Nommage : "Terminal 1" au lieu de l'IP
+- [x] Barre session : font 11px, IP complète
+
+**Fix bugs :**
+- [x] Scroll terminal qui déborde sur la barre d'infos (ClipRect)
+
+**Settings réorganisés :**
+- [x] 3 onglets : Connexion | Thème | Sécurité
+- [x] Face ID et Empreinte séparés avec toggles indépendants
+- [x] Temps de verrouillage auto : 5min / 10min / 15min / 30min
+
+### Décisions de design (brainstorming 31 Jan 2026)
+- **Approche** : Boutons intelligents (contextuels) + quelques boutons permanents
+- **Flèches** : ↑↓ uniquement (pas ←→)
+- **Raccourcis abandonnés** : Ctrl+R, Ctrl+L, Ctrl+Z (pas essentiels sur mobile)
+
+### Boutons à implémenter
+
+| Bouton | Type | Condition d'affichage | Action |
+|--------|------|----------------------|--------|
+| **Ctrl+D** | Intelligent | Shell actif, pas de process | EOF / Quitter shell |
+| **Navigation dossiers** | Permanent | Toujours | cd rapide (style Warp) |
+| **Ctrl+O** (nano) | Intelligent | Éditeur nano ouvert | Sauvegarder |
+| **Ctrl+X** (nano) | Intelligent | Éditeur nano ouvert | Quitter |
+
+### Mode édition (nano, vim)
+- [ ] **Détection éditeur** - Détecter quand nano/vim s'ouvre
+- [ ] **Terminal éditable** - Passer `readOnly: false` en mode édition
+- [ ] **Masquer champ saisie** - Le champ du bas disparaît
+- [ ] **Boutons nano** - Ctrl+O (sauvegarder) + Ctrl+X (quitter)
+- [ ] **Boutons vim** - Escape + possibilité de taper `:wq`, `:q!`
+- [ ] **Retour mode normal** - Quand l'éditeur se ferme
+
+### Corrections
+- [ ] **Copier/coller terminal** - Menu contextuel natif après sélection
+- [ ] **Commandes interactives** - Ajouter : alsamixer, pulsemixer, nmtui, cfdisk, journalctl
+
+### UI cible V1.2
+```
+Mode normal:
+┌─────────────────────────────────────────────────────────────┐
+│ [📁~] [▲] > [Input field...........] [↑] [↓] [Ctrl+D] [Send]│
+│   ↑    ↑                              ↑   ↑     ↑       ↑   │
+│   │    │                              │   │     │       └─ Vert│
+│   │    │                              │   │     └─ Intelligent │
+│   │    │                              └───┴─ Si app interactive│
+│   │    └─ Historique                                        │
+│   └─ Navigation dossiers (permanent)                        │
+└─────────────────────────────────────────────────────────────┘
+
+Mode édition (nano):
+┌─────────────────────────────────────────────────────────────┐
+│                    Terminal éditable                        │
+│                    (clavier virtuel actif)                  │
+├─────────────────────────────────────────────────────────────┤
+│              [Ctrl+O Sauvegarder] [Ctrl+X Quitter]          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Priorité basse (V1.2+)
+- [x] **Mode terminal local** - Local Shell sur Android (message explicatif sur iOS)
 
 ---
 
@@ -106,7 +167,6 @@ Options envisagées :
 
 ### Navigation
 - [ ] **Bouton Snippets** - Commandes favorites en accordéon (style Warp)
-- [ ] **Bouton Navigation Dossiers** - cd rapide avec liste (style Warp)
 
 ### Productivité
 - [ ] **Complétion intelligente** - TAB chaîné, suggestions multiples
@@ -165,12 +225,13 @@ flutter build apk --release
 | xterm | 4.0.0 | Rendu terminal |
 | flutter_secure_storage | 9.0.0 | Stockage clés |
 | local_auth | 2.1.8 | Biométrie |
+| flutter_foreground_task | 9.2.0 | Connexions persistantes en arrière-plan |
+| flutter_pty | 0.4.2 | Shell local Android |
 
 ### À investiguer pour V1.3+
-- `flutter_pty` pour terminal local
 - `mosh` dart binding ou wrapper
 - `sftp` via dartssh2
 
 ---
 
-*Dernière mise à jour: 31 Janvier 2026*
+*Dernière mise à jour: 2 Février 2026 (foreground service SSH + fix double Enter)*
