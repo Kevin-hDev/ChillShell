@@ -100,6 +100,27 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     _saveSettings();
   }
 
+  void toggleFaceId(bool enabled) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(faceIdEnabled: enabled),
+    );
+    _saveSettings();
+  }
+
+  void toggleFingerprint(bool enabled) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(fingerprintEnabled: enabled),
+    );
+    _saveSettings();
+  }
+
+  void setAutoLockMinutes(int minutes) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(autoLockMinutes: minutes),
+    );
+    _saveSettings();
+  }
+
   void toggleAutoConnect(bool enabled) {
     state = state.copyWith(
       appSettings: state.appSettings.copyWith(autoConnectOnStart: enabled),
@@ -117,6 +138,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   void toggleNotifyOnDisconnect(bool enabled) {
     state = state.copyWith(
       appSettings: state.appSettings.copyWith(notifyOnDisconnect: enabled),
+    );
+    _saveSettings();
+  }
+
+  void toggleWolEnabled(bool enabled) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(wolEnabled: enabled),
     );
     _saveSettings();
   }
