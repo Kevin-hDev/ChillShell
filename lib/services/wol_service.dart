@@ -123,10 +123,10 @@ class WolService {
   /// Réveille un PC et attend qu'il soit disponible pour une connexion SSH.
   ///
   /// Cette méthode:
-  /// 1. Envoie un magic packet
-  /// 2. Attend 10 secondes
-  /// 3. Tente une connexion SSH via le callback [tryConnect]
-  /// 4. Répète les étapes 2-3 jusqu'à succès ou timeout (5 minutes)
+  /// 1. Tente d'abord une connexion SSH (PC peut-être déjà allumé)
+  /// 2. Si échec, envoie un magic packet
+  /// 3. Attend 10 secondes puis retente SSH
+  /// 4. Répète jusqu'à succès ou timeout (5 minutes)
   ///
   /// [config] Configuration WOL contenant MAC et adresse broadcast
   /// [tryConnect] Callback qui tente la connexion SSH, retourne true si succès
@@ -148,7 +148,30 @@ class WolService {
 
     final startTime = DateTime.now();
 
-    // Étape 1: Envoyer le magic packet
+    // Étape 1: Tenter d'abord une connexion SSH (PC peut-être déjà allumé)
+    onProgress(WolProgress(
+      attempt: 0,
+      maxAttempts: _maxAttempts,
+      elapsed: Duration.zero,
+    ));
+
+    try {
+      final connected = await tryConnect();
+      if (connected) {
+        _cancelCompleter = null;
+        onSuccess();
+        return;
+      }
+    } catch (_) {
+      // PC pas allumé, on continue avec WOL
+    }
+
+    // Vérifier si annulé
+    if (_cancelCompleter == null || _cancelCompleter!.isCompleted) {
+      return;
+    }
+
+    // Étape 2: Envoyer le magic packet
     final sent = await sendMagicPacket(config);
     if (!sent) {
       _cancelCompleter = null;
@@ -156,7 +179,7 @@ class WolService {
       return;
     }
 
-    // Étape 2-4: Polling jusqu'à connexion réussie ou timeout
+    // Étape 3-4: Polling jusqu'à connexion réussie ou timeout
     for (var attempt = 1; attempt <= _maxAttempts; attempt++) {
       // Vérifier si annulé
       if (_cancelCompleter == null || _cancelCompleter!.isCompleted) {

@@ -126,6 +126,29 @@ class WolNotifier extends StateNotifier<WolState> {
       return null;
     }
   }
+
+  /// Récupère la configuration WOL associée à une session active.
+  ///
+  /// Cherche en comparant les savedConnections avec host/username de la session.
+  /// [savedConnections] Liste des connexions sauvegardées
+  /// [sessionHost] Host de la session active
+  /// [sessionUsername] Username de la session active
+  WolConfig? getConfigForSession(
+    List<dynamic> savedConnections,
+    String sessionHost,
+    String sessionUsername,
+  ) {
+    // Trouver la SavedConnection correspondante
+    try {
+      final savedConnection = savedConnections.firstWhere(
+        (c) => c.host == sessionHost && c.username == sessionUsername,
+      );
+      // Chercher la WolConfig par l'ID de la SavedConnection
+      return getConfigForSshConnection(savedConnection.id);
+    } catch (_) {
+      return null;
+    }
+  }
 }
 
 /// Provider global pour la gestion des configurations WOL.
