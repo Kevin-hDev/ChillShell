@@ -90,25 +90,79 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final privateKey = await SecureStorageService.getPrivateKey(lastConnection.keyId);
     if (privateKey == null || privateKey.isEmpty) return;
 
+    // Vérifier si WOL auto doit être déclenché
+    // Conditions: WOL activé ET config WOL existe pour la dernière connexion
+    if (settings.appSettings.wolEnabled) {
+      // Attendre que le provider WOL soit chargé
+      var wolState = ref.read(wolProvider);
+      int wolAttempts = 0;
+      while (wolState.isLoading && wolAttempts < 10) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        wolState = ref.read(wolProvider);
+        wolAttempts++;
+      }
+
+      final wolConfig = ref.read(wolProvider.notifier).getConfigForSshConnection(lastConnection.id);
+
+      if (wolConfig != null) {
+        // WOL auto: lancer WolStartScreen au lieu de SSH directe
+        if (mounted) {
+          _launchWolStartScreenAuto(wolConfig, lastConnection);
+        }
+        return;
+      }
+    }
+
+    // Comportement standard: tentative SSH directe
+    await _performDirectSshConnect(lastConnection, privateKey);
+  }
+
+  /// Lance WolStartScreen automatiquement au démarrage de l'app.
+  void _launchWolStartScreenAuto(WolConfig config, SavedConnection connection) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WolStartScreen(
+          config: config,
+          tryConnect: () => _tryConnectForWol(connection),
+          onSuccess: () {
+            // Revenir à l'écran terminal (connexion établie)
+            Navigator.of(context).pop();
+          },
+          onCancel: () {
+            // Revenir à l'écran d'accueil normal
+            Navigator.of(context).pop();
+          },
+          onError: (error) {
+            // Revenir à l'écran d'accueil et afficher l'erreur
+            Navigator.of(context).pop();
+            _showWolErrorSnackBar(error);
+          },
+        ),
+      ),
+    );
+  }
+
+  /// Effectue une connexion SSH directe (comportement standard).
+  Future<void> _performDirectSshConnect(SavedConnection connection, String privateKey) async {
     // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
     ref.read(sessionsProvider.notifier).addSession(
       name: 'Terminal $tabNumber',
-      host: lastConnection.host,
-      username: lastConnection.username,
-      port: lastConnection.port,
+      host: connection.host,
+      username: connection.username,
+      port: connection.port,
     );
 
     final sessions = ref.read(sessionsProvider);
     final sessionId = sessions.last.id;
 
     final success = await ref.read(sshProvider.notifier).connect(
-      host: lastConnection.host,
-      username: lastConnection.username,
+      host: connection.host,
+      username: connection.username,
       privateKey: privateKey,
-      keyId: lastConnection.keyId,
+      keyId: connection.keyId,
       sessionId: sessionId,
-      port: lastConnection.port,
+      port: connection.port,
     );
 
     if (success) {
@@ -116,7 +170,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         sessionId,
         ConnectionStatus.connected,
       );
-      await storage.updateConnectionLastConnected(lastConnection.id);
+      await StorageService().updateConnectionLastConnected(connection.id);
     } else {
       ref.read(sessionsProvider.notifier).removeSession(sessionId);
     }
