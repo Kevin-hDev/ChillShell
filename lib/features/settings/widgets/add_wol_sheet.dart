@@ -53,14 +53,21 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
     final settings = ref.watch(settingsProvider);
     final savedConnections = settings.savedConnections;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: VibeTermSpacing.md,
-        right: VibeTermSpacing.md,
-        top: VibeTermSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + VibeTermSpacing.md,
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.bg,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(VibeTermRadius.lg),
+        ),
       ),
-      child: Form(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: VibeTermSpacing.md,
+          right: VibeTermSpacing.md,
+          top: VibeTermSpacing.md,
+          bottom: MediaQuery.of(context).viewInsets.bottom + VibeTermSpacing.md,
+        ),
+        child: Form(
         key: _formKey,
         child: SingleChildScrollView(
           child: Column(
@@ -197,6 +204,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
