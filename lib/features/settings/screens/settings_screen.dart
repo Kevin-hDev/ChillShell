@@ -8,6 +8,7 @@ import '../widgets/quick_connections_section.dart';
 import '../widgets/appearance_section.dart';
 import '../widgets/security_section.dart';
 import '../widgets/wol_section.dart';
+import '../widgets/add_wol_sheet.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onTerminalTap;
@@ -180,7 +181,12 @@ class _WolTab extends StatelessWidget {
       children: [
         WolSection(
           onAddConfig: () {
-            // TODO: Ouvrir le sheet d'ajout de configuration WOL
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => const AddWolSheet(),
+            );
           },
         ),
         const SizedBox(height: VibeTermSpacing.xl),
