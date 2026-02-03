@@ -18,7 +18,7 @@
   "fontSizeXL": "XL (24px)",
 
   "disconnect": "断开",
-  "disconnectAll": "全部断开",
+  "disconnectAll": "断开全部",
   "disconnectConfirmTitle": "断开连接",
   "disconnectConfirmMessage": "是否关闭所有SSH连接？",
   "connect": "连接",
