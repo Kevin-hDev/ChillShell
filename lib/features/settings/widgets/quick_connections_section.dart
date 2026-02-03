@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../providers/settings_provider.dart';
 import 'section_header.dart';
@@ -12,6 +13,7 @@ class QuickConnectionsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final savedConnections = settings.savedConnections;
     final appSettings = settings.appSettings;
@@ -20,7 +22,7 @@ class QuickConnectionsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'CONNEXIONS RAPIDES'),
+        SectionHeader(title: l10n.quickConnections),
         const SizedBox(height: VibeTermSpacing.sm),
         // Options de comportement
         Container(
@@ -32,24 +34,24 @@ class QuickConnectionsSection extends ConsumerWidget {
           child: Column(
             children: [
               _SettingsToggle(
-                title: 'Connexion auto au démarrage',
-                subtitle: 'Se connecter automatiquement à la dernière connexion',
+                title: l10n.autoConnectOnStart,
+                subtitle: l10n.autoConnectOnStartDesc,
                 value: appSettings.autoConnectOnStart,
                 onChanged: (value) => ref.read(settingsProvider.notifier).toggleAutoConnect(value),
                 theme: theme,
               ),
               Divider(height: 1, color: theme.border),
               _SettingsToggle(
-                title: 'Reconnexion automatique',
-                subtitle: 'Reconnecter en cas de perte de connexion',
+                title: l10n.autoReconnect,
+                subtitle: l10n.autoReconnectDesc,
                 value: appSettings.reconnectOnDisconnect,
                 onChanged: (value) => ref.read(settingsProvider.notifier).toggleReconnect(value),
                 theme: theme,
               ),
               Divider(height: 1, color: theme.border),
               _SettingsToggle(
-                title: 'Notification de déconnexion',
-                subtitle: 'Afficher une notification en cas de déconnexion',
+                title: l10n.disconnectNotification,
+                subtitle: l10n.disconnectNotificationDesc,
                 value: appSettings.notifyOnDisconnect,
                 onChanged: (value) => ref.read(settingsProvider.notifier).toggleNotifyOnDisconnect(value),
                 theme: theme,
@@ -60,7 +62,7 @@ class QuickConnectionsSection extends ConsumerWidget {
         const SizedBox(height: VibeTermSpacing.md),
         // Liste des connexions sauvegardées
         Text(
-          'Connexions sauvegardées',
+          l10n.savedConnections,
           style: VibeTermTypography.sectionLabel.copyWith(color: theme.textMuted),
         ),
         const SizedBox(height: VibeTermSpacing.sm),
@@ -74,7 +76,7 @@ class QuickConnectionsSection extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.all(VibeTermSpacing.md),
                   child: Text(
-                    'Aucune connexion sauvegardée',
+                    l10n.noSavedConnections,
                     style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
                   ),
                 )
@@ -101,27 +103,28 @@ class QuickConnectionsSection extends ConsumerWidget {
   }
 
   void _showDeleteDialog(BuildContext context, WidgetRef ref, String id, String name) {
+    final l10n = context.l10n;
     final theme = ref.read(vibeTermThemeProvider);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgElevated,
-        title: Text('Supprimer la connexion ?', style: TextStyle(color: theme.text)),
+        title: Text(l10n.deleteConnectionConfirm, style: TextStyle(color: theme.text)),
         content: Text(
-          'Voulez-vous supprimer "$name" de vos connexions sauvegardées ?',
+          l10n.deleteConnectionConfirmMessage(name),
           style: TextStyle(color: theme.textMuted),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Annuler', style: TextStyle(color: theme.textMuted)),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
           ),
           TextButton(
             onPressed: () {
               ref.read(settingsProvider.notifier).deleteSavedConnection(id);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
             },
-            child: Text('Supprimer', style: TextStyle(color: theme.danger)),
+            child: Text(l10n.delete, style: TextStyle(color: theme.danger)),
           ),
         ],
       ),

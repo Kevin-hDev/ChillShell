@@ -1,8 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../../../services/storage_service.dart';
 import '../../settings/providers/settings_provider.dart';
@@ -49,6 +52,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final theme = ref.watch(vibeTermThemeProvider);
     final sshKeys = settings.sshKeys;
@@ -68,7 +72,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: Text('Connexion SSH', style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+                    child: Text(l10n.newConnection, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
                   ),
                   if (_savedConnections.isNotEmpty)
                     TextButton(
@@ -76,7 +80,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                         setState(() => _showSavedConnections = !_showSavedConnections);
                       },
                       child: Text(
-                        _showSavedConnections ? 'Nouvelle' : 'Récentes',
+                        _showSavedConnections ? l10n.add : l10n.savedConnections,
                         style: TextStyle(color: theme.accent),
                       ),
                     ),
@@ -85,9 +89,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               const SizedBox(height: VibeTermSpacing.md),
 
               if (_showSavedConnections && _savedConnections.isNotEmpty)
-                _buildSavedConnectionsList(theme)
+                _buildSavedConnectionsList(context, theme)
               else
-                _buildNewConnectionForm(sshKeys, theme),
+                _buildNewConnectionForm(context, sshKeys, theme),
             ],
           ),
         ),
@@ -95,11 +99,12 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     );
   }
 
-  Widget _buildSavedConnectionsList(VibeTermThemeData theme) {
+  Widget _buildSavedConnectionsList(BuildContext context, VibeTermThemeData theme) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Connexions récentes', style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+        Text(l10n.savedConnections, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
         const SizedBox(height: VibeTermSpacing.sm),
         ..._savedConnections.map((connection) => _SavedConnectionTile(
           connection: connection,
@@ -113,23 +118,26 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             onPressed: () => setState(() => _showSavedConnections = false),
             icon: Icon(Icons.add, color: theme.accent),
             label: Text(
-              'Nouvelle connexion',
+              l10n.newConnection,
               style: TextStyle(color: theme.accent),
             ),
           ),
         ),
+        const SizedBox(height: VibeTermSpacing.sm),
+        _buildLocalShellButton(context, theme),
       ],
     );
   }
 
-  Widget _buildNewConnectionForm(List<SSHKey> sshKeys, VibeTermThemeData theme) {
+  Widget _buildNewConnectionForm(BuildContext context, List<SSHKey> sshKeys, VibeTermThemeData theme) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Host
         _buildTextField(
           controller: _hostController,
-          label: 'Adresse IP / Hostname',
+          label: l10n.host,
           hint: '192.168.1.93',
           theme: theme,
         ),
@@ -138,8 +146,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         // Username
         _buildTextField(
           controller: _usernameController,
-          label: 'Utilisateur',
-          hint: 'huynh-kevin',
+          label: l10n.username,
+          hint: 'user',
           theme: theme,
         ),
         const SizedBox(height: VibeTermSpacing.sm),
@@ -147,7 +155,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         // Port
         _buildTextField(
           controller: _portController,
-          label: 'Port',
+          label: l10n.port,
           hint: '22',
           keyboardType: TextInputType.number,
           theme: theme,
@@ -155,7 +163,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         const SizedBox(height: VibeTermSpacing.sm),
 
         // SSH Key selector
-        Text('Clé SSH', style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+        Text(l10n.sshKeys, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
         const SizedBox(height: VibeTermSpacing.xs),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.sm),
@@ -169,7 +177,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               value: _selectedKeyId,
               isExpanded: true,
               dropdownColor: theme.bgBlock,
-              hint: Text('Sélectionner une clé', style: VibeTermTypography.caption.copyWith(color: theme.textMuted)),
+              hint: Text(l10n.selectKey, style: VibeTermTypography.caption.copyWith(color: theme.textMuted)),
               items: sshKeys.map((key) {
                 return DropdownMenuItem(
                   value: key.id,
@@ -189,7 +197,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         if (sshKeys.isEmpty) ...[
           const SizedBox(height: VibeTermSpacing.xs),
           Text(
-            'Aucune clé SSH. Créez-en une dans Settings.',
+            l10n.sshKeys,
             style: VibeTermTypography.caption.copyWith(color: theme.warning),
           ),
         ],
@@ -202,7 +210,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           children: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Annuler', style: TextStyle(color: theme.textMuted)),
+              child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
             ),
             const SizedBox(width: VibeTermSpacing.sm),
             ElevatedButton(
@@ -211,10 +219,14 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
                 foregroundColor: theme.bg,
               ),
               onPressed: _canConnect() ? _connect : null,
-              child: const Text('Connexion'),
+              child: Text(l10n.connect),
             ),
           ],
         ),
+        const SizedBox(height: VibeTermSpacing.md),
+        Divider(color: theme.border),
+        const SizedBox(height: VibeTermSpacing.sm),
+        _buildLocalShellButton(context, theme),
       ],
     );
   }
@@ -320,29 +332,102 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     Navigator.pop(context, result);
   }
 
+  Widget _buildLocalShellButton(BuildContext context, VibeTermThemeData theme) {
+    final l10n = context.l10n;
+    return Center(
+      child: OutlinedButton.icon(
+        onPressed: _onLocalShellPressed,
+        icon: Icon(Icons.computer, color: theme.accent),
+        label: Text(
+          l10n.localShell,
+          style: TextStyle(color: theme.accent),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: theme.accent),
+          padding: const EdgeInsets.symmetric(
+            horizontal: VibeTermSpacing.md,
+            vertical: VibeTermSpacing.sm,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onLocalShellPressed() {
+    if (Platform.isIOS) {
+      _showIOSNotAvailableDialog();
+    } else {
+      Navigator.pop(context, const LocalShellRequest());
+    }
+  }
+
+  void _showIOSNotAvailableDialog() {
+    final l10n = context.l10n;
+    final theme = ref.read(vibeTermThemeProvider);
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: theme.warning),
+            const SizedBox(width: VibeTermSpacing.sm),
+            Expanded(
+              child: Text(
+                l10n.localShellNotAvailable,
+                style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.localShellIOSMessage,
+              style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.accent,
+              foregroundColor: theme.bg,
+            ),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _deleteSavedConnection(SavedConnection connection) async {
+    final l10n = context.l10n;
     final theme = ref.read(vibeTermThemeProvider);
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgBlock,
-        title: Text('Supprimer la connexion ?', style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        title: Text(l10n.deleteConnection, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
         content: Text(
-          'La connexion "${connection.name}" sera supprimée.',
+          '${connection.name}',
           style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('Annuler', style: TextStyle(color: theme.textMuted)),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.danger,
               foregroundColor: theme.text,
             ),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Supprimer'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.delete),
           ),
         ],
       ),
@@ -441,4 +526,8 @@ class ConnectionInfo {
     this.savedConnectionId,
     this.isNewConnection = true,
   });
+}
+
+class LocalShellRequest {
+  const LocalShellRequest();
 }

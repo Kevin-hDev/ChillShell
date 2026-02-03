@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../models/wol_config.dart';
 import '../../../models/saved_connection.dart';
 import '../providers/settings_provider.dart';
@@ -49,6 +50,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = ref.watch(vibeTermThemeProvider);
     final settings = ref.watch(settingsProvider);
     final savedConnections = settings.savedConnections;
@@ -85,7 +87,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                         Icon(Icons.arrow_back_ios, size: 16, color: theme.accent),
                         const SizedBox(width: 4),
                         Text(
-                          'Retour',
+                          l10n.back,
                           style: VibeTermTypography.caption.copyWith(color: theme.accent),
                         ),
                       ],
@@ -93,7 +95,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                   ),
                   const Spacer(),
                   Text(
-                    'Ajouter un PC',
+                    l10n.addPc,
                     style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
                   ),
                   const Spacer(),
@@ -103,7 +105,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
               const SizedBox(height: VibeTermSpacing.lg),
 
               // Nom du PC
-              _buildLabel('Nom du PC', theme),
+              _buildLabel(l10n.pcName, theme),
               const SizedBox(height: VibeTermSpacing.xs),
               _buildTextField(
                 controller: _nameController,
@@ -111,7 +113,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                 theme: theme,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Le nom est obligatoire';
+                    return l10n.pcNameRequired;
                   }
                   return null;
                 },
@@ -119,7 +121,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
               const SizedBox(height: VibeTermSpacing.md),
 
               // Adresse MAC
-              _buildLabel('Adresse MAC *', theme),
+              _buildLabel('${l10n.macAddress} *', theme),
               const SizedBox(height: VibeTermSpacing.xs),
               _buildTextField(
                 controller: _macController,
@@ -131,10 +133,10 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                 ],
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'L\'adresse MAC est obligatoire';
+                    return l10n.macAddressRequired;
                   }
                   if (!_macRegex.hasMatch(value.toUpperCase())) {
-                    return 'Format invalide (ex: AA:BB:CC:DD:EE:FF)';
+                    return l10n.macAddressInvalid;
                   }
                   return null;
                 },
@@ -146,7 +148,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Comment trouver l\'adresse MAC ?',
+                      l10n.howToFindMac,
                       style: VibeTermTypography.caption.copyWith(color: theme.accent),
                     ),
                     const SizedBox(width: 4),
@@ -160,7 +162,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
               const SizedBox(height: VibeTermSpacing.md),
 
               // Connexion SSH associée
-              _buildLabel('Connexion SSH associée *', theme),
+              _buildLabel(l10n.linkedSshConnection, theme),
               const SizedBox(height: VibeTermSpacing.xs),
               _buildConnectionDropdown(savedConnections, theme),
               const SizedBox(height: VibeTermSpacing.md),
@@ -192,7 +194,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                           ),
                         )
                       : Text(
-                          'Enregistrer',
+                          l10n.save,
                           style: VibeTermTypography.itemTitle.copyWith(
                             color: theme.bg,
                             fontWeight: FontWeight.w600,
@@ -264,6 +266,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
     List<SavedConnection> connections,
     VibeTermThemeData theme,
   ) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.md),
       decoration: BoxDecoration(
@@ -281,7 +284,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
           isExpanded: true,
           dropdownColor: theme.bgElevated,
           hint: Text(
-            'Sélectionner une connexion',
+            l10n.selectConnection,
             style: VibeTermTypography.input.copyWith(color: theme.textMuted),
           ),
           icon: Icon(Icons.keyboard_arrow_down, color: theme.textMuted),
@@ -290,7 +293,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                   DropdownMenuItem<String>(
                     enabled: false,
                     child: Text(
-                      'Aucune connexion sauvegardée',
+                      l10n.noSavedConnections,
                       style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
                     ),
                   ),
@@ -335,6 +338,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
   }
 
   Widget _buildAdvancedSection(VibeTermThemeData theme) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -350,7 +354,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Options avancées (WOL distant)',
+                      l10n.advancedOptions,
                       style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
                     ),
                     const SizedBox(width: 4),
@@ -370,7 +374,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
           const SizedBox(height: VibeTermSpacing.md),
 
           // Adresse broadcast
-          _buildLabel('Adresse broadcast (optionnel)', theme),
+          _buildLabel(l10n.broadcastOptional, theme),
           const SizedBox(height: VibeTermSpacing.xs),
           _buildTextField(
             controller: _broadcastController,
@@ -380,7 +384,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
           ),
           const SizedBox(height: VibeTermSpacing.xs),
           Text(
-            'Par défaut: 255.255.255.255',
+            l10n.defaultBroadcast,
             style: VibeTermTypography.caption.copyWith(
               color: theme.textMuted,
               fontSize: 11,
@@ -389,7 +393,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
           const SizedBox(height: VibeTermSpacing.md),
 
           // Port UDP
-          _buildLabel('Port UDP (optionnel)', theme),
+          _buildLabel(l10n.udpPortOptional, theme),
           const SizedBox(height: VibeTermSpacing.xs),
           _buildTextField(
             controller: _portController,
@@ -401,7 +405,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
               if (value != null && value.isNotEmpty) {
                 final port = int.tryParse(value);
                 if (port == null || port < 1 || port > 65535) {
-                  return 'Port entre 1 et 65535';
+                  return l10n.portRange;
                 }
               }
               return null;
@@ -409,7 +413,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
           ),
           const SizedBox(height: VibeTermSpacing.xs),
           Text(
-            'Par défaut: 9',
+            l10n.defaultPort,
             style: VibeTermTypography.caption.copyWith(
               color: theme.textMuted,
               fontSize: 11,
@@ -421,13 +425,14 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
   }
 
   void _showMacHelp() {
+    final l10n = context.l10n;
     final theme = ref.read(vibeTermThemeProvider);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgElevated,
         title: Text(
-          'Trouver l\'adresse MAC',
+          l10n.findMacAddress,
           style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
         ),
         content: Column(
@@ -441,15 +446,15 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
             _buildHelpItem('Linux', 'ip link show', theme),
             const SizedBox(height: VibeTermSpacing.md),
             Text(
-              'L\'adresse MAC ressemble à : AA:BB:CC:DD:EE:FF',
+              l10n.macAddressFormat,
               style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
             ),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Compris', style: TextStyle(color: theme.accent)),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.understood, style: TextStyle(color: theme.accent)),
           ),
         ],
       ),
@@ -486,6 +491,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
   }
 
   Future<void> _saveConfig() async {
+    final l10n = context.l10n;
     // Validation du formulaire
     if (!_formKey.currentState!.validate()) {
       return;
@@ -494,7 +500,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
     // Validation de la connexion SSH sélectionnée
     if (_selectedConnectionId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez sélectionner une connexion SSH')),
+        SnackBar(content: Text(l10n.pleaseSelectSshConnection)),
       );
       return;
     }
@@ -526,14 +532,14 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Configuration "$name" ajoutée')),
+          SnackBar(content: Text(l10n.configAdded(name))),
         );
       }
     } catch (e) {
       setState(() => _isSaving = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }

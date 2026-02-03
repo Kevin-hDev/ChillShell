@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../providers/settings_provider.dart';
 import 'section_header.dart';
 import 'ssh_key_tile.dart';
@@ -13,6 +14,7 @@ class SSHKeysSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final theme = ref.watch(vibeTermThemeProvider);
 
@@ -20,7 +22,7 @@ class SSHKeysSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'CLÉS SSH',
+          title: l10n.sshKeys.toUpperCase(),
           trailing: IconButton(
             icon: Icon(Icons.add, color: theme.accent),
             onPressed: () => _showAddKeySheet(context, theme),
@@ -37,7 +39,7 @@ class SSHKeysSection extends ConsumerWidget {
               ? Padding(
                   padding: const EdgeInsets.all(VibeTermSpacing.md),
                   child: Text(
-                    'Aucune clé SSH',
+                    l10n.sshKeys,
                     style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
                   ),
                 )
