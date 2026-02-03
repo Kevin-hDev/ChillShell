@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../services/biometric_service.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
@@ -62,6 +63,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = ref.watch(vibeTermThemeProvider);
 
     return Scaffold(
@@ -96,7 +98,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
                 // Titre
                 Text(
-                  'VibeTerm',
+                  l10n.appName,
                   style: VibeTermTypography.settingsTitle.copyWith(
                     fontSize: 28,
                     color: theme.text,
@@ -105,9 +107,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 const SizedBox(height: VibeTermSpacing.sm),
 
                 Text(
-                  widget.biometricUnavailable
-                      ? 'Biométrie indisponible'
-                      : 'Déverrouillez pour continuer',
+                  l10n.biometricUnlock,
                   style: VibeTermTypography.caption.copyWith(
                     color: widget.biometricUnavailable
                         ? theme.warning
@@ -136,18 +136,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                         ),
                         const SizedBox(height: VibeTermSpacing.sm),
                         Text(
-                          'La biométrie est activée mais indisponible sur cet appareil.',
+                          l10n.biometricUnlock,
                           textAlign: TextAlign.center,
                           style: VibeTermTypography.caption.copyWith(
                             color: theme.text,
-                          ),
-                        ),
-                        const SizedBox(height: VibeTermSpacing.xs),
-                        Text(
-                          'Désactivez-la dans les paramètres pour accéder à l\'application.',
-                          textAlign: TextAlign.center,
-                          style: VibeTermTypography.caption.copyWith(
-                            color: theme.textMuted,
                           ),
                         ),
                       ],
@@ -191,7 +183,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                             ),
                             const SizedBox(width: VibeTermSpacing.sm),
                             Text(
-                              'Déverrouiller',
+                              l10n.fingerprint,
                               style: VibeTermTypography.itemTitle.copyWith(
                                 color: theme.bg,
                               ),

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
+import 'core/l10n/l10n.dart';
 import 'features/terminal/screens/terminal_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
 import 'features/auth/screens/lock_screen.dart';
@@ -15,15 +17,32 @@ void main() {
   runApp(const ProviderScope(child: VibeTermApp()));
 }
 
-class VibeTermApp extends StatelessWidget {
+class VibeTermApp extends ConsumerWidget {
   const VibeTermApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
+    final languageCode = settings.appSettings.languageCode;
+
     return MaterialApp(
       title: 'VibeTerm',
       debugShowCheckedModeBanner: false,
       theme: VibeTermTheme.dark,
+      locale: languageCode != null ? Locale(languageCode) : null,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('fr'),
+        Locale('es'),
+        Locale('de'),
+        Locale('zh'),
+      ],
       home: const AppRoot(),
     );
   }

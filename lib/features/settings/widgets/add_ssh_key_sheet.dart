@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../../../services/key_generation_service.dart';
 import '../../../services/secure_storage_service.dart';
@@ -31,6 +32,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final theme = ref.watch(vibeTermThemeProvider);
 
     return Padding(
@@ -44,26 +46,26 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Ajouter une clé SSH', style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+          Text(l10n.sshKeys, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
           const SizedBox(height: VibeTermSpacing.md),
           if (!_showGenerateForm) ...[
             _OptionTile(
               icon: Icons.file_upload,
-              title: 'Importer une clé',
-              subtitle: 'Depuis un fichier .pem ou .pub',
+              title: l10n.privateKey,
+              subtitle: '.pem / .pub',
               onTap: _importKey,
               theme: theme,
             ),
             const SizedBox(height: VibeTermSpacing.sm),
             _OptionTile(
               icon: Icons.auto_fix_high,
-              title: 'Générer une clé',
-              subtitle: 'Créer une nouvelle paire de clés',
+              title: l10n.generateKey,
+              subtitle: l10n.keyType,
               onTap: () => setState(() => _showGenerateForm = true),
               theme: theme,
             ),
           ] else ...[
-            _buildGenerateForm(theme),
+            _buildGenerateForm(context, theme),
           ],
           const SizedBox(height: VibeTermSpacing.md),
         ],
@@ -71,7 +73,8 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
     );
   }
 
-  Widget _buildGenerateForm(VibeTermThemeData theme) {
+  Widget _buildGenerateForm(BuildContext context, VibeTermThemeData theme) {
+    final l10n = context.l10n;
     if (_generatedPublicKey != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,11 +83,11 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
             children: [
               Icon(Icons.check_circle, color: theme.success),
               const SizedBox(width: VibeTermSpacing.sm),
-              Text('Clé générée !', style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+              Text(l10n.keyCopied, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
             ],
           ),
           const SizedBox(height: VibeTermSpacing.md),
-          Text('Clé publique (à copier sur le serveur) :',
+          Text(l10n.publicKey,
                style: VibeTermTypography.caption.copyWith(color: theme.textMuted)),
           const SizedBox(height: VibeTermSpacing.xs),
           Container(
@@ -108,7 +111,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: _generatedPublicKey!));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Clé publique copiée !')),
+                      SnackBar(content: Text(l10n.keyCopied)),
                     );
                   },
                   child: Row(
@@ -116,7 +119,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                     children: [
                       Icon(Icons.copy, size: 16, color: theme.accent),
                       const SizedBox(width: 4),
-                      Text('Copier', style: VibeTermTypography.caption.copyWith(color: theme.accent)),
+                      Text(l10n.copy, style: VibeTermTypography.caption.copyWith(color: theme.accent)),
                     ],
                   ),
                 ),
@@ -132,7 +135,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                 foregroundColor: theme.bg,
               ),
               onPressed: () => Navigator.pop(context),
-              child: const Text('Terminé'),
+              child: const Text('OK'),
             ),
           ),
         ],
@@ -147,7 +150,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           style: VibeTermTypography.input.copyWith(color: theme.text),
           enabled: !_isGenerating,
           decoration: InputDecoration(
-            labelText: 'Nom de la clé',
+            labelText: l10n.keyName,
             labelStyle: VibeTermTypography.caption.copyWith(color: theme.textMuted),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: theme.border),
@@ -160,7 +163,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           ),
         ),
         const SizedBox(height: VibeTermSpacing.md),
-        Text('Type de clé', style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+        Text(l10n.keyType, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
         const SizedBox(height: VibeTermSpacing.xs),
         Row(
           children: [
@@ -184,7 +187,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           children: [
             TextButton(
               onPressed: _isGenerating ? null : () => setState(() => _showGenerateForm = false),
-              child: Text('Retour', style: TextStyle(color: theme.accent)),
+              child: Text(l10n.cancel, style: TextStyle(color: theme.accent)),
             ),
             const Spacer(),
             ElevatedButton(
@@ -202,7 +205,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                         color: theme.bg,
                       ),
                     )
-                  : const Text('Générer'),
+                  : Text(l10n.generateKey),
             ),
           ],
         ),

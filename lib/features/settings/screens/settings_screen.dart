@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../shared/widgets/app_header.dart';
 import '../widgets/ssh_keys_section.dart';
 import '../widgets/quick_connections_section.dart';
@@ -59,8 +60,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               children: const [
                 // Onglet 1: Connexion
                 _ConnectionTab(),
-                // Onglet 2: Thème
-                _ThemeTab(),
+                // Onglet 2: Général (Thème + Langue + Taille police)
+                _GeneralTab(),
                 // Onglet 3: Sécurité
                 _SecurityTab(),
                 // Onglet 4: WOL
@@ -86,6 +87,8 @@ class _SettingsTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Container(
       decoration: BoxDecoration(
         color: theme.bg,
@@ -109,11 +112,11 @@ class _SettingsTabBar extends StatelessWidget {
           fontWeight: FontWeight.w500,
           fontFamily: 'JetBrainsMono',
         ),
-        tabs: const [
-          Tab(text: 'Connexion'),
-          Tab(text: 'Thème'),
-          Tab(text: 'Sécurité'),
-          Tab(text: 'WOL'),
+        tabs: [
+          Tab(text: l10n.connection),
+          Tab(text: l10n.general),
+          Tab(text: l10n.security),
+          Tab(text: l10n.wol),
         ],
       ),
     );
@@ -138,9 +141,9 @@ class _ConnectionTab extends StatelessWidget {
   }
 }
 
-/// Onglet Thème : Sélection des 12 thèmes
-class _ThemeTab extends StatelessWidget {
-  const _ThemeTab();
+/// Onglet Général : Thème + Langue + Taille de police
+class _GeneralTab extends StatelessWidget {
+  const _GeneralTab();
 
   @override
   Widget build(BuildContext context) {

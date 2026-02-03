@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../providers/settings_provider.dart';
 import '../providers/wol_provider.dart';
 import 'section_header.dart';
@@ -19,6 +20,7 @@ class WolSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final wolState = ref.watch(wolProvider);
     final theme = ref.watch(vibeTermThemeProvider);
@@ -30,7 +32,7 @@ class WolSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Section Activer Wake-on-LAN
-        const SectionHeader(title: 'ACTIVER WAKE-ON-LAN'),
+        SectionHeader(title: l10n.wolEnabled.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         _WolEnableCard(
           enabled: wolEnabled,
@@ -43,7 +45,7 @@ class WolSection extends ConsumerWidget {
         const SizedBox(height: VibeTermSpacing.lg),
 
         // Section Configurations WOL
-        const SectionHeader(title: 'CONFIGURATIONS WOL'),
+        SectionHeader(title: l10n.wolConfigs.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         _WolConfigsCard(
           configs: wolState.configs,
@@ -54,12 +56,6 @@ class WolSection extends ConsumerWidget {
           },
           theme: theme,
         ),
-        const SizedBox(height: VibeTermSpacing.lg),
-
-        // Section Scan automatique (bientôt)
-        const SectionHeader(title: 'SCAN AUTOMATIQUE'),
-        const SizedBox(height: VibeTermSpacing.sm),
-        _ComingSoonCard(theme: theme),
       ],
     );
   }
@@ -96,6 +92,7 @@ class _WolEnableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       decoration: BoxDecoration(
         color: theme.bgBlock,
@@ -121,7 +118,7 @@ class _WolEnableCard extends StatelessWidget {
                 const SizedBox(width: VibeTermSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Activer Wake-on-LAN',
+                    l10n.wolEnabled,
                     style: VibeTermTypography.itemTitle.copyWith(
                       color: canToggle ? theme.text : theme.textMuted,
                     ),
@@ -131,44 +128,6 @@ class _WolEnableCard extends StatelessWidget {
                   value: enabled && canToggle,
                   activeThumbColor: theme.accent,
                   onChanged: canToggle ? onToggle : null,
-                ),
-              ],
-            ),
-          ),
-          Divider(color: theme.border.withValues(alpha: 0.5), height: 1),
-          // Description
-          Padding(
-            padding: const EdgeInsets.all(VibeTermSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Allumez votre PC à distance avant de vous connecter en SSH.',
-                  style: VibeTermTypography.itemDescription.copyWith(
-                    color: theme.textMuted,
-                  ),
-                ),
-                const SizedBox(height: VibeTermSpacing.sm),
-                GestureDetector(
-                  onTap: () => _copyWolGuideUrl(context),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.menu_book,
-                        color: theme.accent,
-                        size: 16,
-                      ),
-                      const SizedBox(width: VibeTermSpacing.xs),
-                      Text(
-                        'Guide complet sur chillshell.app/wol',
-                        style: VibeTermTypography.itemDescription.copyWith(
-                          color: theme.accent,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),
@@ -248,10 +207,11 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.all(VibeTermSpacing.lg),
       child: Text(
-        'Aucune configuration. Ajoutez-en une pour activer le WOL.',
+        l10n.noWolConfig,
         style: VibeTermTypography.itemDescription.copyWith(
           color: theme.textMuted,
         ),
@@ -320,35 +280,36 @@ class _WolConfigItem extends StatelessWidget {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
+    final l10n = context.l10n;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgBlock,
         title: Text(
-          'Supprimer la configuration ?',
+          l10n.delete,
           style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
         ),
         content: Text(
-          'Voulez-vous vraiment supprimer "${config.name}" ?',
+          '${config.name}',
           style: VibeTermTypography.itemDescription.copyWith(
             color: theme.textMuted,
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
-              'Annuler',
+              l10n.cancel,
               style: TextStyle(color: theme.textMuted),
             ),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
               onDelete();
             },
             child: Text(
-              'Supprimer',
+              l10n.delete,
               style: TextStyle(color: theme.danger),
             ),
           ),
@@ -370,6 +331,7 @@ class _AddConfigButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return InkWell(
       onTap: onTap,
       borderRadius: const BorderRadius.only(
@@ -384,82 +346,10 @@ class _AddConfigButton extends StatelessWidget {
             Icon(Icons.add, color: theme.accent, size: 20),
             const SizedBox(width: VibeTermSpacing.xs),
             Text(
-              'Ajouter un PC',
+              l10n.addWolConfig,
               style: VibeTermTypography.itemTitle.copyWith(
                 color: theme.accent,
                 fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Carte indiquant que le scan automatique arrive bientôt.
-class _ComingSoonCard extends StatelessWidget {
-  final VibeTermThemeData theme;
-
-  const _ComingSoonCard({required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.bgBlock.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(VibeTermRadius.md),
-        border: Border.all(color: theme.border.withValues(alpha: 0.5)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: VibeTermSpacing.md,
-          vertical: VibeTermSpacing.sm,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.wifi_find,
-              color: theme.textMuted,
-              size: 22,
-            ),
-            const SizedBox(width: VibeTermSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Scan automatique',
-                    style: VibeTermTypography.itemTitle.copyWith(
-                      color: theme.textMuted,
-                    ),
-                  ),
-                  Text(
-                    'Fonctionnalité en développement',
-                    style: VibeTermTypography.itemDescription.copyWith(
-                      color: theme.textMuted.withValues(alpha: 0.7),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: VibeTermSpacing.sm,
-                vertical: VibeTermSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: theme.textMuted.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-              ),
-              child: Text(
-                'Bientôt',
-                style: VibeTermTypography.itemDescription.copyWith(
-                  color: theme.textMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
               ),
             ),
           ],

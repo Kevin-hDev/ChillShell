@@ -149,6 +149,23 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     _saveSettings();
   }
 
+  void setLanguage(String? languageCode) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(
+        languageCode: languageCode,
+        clearLanguageCode: languageCode == null,
+      ),
+    );
+    _saveSettings();
+  }
+
+  void setFontSize(TerminalFontSize fontSize) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(terminalFontSize: fontSize),
+    );
+    _saveSettings();
+  }
+
   void toggleQuickAccess(String connectionId) {
     final connections = state.savedConnections.map((c) {
       if (c.id == connectionId) {

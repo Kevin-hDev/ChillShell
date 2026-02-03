@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/typography.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../models/wol_config.dart';
 import '../../../services/wol_service.dart';
 
@@ -163,6 +164,7 @@ class _WolStartScreenState extends State<WolStartScreen>
   }
 
   Widget _buildLoadingScreen() {
+    final l10n = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(VibeTermSpacing.lg),
@@ -176,7 +178,7 @@ class _WolStartScreenState extends State<WolStartScreen>
                 return Transform.scale(
                   scale: _pulseAnimation.value,
                   child: Text(
-                    'WOL START',
+                    l10n.wolStart,
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -237,7 +239,7 @@ class _WolStartScreenState extends State<WolStartScreen>
 
             // Message de statut
             Text(
-              'Réveil de ${widget.config.name} en cours...',
+              l10n.wolWakingUp(widget.config.name),
               style: VibeTermTypography.itemTitle,
               textAlign: TextAlign.center,
             ),
@@ -246,7 +248,7 @@ class _WolStartScreenState extends State<WolStartScreen>
             // Tentative X/30
             if (_progress != null)
               Text(
-                'Tentative ${_progress!.attempt}/${_progress!.maxAttempts}',
+                l10n.wolAttempt(_progress!.attempt.toString(), _progress!.maxAttempts.toString()),
                 style: VibeTermTypography.itemDescription,
               ),
             const SizedBox(height: VibeTermSpacing.sm),
@@ -276,7 +278,7 @@ class _WolStartScreenState extends State<WolStartScreen>
                 ),
               ),
               child: Text(
-                'Annuler',
+                l10n.cancel,
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 16,
                   color: VibeTermColors.textMuted,
@@ -290,6 +292,7 @@ class _WolStartScreenState extends State<WolStartScreen>
   }
 
   Widget _buildSuccessScreen() {
+    final l10n = context.l10n;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(VibeTermSpacing.lg),
@@ -314,7 +317,7 @@ class _WolStartScreenState extends State<WolStartScreen>
 
             // "Connecté !"
             Text(
-              'Connecté !',
+              l10n.wolConnected,
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -325,14 +328,14 @@ class _WolStartScreenState extends State<WolStartScreen>
 
             // "PC Bureau allumé"
             Text(
-              '${widget.config.name} allumé',
+              l10n.wolPcAwake(widget.config.name),
               style: VibeTermTypography.itemTitle,
             ),
             const SizedBox(height: VibeTermSpacing.sm),
 
             // "Connexion SSH établie"
             Text(
-              'Connexion SSH établie',
+              l10n.wolSshEstablished,
               style: VibeTermTypography.itemDescription,
             ),
           ],

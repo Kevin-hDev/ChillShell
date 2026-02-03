@@ -15,6 +15,19 @@ enum AppTheme {
   lunariaDark,
 }
 
+/// Tailles de police disponibles pour le terminal
+enum TerminalFontSize {
+  xs(12.0, 'XS'),
+  s(14.0, 'S'),
+  m(17.0, 'M'),
+  l(20.0, 'L'),
+  xl(24.0, 'XL');
+
+  final double size;
+  final String label;
+  const TerminalFontSize(this.size, this.label);
+}
+
 @immutable
 class AppSettings {
   final AppTheme theme;
@@ -28,6 +41,9 @@ class AppSettings {
   final bool fingerprintEnabled;
   final int autoLockMinutes;  // 5, 10, 15 ou 30
   final bool wolEnabled;  // Wake-on-LAN
+  // Multi-langues et taille de police
+  final String? languageCode;  // null = auto-détection
+  final TerminalFontSize terminalFontSize;
 
   const AppSettings({
     this.theme = AppTheme.warpDark,
@@ -40,6 +56,8 @@ class AppSettings {
     this.fingerprintEnabled = false,
     this.autoLockMinutes = 10,
     this.wolEnabled = false,
+    this.languageCode,
+    this.terminalFontSize = TerminalFontSize.m,
   });
 
   AppSettings copyWith({
@@ -53,6 +71,9 @@ class AppSettings {
     bool? fingerprintEnabled,
     int? autoLockMinutes,
     bool? wolEnabled,
+    String? languageCode,
+    bool clearLanguageCode = false,
+    TerminalFontSize? terminalFontSize,
   }) {
     return AppSettings(
       theme: theme ?? this.theme,
@@ -65,6 +86,8 @@ class AppSettings {
       fingerprintEnabled: fingerprintEnabled ?? this.fingerprintEnabled,
       autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
       wolEnabled: wolEnabled ?? this.wolEnabled,
+      languageCode: clearLanguageCode ? null : (languageCode ?? this.languageCode),
+      terminalFontSize: terminalFontSize ?? this.terminalFontSize,
     );
   }
 
@@ -79,6 +102,8 @@ class AppSettings {
     'fingerprintEnabled': fingerprintEnabled,
     'autoLockMinutes': autoLockMinutes,
     'wolEnabled': wolEnabled,
+    'languageCode': languageCode,
+    'terminalFontSize': terminalFontSize.name,
   };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -92,5 +117,9 @@ class AppSettings {
     fingerprintEnabled: json['fingerprintEnabled'] as bool? ?? false,
     autoLockMinutes: json['autoLockMinutes'] as int? ?? 10,
     wolEnabled: json['wolEnabled'] as bool? ?? false,
+    languageCode: json['languageCode'] as String?,
+    terminalFontSize: TerminalFontSize.values.byName(
+      json['terminalFontSize'] as String? ?? 'm',
+    ),
   );
 }

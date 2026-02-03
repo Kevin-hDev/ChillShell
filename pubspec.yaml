@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
 
   # === UI & Theming ===
   google_fonts: ^6.1.0              # JetBrains Mono font
@@ -49,6 +52,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  generate: true
   
   assets:
     - assets/images/

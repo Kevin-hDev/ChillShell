@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../providers/settings_provider.dart';
 import 'section_header.dart';
@@ -105,14 +106,17 @@ class AppearanceSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final currentTheme = settings.appSettings.theme;
+    final currentLanguage = settings.appSettings.languageCode;
+    final currentFontSize = settings.appSettings.terminalFontSize;
     final theme = ref.watch(vibeTermThemeProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'APPARENCE'),
+        SectionHeader(title: l10n.general.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
           padding: const EdgeInsets.all(VibeTermSpacing.md),
@@ -124,8 +128,9 @@ class AppearanceSection extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Section Thème
               Text(
-                'Thème',
+                l10n.theme,
                 style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
               ),
               const SizedBox(height: VibeTermSpacing.md),
@@ -151,7 +156,161 @@ class AppearanceSection extends ConsumerWidget {
                   );
                 },
               ),
+              const SizedBox(height: VibeTermSpacing.lg),
+              Divider(color: theme.border),
+              const SizedBox(height: VibeTermSpacing.lg),
+              // Section Langue
+              _LanguageSelector(
+                theme: theme,
+                currentLanguage: currentLanguage,
+                onChanged: (code) => ref.read(settingsProvider.notifier).setLanguage(code),
+              ),
+              const SizedBox(height: VibeTermSpacing.lg),
+              Divider(color: theme.border),
+              const SizedBox(height: VibeTermSpacing.lg),
+              // Section Taille de police
+              _FontSizeSelector(
+                theme: theme,
+                currentSize: currentFontSize,
+                onChanged: (size) => ref.read(settingsProvider.notifier).setFontSize(size),
+              ),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Sélecteur de langue
+class _LanguageSelector extends StatelessWidget {
+  final VibeTermThemeData theme;
+  final String? currentLanguage;
+  final ValueChanged<String?> onChanged;
+
+  const _LanguageSelector({
+    required this.theme,
+    required this.currentLanguage,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.language,
+          style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
+        ),
+        const SizedBox(height: VibeTermSpacing.sm),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.md),
+          decoration: BoxDecoration(
+            color: theme.bg,
+            borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            border: Border.all(color: theme.border),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String?>(
+              value: currentLanguage,
+              isExpanded: true,
+              dropdownColor: theme.bgBlock,
+              style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+              icon: Icon(Icons.expand_more, color: theme.textMuted),
+              items: [
+                // Option auto-détection
+                DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text(
+                    'Auto',
+                    style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                  ),
+                ),
+                // Langues disponibles
+                ...supportedLanguages.entries.map((entry) {
+                  return DropdownMenuItem<String?>(
+                    value: entry.key,
+                    child: Text(
+                      entry.value,
+                      style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                    ),
+                  );
+                }),
+              ],
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Sélecteur de taille de police
+class _FontSizeSelector extends StatelessWidget {
+  final VibeTermThemeData theme;
+  final TerminalFontSize currentSize;
+  final ValueChanged<TerminalFontSize> onChanged;
+
+  const _FontSizeSelector({
+    required this.theme,
+    required this.currentSize,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    // Labels localisés pour les tailles
+    final sizeLabels = {
+      TerminalFontSize.xs: l10n.fontSizeXS,
+      TerminalFontSize.s: l10n.fontSizeS,
+      TerminalFontSize.m: l10n.fontSizeM,
+      TerminalFontSize.l: l10n.fontSizeL,
+      TerminalFontSize.xl: l10n.fontSizeXL,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.fontSize,
+          style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
+        ),
+        const SizedBox(height: VibeTermSpacing.sm),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.md),
+          decoration: BoxDecoration(
+            color: theme.bg,
+            borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            border: Border.all(color: theme.border),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<TerminalFontSize>(
+              value: currentSize,
+              isExpanded: true,
+              dropdownColor: theme.bgBlock,
+              style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+              icon: Icon(Icons.expand_more, color: theme.textMuted),
+              items: TerminalFontSize.values.map((size) {
+                return DropdownMenuItem<TerminalFontSize>(
+                  value: size,
+                  child: Text(
+                    sizeLabels[size] ?? size.label,
+                    style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                  ),
+                );
+              }).toList(),
+              onChanged: (size) {
+                if (size != null) onChanged(size);
+              },
+            ),
           ),
         ),
       ],
