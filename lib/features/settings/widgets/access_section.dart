@@ -23,6 +23,8 @@ class AccessSection extends ConsumerWidget {
         _TailscaleSection(),
         SizedBox(height: VibeTermSpacing.lg),
         SSHKeysSection(),
+        SizedBox(height: VibeTermSpacing.lg),
+        _SSHKeySecurityCard(),
         SizedBox(height: VibeTermSpacing.xl),
       ],
     );
@@ -133,6 +135,77 @@ class _TailscaleSection extends ConsumerWidget {
   }
 }
 
+/// Card dépliante avec conseils de sécurité sur les clés SSH.
+class _SSHKeySecurityCard extends ConsumerStatefulWidget {
+  const _SSHKeySecurityCard();
+
+  @override
+  ConsumerState<_SSHKeySecurityCard> createState() => _SSHKeySecurityCardState();
+}
+
+class _SSHKeySecurityCardState extends ConsumerState<_SSHKeySecurityCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final theme = ref.watch(vibeTermThemeProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.bgBlock,
+        borderRadius: BorderRadius.circular(VibeTermRadius.md),
+        border: Border.all(color: theme.border),
+      ),
+      child: Column(
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            borderRadius: BorderRadius.circular(VibeTermRadius.md),
+            child: Padding(
+              padding: const EdgeInsets.all(VibeTermSpacing.sm),
+              child: Row(
+                children: [
+                  Icon(Icons.shield_outlined, color: theme.warning, size: 18),
+                  const SizedBox(width: VibeTermSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      l10n.sshKeySecurityTitle,
+                      style: VibeTermTypography.itemTitle.copyWith(
+                        color: theme.text,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _expanded ? Icons.expand_less : Icons.expand_more,
+                    color: theme.textMuted,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: VibeTermSpacing.md,
+                right: VibeTermSpacing.md,
+                bottom: VibeTermSpacing.md,
+              ),
+              child: Text(
+                l10n.sshKeySecurityDesc,
+                style: VibeTermTypography.itemDescription.copyWith(
+                  color: theme.textMuted,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Bouton pour télécharger Tailscale
 class _TailscaleButton extends StatelessWidget {
   final IconData icon;
@@ -154,7 +227,7 @@ class _TailscaleButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(VibeTermRadius.sm),
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: VibeTermSpacing.md,
+          horizontal: VibeTermSpacing.sm,
           vertical: VibeTermSpacing.sm,
         ),
         decoration: BoxDecoration(
@@ -165,7 +238,7 @@ class _TailscaleButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: theme.accent, size: 18),
+            Icon(icon, color: theme.accent, size: 16),
             const SizedBox(width: VibeTermSpacing.xs),
             Flexible(
               child: Text(

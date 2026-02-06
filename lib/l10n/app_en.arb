@@ -173,5 +173,25 @@
   "@shutdownPcMessage": { "placeholders": { "name": { "type": "String" } } },
   "shutdownAction": "Shutdown",
   "searchPlaceholder": "Search...",
-  "autoDetect": "Auto"
+  "autoDetect": "Auto",
+
+  "wolBiosTitle": "1. BIOS",
+  "wolBiosEnablePcie": "Enable \"Power On By PCI-E\"",
+  "wolBiosDisableErp": "Disable \"ErP Ready\"",
+  "wolFastStartupTitle": "2. Fast Startup",
+  "wolFastStep1": "Power Options → System Settings",
+  "wolFastStep2": "Change unavailable settings",
+  "wolFastStep3": "Uncheck \"Turn on fast startup\"",
+  "wolDeviceManagerTitle": "3. Device Manager",
+  "wolDevStep1": "Network adapter → Power Management",
+  "wolDevStep2": "Check \"Magic Packet only\"",
+  "wolDevStep3": "Network adapter → Advanced",
+  "wolDevStep4": "Enable \"Wake on Magic Packet\"",
+  "wolMacConfigTitle": "Configuration",
+  "wolMacStep1": "1. Apple Menu → System Preferences",
+  "wolMacStep2": "2. Energy Saver",
+  "wolMacStep3": "3. Check \"Wake for network access\"",
+
+  "sshKeySecurityTitle": "Protect your keys",
+  "sshKeySecurityDesc": "Your SSH keys work like passwords that give access to your servers. The private key must NEVER be shared — not by email, messaging, or cloud storage. Only share the public key with servers you want to connect to. ChillShell stores your keys securely on your device only. If you suspect a key has been compromised, delete it immediately and create a new one."
 }

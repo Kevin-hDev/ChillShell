@@ -636,38 +636,40 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
   }
 
   Widget _buildWindowsInstructions(VibeTermThemeData theme) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStep('1. BIOS', [
-          '• Activer "Power On By PCI-E"',
-          '• Désactiver "ErP Ready"',
+        _buildStep(l10n.wolBiosTitle, [
+          '• ${l10n.wolBiosEnablePcie}',
+          '• ${l10n.wolBiosDisableErp}',
         ], theme),
         const SizedBox(height: VibeTermSpacing.sm),
-        _buildStep('2. Démarrage rapide', [
-          '• Options d\'alimentation → Paramètre système',
-          '• Modifier les paramètres non disponibles',
-          '• Décocher "Activer le démarrage rapide"',
+        _buildStep(l10n.wolFastStartupTitle, [
+          '• ${l10n.wolFastStep1}',
+          '• ${l10n.wolFastStep2}',
+          '• ${l10n.wolFastStep3}',
         ], theme),
         const SizedBox(height: VibeTermSpacing.sm),
-        _buildStep('3. Gestionnaire de périphériques', [
-          '• Carte réseau → Gestion alimentation',
-          '• Cocher "Paquet magique uniquement"',
-          '• Carte réseau → Avancé',
-          '• Activer "Wake on Magic Packet"',
+        _buildStep(l10n.wolDeviceManagerTitle, [
+          '• ${l10n.wolDevStep1}',
+          '• ${l10n.wolDevStep2}',
+          '• ${l10n.wolDevStep3}',
+          '• ${l10n.wolDevStep4}',
         ], theme),
       ],
     );
   }
 
   Widget _buildMacInstructions(VibeTermThemeData theme) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStep('Configuration', [
-          '1. Menu Apple → Préférences Système',
-          '2. Économiseur d\'énergie',
-          '3. Cocher "Réactiver pour l\'accès au réseau"',
+        _buildStep(l10n.wolMacConfigTitle, [
+          l10n.wolMacStep1,
+          l10n.wolMacStep2,
+          l10n.wolMacStep3,
         ], theme),
       ],
     );

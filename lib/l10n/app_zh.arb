@@ -164,5 +164,25 @@
   "shutdownPcMessage": "确定要关闭 {name} 吗？\n\nSSH连接将断开。",
   "shutdownAction": "关闭",
   "searchPlaceholder": "搜索...",
-  "autoDetect": "自动"
+  "autoDetect": "自动",
+
+  "wolBiosTitle": "1. BIOS",
+  "wolBiosEnablePcie": "启用 \"Power On By PCI-E\"",
+  "wolBiosDisableErp": "禁用 \"ErP Ready\"",
+  "wolFastStartupTitle": "2. 快速启动",
+  "wolFastStep1": "电源选项 → 系统设置",
+  "wolFastStep2": "更改不可用的设置",
+  "wolFastStep3": "取消勾选\"启用快速启动\"",
+  "wolDeviceManagerTitle": "3. 设备管理器",
+  "wolDevStep1": "网络适配器 → 电源管理",
+  "wolDevStep2": "勾选\"仅限魔术数据包\"",
+  "wolDevStep3": "网络适配器 → 高级",
+  "wolDevStep4": "启用 \"Wake on Magic Packet\"",
+  "wolMacConfigTitle": "配置",
+  "wolMacStep1": "1. Apple菜单 → 系统偏好设置",
+  "wolMacStep2": "2. 节能",
+  "wolMacStep3": "3. 勾选\"唤醒以进行网络访问\"",
+
+  "sshKeySecurityTitle": "保护您的密钥",
+  "sshKeySecurityDesc": "您的SSH密钥就像密码，可以授予您服务器的访问权限。私钥绝对不能分享——不能通过邮件、即时通讯或云存储。只将公钥分享给您要连接的服务器。ChillShell仅在您的设备上安全存储密钥。如果您怀疑密钥已被泄露，请立即删除并创建新的密钥。"
 }

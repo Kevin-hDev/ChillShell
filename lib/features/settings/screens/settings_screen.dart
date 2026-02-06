@@ -101,7 +101,7 @@ class _SettingsTabBar extends StatelessWidget {
       child: TabBar(
         controller: tabController,
         isScrollable: true,
-        tabAlignment: TabAlignment.start,
+        tabAlignment: TabAlignment.center,
         labelColor: theme.accent,
         unselectedLabelColor: theme.textMuted,
         indicatorColor: theme.accent,

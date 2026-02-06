@@ -973,6 +973,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto'**
   String get autoDetect;
+
+  /// No description provided for @wolBiosTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1. BIOS'**
+  String get wolBiosTitle;
+
+  /// No description provided for @wolBiosEnablePcie.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable \"Power On By PCI-E\"'**
+  String get wolBiosEnablePcie;
+
+  /// No description provided for @wolBiosDisableErp.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable \"ErP Ready\"'**
+  String get wolBiosDisableErp;
+
+  /// No description provided for @wolFastStartupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Fast Startup'**
+  String get wolFastStartupTitle;
+
+  /// No description provided for @wolFastStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Power Options → System Settings'**
+  String get wolFastStep1;
+
+  /// No description provided for @wolFastStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Change unavailable settings'**
+  String get wolFastStep2;
+
+  /// No description provided for @wolFastStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Uncheck \"Turn on fast startup\"'**
+  String get wolFastStep3;
+
+  /// No description provided for @wolDeviceManagerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Device Manager'**
+  String get wolDeviceManagerTitle;
+
+  /// No description provided for @wolDevStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Network adapter → Power Management'**
+  String get wolDevStep1;
+
+  /// No description provided for @wolDevStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'Check \"Magic Packet only\"'**
+  String get wolDevStep2;
+
+  /// No description provided for @wolDevStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'Network adapter → Advanced'**
+  String get wolDevStep3;
+
+  /// No description provided for @wolDevStep4.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable \"Wake on Magic Packet\"'**
+  String get wolDevStep4;
+
+  /// No description provided for @wolMacConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration'**
+  String get wolMacConfigTitle;
+
+  /// No description provided for @wolMacStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Apple Menu → System Preferences'**
+  String get wolMacStep1;
+
+  /// No description provided for @wolMacStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'2. Energy Saver'**
+  String get wolMacStep2;
+
+  /// No description provided for @wolMacStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Check \"Wake for network access\"'**
+  String get wolMacStep3;
+
+  /// No description provided for @sshKeySecurityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect your keys'**
+  String get sshKeySecurityTitle;
+
+  /// No description provided for @sshKeySecurityDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your SSH keys work like passwords that give access to your servers. The private key must NEVER be shared — not by email, messaging, or cloud storage. Only share the public key with servers you want to connect to. ChillShell stores your keys securely on your device only. If you suspect a key has been compromised, delete it immediately and create a new one.'**
+  String get sshKeySecurityDesc;
 }
 
 class _AppLocalizationsDelegate
