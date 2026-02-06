@@ -117,7 +117,7 @@ class SSHState {
   }
 }
 
-class SSHNotifier extends StateNotifier<SSHState> {
+class SSHNotifier extends Notifier<SSHState> {
   /// Map des services SSH par ID stable (pas par index!)
   final Map<String, SSHService> _tabServices = {};
   /// Map des services de shell local par ID
@@ -147,7 +147,19 @@ class SSHNotifier extends StateNotifier<SSHState> {
   static const _maxReconnectAttempts = 3;
   static const _reconnectDelay = Duration(seconds: 5);
 
-  SSHNotifier() : super(const SSHState());
+  @override
+  SSHState build() {
+    ref.onDispose(() {
+      _isDisposed = true;
+      _connectionCheckTimer?.cancel();
+      _connectionCheckTimer = null;
+      _reconnectTimer?.cancel();
+      _reconnectTimer = null;
+      _resizeThrottleTimer?.cancel();
+      _resizeThrottleTimer = null;
+    });
+    return const SSHState();
+  }
 
   /// Génère un ID unique pour un nouvel onglet
   String _generateTabId() => DateTime.now().millisecondsSinceEpoch.toString();
@@ -443,6 +455,19 @@ class SSHNotifier extends StateNotifier<SSHState> {
     });
   }
 
+  /// Pause le timer de vérification de connexion (app en arrière-plan)
+  void pauseConnectionMonitor() {
+    _connectionCheckTimer?.cancel();
+    _connectionCheckTimer = null;
+  }
+
+  /// Reprend le timer de vérification de connexion (app au premier plan)
+  void resumeConnectionMonitor() {
+    if (state.connectionState == SSHConnectionState.connected) {
+      _startConnectionMonitor();
+    }
+  }
+
   void _handleDisconnection() {
     if (state.connectionState == SSHConnectionState.disconnected) return;
 
@@ -580,18 +605,6 @@ class SSHNotifier extends StateNotifier<SSHState> {
     await ForegroundSSHService.stop();
 
     state = const SSHState();
-  }
-
-  @override
-  void dispose() {
-    _isDisposed = true;
-    _connectionCheckTimer?.cancel();
-    _connectionCheckTimer = null;
-    _reconnectTimer?.cancel();
-    _reconnectTimer = null;
-    _resizeThrottleTimer?.cancel();
-    _resizeThrottleTimer = null;
-    super.dispose();
   }
 
   /// Marque un onglet comme ayant une connexion morte (stream fermé)
@@ -985,6 +998,6 @@ class SSHNotifier extends StateNotifier<SSHState> {
   }
 }
 
-final sshProvider = StateNotifierProvider<SSHNotifier, SSHState>(
-  (ref) => SSHNotifier(),
+final sshProvider = NotifierProvider<SSHNotifier, SSHState>(
+  SSHNotifier.new,
 );

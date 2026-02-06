@@ -8,6 +8,7 @@ import '../../../core/l10n/l10n.dart';
 import '../providers/settings_provider.dart';
 import '../providers/wol_provider.dart';
 import 'section_header.dart';
+import 'selection_mixin.dart';
 
 /// Section Wake-on-LAN dans les paramètres.
 ///
@@ -22,52 +23,23 @@ class WolSection extends ConsumerStatefulWidget {
   ConsumerState<WolSection> createState() => _WolSectionState();
 }
 
-class _WolSectionState extends ConsumerState<WolSection> {
-  bool _isSelectionMode = false;
-  final Set<String> _selectedIds = {};
-
-  void _enterSelectionMode(String configId) {
-    setState(() {
-      _isSelectionMode = true;
-      _selectedIds.add(configId);
-    });
-  }
-
-  void _exitSelectionMode() {
-    setState(() {
-      _isSelectionMode = false;
-      _selectedIds.clear();
-    });
-  }
-
-  void _toggleSelection(String configId) {
-    setState(() {
-      if (_selectedIds.contains(configId)) {
-        _selectedIds.remove(configId);
-        if (_selectedIds.isEmpty) {
-          _isSelectionMode = false;
-        }
-      } else {
-        _selectedIds.add(configId);
-      }
-    });
-  }
-
+class _WolSectionState extends ConsumerState<WolSection>
+    with SelectionModeMixin {
   Future<void> _deleteSelected() async {
     final theme = ref.read(vibeTermThemeProvider);
     final l10n = context.l10n;
-    final count = _selectedIds.length;
+    final count = selectedIds.length;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.bgBlock,
         title: Text(
-          'Supprimer $count config${count > 1 ? 's' : ''} ?',
+          l10n.deleteWolConfigsConfirm(count),
           style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
         ),
         content: Text(
-          'Cette action est irréversible.',
+          l10n.actionIrreversible,
           style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
         ),
         actions: [
@@ -84,22 +56,21 @@ class _WolSectionState extends ConsumerState<WolSection> {
     );
 
     if (confirmed == true) {
-      for (final id in _selectedIds) {
+      for (final id in selectedIds) {
         await ref.read(wolProvider.notifier).deleteConfig(id);
       }
-      _exitSelectionMode();
+      exitSelectionMode();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final settings = ref.watch(settingsProvider);
+    final wolEnabled = ref.watch(settingsProvider.select((s) => s.appSettings.wolEnabled));
     final wolState = ref.watch(wolProvider);
     final theme = ref.watch(vibeTermThemeProvider);
 
     final hasConfigs = wolState.configs.isNotEmpty;
-    final wolEnabled = settings.appSettings.wolEnabled;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,20 +91,8 @@ class _WolSectionState extends ConsumerState<WolSection> {
         // Section Configurations WOL
         SectionHeader(
           title: l10n.wolConfigs.toUpperCase(),
-          trailing: _isSelectionMode
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.delete, color: theme.danger),
-                      onPressed: _selectedIds.isNotEmpty ? _deleteSelected : null,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: theme.textMuted),
-                      onPressed: _exitSelectionMode,
-                    ),
-                  ],
-                )
+          trailing: isSelectionMode
+              ? buildSelectionActions(theme: theme, onDelete: _deleteSelected)
               : null,
         ),
         const SizedBox(height: VibeTermSpacing.sm),
@@ -144,10 +103,10 @@ class _WolSectionState extends ConsumerState<WolSection> {
           onDeleteConfig: (configId) {
             ref.read(wolProvider.notifier).deleteConfig(configId);
           },
-          isSelectionMode: _isSelectionMode,
-          selectedIds: _selectedIds,
-          onLongPress: _enterSelectionMode,
-          onSelectionToggle: _toggleSelection,
+          isSelectionMode: isSelectionMode,
+          selectedIds: selectedIds,
+          onLongPress: enterSelectionMode,
+          onSelectionToggle: toggleSelection,
           theme: theme,
         ),
         const SizedBox(height: VibeTermSpacing.lg),

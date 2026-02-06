@@ -218,12 +218,9 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
 
   @override
   Widget build(BuildContext context) {
-    final terminalState = ref.watch(terminalProvider);
+    final ghostText = ref.watch(terminalProvider.select((s) => s.ghostText));
+    final currentInput = ref.watch(terminalProvider.select((s) => s.currentInput));
     final theme = ref.watch(vibeTermThemeProvider);
-
-    // Mode expanded désactivé temporairement pour debug
-    // TODO: Réactiver après avoir résolu le bug de layout
-    const isEffectivelyExpanded = false;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -239,7 +236,7 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
       child: SafeArea(
         top: false,
         child: Row(
-          crossAxisAlignment: isEffectivelyExpanded ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Flèches historique empilées verticalement
             Column(
@@ -297,14 +294,13 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
                       child: Stack(
                         children: [
                           // Ghost text layer (seulement si pas expanded)
-                          if (terminalState.ghostText != null &&
-                              !terminalState.currentInput.contains('\n') &&
-                              !isEffectivelyExpanded)
+                          if (ghostText != null &&
+                              !currentInput.contains('\n'))
                             Positioned(
                               left: 0,
                               bottom: 4,
                               child: Text(
-                                terminalState.currentInput + terminalState.ghostText!,
+                                currentInput + ghostText,
                                 style: VibeTermTypography.input.copyWith(
                                   color: theme.ghost,
                                 ),
@@ -333,7 +329,7 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
                               decoration: InputDecoration(
                                 hintText: _ctrlArmed
                                     ? context.l10n.pressKeyForCtrl
-                                    : (isEffectivelyExpanded ? context.l10n.swipeDownToReduce : context.l10n.runCommands),
+                                    : context.l10n.runCommands,
                                 hintStyle: VibeTermTypography.input.copyWith(
                                   color: _ctrlArmed ? const Color(0xFFEAB308) : theme.textMuted,
                                 ),
@@ -365,7 +361,7 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
               ),
             ),
             // Bouton accepter ghost (si disponible)
-            if (terminalState.ghostText != null) ...[
+            if (ghostText != null) ...[
               const SizedBox(width: VibeTermSpacing.xs),
               TerminalGhostAcceptButton(onTap: _acceptGhost, theme: theme),
             ],

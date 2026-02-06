@@ -30,20 +30,3 @@ class VibeTermColors {
   static const Color scrollThumb = Color(0xFF444444);
   static const Color homeIndicator = Color(0xFF444444);
 }
-
-/// Thèmes alternatifs
-class DraculaColors {
-  static const Color bg = Color(0xFF282A36);
-  static const Color bgBlock = Color(0xFF343746);
-  static const Color border = Color(0xFF44475A);
-  static const Color text = Color(0xFFF8F8F2);
-  static const Color accent = Color(0xFFBD93F9);
-}
-
-class NordColors {
-  static const Color bg = Color(0xFF2E3440);
-  static const Color bgBlock = Color(0xFF3B4252);
-  static const Color border = Color(0xFF434C5E);
-  static const Color text = Color(0xFFECEFF4);
-  static const Color accent = Color(0xFF88C0D0);
-}

@@ -41,7 +41,7 @@ class SessionTabBar extends ConsumerWidget {
                 : ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: sessions.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: VibeTermSpacing.xs),
+                    separatorBuilder: (_, _) => const SizedBox(width: VibeTermSpacing.xs),
                     itemBuilder: (context, index) {
                       final session = sessions[index];
                       final isActive = index == activeIndex;
@@ -49,7 +49,7 @@ class SessionTabBar extends ConsumerWidget {
                         session: session,
                         isActive: isActive,
                         theme: theme,
-                        onTap: () => ref.read(activeSessionIndexProvider.notifier).state = index,
+                        onTap: () => ref.read(activeSessionIndexProvider.notifier).set(index),
                         onClose: sessions.length > 1
                             ? () async {
                                 // IMPORTANT: Fermer d'abord la connexion SSH par index
@@ -61,7 +61,7 @@ class SessionTabBar extends ConsumerWidget {
 
                                 // Ajuster l'index actif si nécessaire
                                 if (activeIndex >= sessions.length - 1 && activeIndex > 0) {
-                                  ref.read(activeSessionIndexProvider.notifier).state = activeIndex - 1;
+                                  ref.read(activeSessionIndexProvider.notifier).set(activeIndex - 1);
                                 }
                               }
                             : null,

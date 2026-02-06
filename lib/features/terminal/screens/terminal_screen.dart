@@ -710,7 +710,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       );
 
       // Sélectionner le nouvel onglet
-      ref.read(activeSessionIndexProvider.notifier).state = newSessions.length - 1;
+      ref.read(activeSessionIndexProvider.notifier).set(newSessions.length - 1);
     }
   }
 
@@ -839,7 +839,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     if (confirmed == true) {
       await ref.read(sshProvider.notifier).disconnect();
       ref.read(sessionsProvider.notifier).clearSessions();
-      ref.read(activeSessionIndexProvider.notifier).state = 0;
+      ref.read(activeSessionIndexProvider.notifier).set(0);
     }
   }
 

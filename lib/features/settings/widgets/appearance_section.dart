@@ -107,10 +107,9 @@ class AppearanceSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final settings = ref.watch(settingsProvider);
-    final currentTheme = settings.appSettings.theme;
-    final currentLanguage = settings.appSettings.languageCode;
-    final currentFontSize = settings.appSettings.terminalFontSize;
+    final currentTheme = ref.watch(settingsProvider.select((s) => s.appSettings.theme));
+    final currentLanguage = ref.watch(settingsProvider.select((s) => s.appSettings.languageCode));
+    final currentFontSize = ref.watch(settingsProvider.select((s) => s.appSettings.terminalFontSize));
     final theme = ref.watch(vibeTermThemeProvider);
 
     return Column(
@@ -226,7 +225,7 @@ class _LanguageSelector extends StatelessWidget {
                 DropdownMenuItem<String?>(
                   value: null,
                   child: Text(
-                    'Auto',
+                    l10n.autoDetect,
                     style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
                   ),
                 ),

@@ -75,9 +75,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get disconnect => '断开';
 
   @override
-  String get disconnectAll => '断开全部';
-
-  @override
   String get disconnectConfirmTitle => '断开连接';
 
   @override
@@ -99,9 +96,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get add => '添加';
 
   @override
-  String get edit => '编辑';
-
-  @override
   String get retry => '重试';
 
   @override
@@ -118,9 +112,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get reconnecting => '正在重连...';
-
-  @override
-  String get connectionLost => '连接丢失';
 
   @override
   String get connectionError => '连接错误';
@@ -153,9 +144,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sshKeys => 'SSH密钥';
 
   @override
-  String get generateKey => '生成密钥';
-
-  @override
   String get createSshKey => '创建SSH密钥';
 
   @override
@@ -174,25 +162,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get keyName => '密钥名称';
 
   @override
-  String get keyType => '密钥类型';
-
-  @override
   String get publicKey => '公钥';
 
   @override
   String get privateKey => '私钥';
 
   @override
-  String get copyPublicKey => '复制公钥';
-
-  @override
   String get keyCopied => '密钥已复制到剪贴板';
 
   @override
   String get deleteKey => '删除密钥';
-
-  @override
-  String get deleteKeyConfirm => '删除此SSH密钥？';
 
   @override
   String get savedConnections => '已保存的连接';
@@ -217,12 +196,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get deleteConnection => '删除连接';
-
-  @override
-  String get biometricUnlock => '生物识别解锁';
-
-  @override
-  String get faceId => '面容ID';
 
   @override
   String get unlock => '解锁';
@@ -279,49 +252,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addWolConfig => '添加WOL配置';
 
   @override
-  String get wolName => '名称';
-
-  @override
   String get macAddress => 'MAC地址';
 
   @override
   String get broadcastAddress => '广播地址';
 
   @override
-  String get udpPort => 'UDP端口';
-
-  @override
-  String get linkedConnection => '关联的SSH连接';
-
-  @override
   String get wolStart => 'WOL启动';
 
   @override
-  String get wakingUp => '正在唤醒...';
-
-  @override
-  String get waitingForBoot => '等待启动...';
-
-  @override
-  String get tryingToConnect => '尝试连接...';
-
-  @override
-  String get pcAwake => '电脑已唤醒！';
-
-  @override
-  String get wolFailed => '网络唤醒失败';
-
-  @override
-  String get shutdown => '关机';
-
-  @override
-  String get shutdownConfirm => '关闭此电脑？';
-
-  @override
   String get pressKeyForCtrl => '按下一个键...';
-
-  @override
-  String get swipeDownToReduce => '向下滑动缩小...';
 
   @override
   String wolWakingUp(Object name) {
@@ -373,24 +313,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noSavedConnections => '没有已保存的连接';
-
-  @override
-  String get advancedOptions => '高级选项（远程WOL）';
-
-  @override
-  String get broadcastOptional => '广播地址（可选）';
-
-  @override
-  String get defaultBroadcast => '默认：255.255.255.255';
-
-  @override
-  String get udpPortOptional => 'UDP端口（可选）';
-
-  @override
-  String get defaultPort => '默认：9';
-
-  @override
-  String get portRange => '端口范围1-65535';
 
   @override
   String get pleaseSelectSshConnection => '请选择一个SSH连接';
@@ -481,4 +403,73 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get uploadFailed => '图片上传失败';
+
+  @override
+  String get ok => '确定';
+
+  @override
+  String errorMessage(String error) {
+    return '错误：$error';
+  }
+
+  @override
+  String get invalidKeyFormat => '密钥格式无效';
+
+  @override
+  String keyImported(String name) {
+    return '密钥 \"$name\" 已导入';
+  }
+
+  @override
+  String get deleteKeyConfirmTitle => '删除密钥？';
+
+  @override
+  String get actionIrreversible => '此操作不可撤销。';
+
+  @override
+  String deleteKeysConfirm(int count) {
+    return '删除 $count 个密钥？';
+  }
+
+  @override
+  String deleteConnectionsConfirm(int count) {
+    return '删除 $count 个连接？';
+  }
+
+  @override
+  String deleteWolConfigsConfirm(int count) {
+    return '删除 $count 个配置？';
+  }
+
+  @override
+  String sshKeyTypeLabel(String type) {
+    return '类型：$type';
+  }
+
+  @override
+  String sshKeyHostLabel(String host) {
+    return '主机：$host';
+  }
+
+  @override
+  String sshKeyLastUsedLabel(String date) {
+    return '最近使用：$date';
+  }
+
+  @override
+  String get shutdownPcTitle => '关闭电脑';
+
+  @override
+  String shutdownPcMessage(String name) {
+    return '确定要关闭 $name 吗？\n\nSSH连接将断开。';
+  }
+
+  @override
+  String get shutdownAction => '关闭';
+
+  @override
+  String get searchPlaceholder => '搜索...';
+
+  @override
+  String get autoDetect => '自动';
 }

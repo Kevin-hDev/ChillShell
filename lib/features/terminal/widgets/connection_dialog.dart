@@ -283,10 +283,17 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
   bool _isValidHost(String host) {
     if (host.isEmpty) return false;
-    // Accepter IP ou hostname valide
-    final ipRegex = RegExp(r'^(\d{1,3}\.){3}\d{1,3}$');
+    // Vérifier IPv4 avec validation des octets 0-255
+    final parts = host.split('.');
+    if (parts.length == 4 && parts.every((p) {
+      final n = int.tryParse(p);
+      return n != null && n >= 0 && n <= 255;
+    })) {
+      return true;
+    }
+    // Accepter hostname valide
     final hostnameRegex = RegExp(r'^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$');
-    return ipRegex.hasMatch(host) || hostnameRegex.hasMatch(host);
+    return hostnameRegex.hasMatch(host);
   }
 
   bool _isValidUsername(String username) {
@@ -408,7 +415,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               foregroundColor: theme.bg,
             ),
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('OK'),
+            child: Text(context.l10n.ok),
           ),
         ],
       ),
@@ -424,7 +431,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         backgroundColor: theme.bgBlock,
         title: Text(l10n.deleteConnection, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
         content: Text(
-          '${connection.name}',
+          connection.name,
           style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
         ),
         actions: [

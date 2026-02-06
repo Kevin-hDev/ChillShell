@@ -146,7 +146,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                 foregroundColor: theme.bg,
               ),
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(l10n.ok),
             ),
           ),
         ],
@@ -368,7 +368,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(context.l10n.errorMessage('$e'))),
         );
       }
     }
@@ -393,7 +393,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
     if (!privateKey.contains('PRIVATE KEY')) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Format de clé invalide')),
+          SnackBar(content: Text(context.l10n.invalidKeyFormat)),
         );
       }
       return;
@@ -410,6 +410,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           : SSHKeyType.rsa;
 
       await SecureStorageService.savePrivateKey(keyId, privateKey);
+      _privateKeyController.clear();
 
       final newKey = SSHKey(
         id: keyId,
@@ -425,14 +426,14 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Clé "$name" importée')),
+          SnackBar(content: Text(context.l10n.keyImported(name))),
         );
       }
     } catch (e) {
       setState(() => _isImporting = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(context.l10n.errorMessage('$e'))),
         );
       }
     }
@@ -474,7 +475,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
       setState(() => _isGenerating = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
+          SnackBar(content: Text(context.l10n.errorMessage('$e'))),
         );
       }
     }

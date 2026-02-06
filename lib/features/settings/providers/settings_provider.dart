@@ -32,11 +32,13 @@ class SettingsState {
   }
 }
 
-class SettingsNotifier extends StateNotifier<SettingsState> {
+class SettingsNotifier extends Notifier<SettingsState> {
   final StorageService _storage = StorageService();
 
-  SettingsNotifier() : super(const SettingsState(appSettings: AppSettings())) {
-    _loadSettings();
+  @override
+  SettingsState build() {
+    Future.microtask(_loadSettings);
+    return const SettingsState(appSettings: AppSettings(), isLoading: true);
   }
 
   Future<void> _loadSettings() async {
@@ -220,6 +222,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 }
 
-final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>(
-  (ref) => SettingsNotifier(),
+final settingsProvider = NotifierProvider<SettingsNotifier, SettingsState>(
+  SettingsNotifier.new,
 );

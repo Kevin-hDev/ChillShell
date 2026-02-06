@@ -29,10 +29,8 @@ class BiometricService {
     try {
       return await _auth.authenticate(
         localizedReason: 'Déverrouillez ChillShell pour accéder à vos sessions SSH',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true, // Empreinte uniquement, notre UI gère le code PIN
-        ),
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
     } on PlatformException catch (e) {
       // Gérer les erreurs spécifiques

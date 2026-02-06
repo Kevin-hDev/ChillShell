@@ -442,7 +442,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
       setState(() => _isSaving = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(context.l10n.errorMessage('$e'))),
         );
       }
     }
