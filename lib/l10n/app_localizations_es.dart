@@ -481,4 +481,59 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get autoDetect => 'Automático';
+
+  @override
+  String get wolBiosTitle => '1. BIOS';
+
+  @override
+  String get wolBiosEnablePcie => 'Activar \"Power On By PCI-E\"';
+
+  @override
+  String get wolBiosDisableErp => 'Desactivar \"ErP Ready\"';
+
+  @override
+  String get wolFastStartupTitle => '2. Inicio rápido';
+
+  @override
+  String get wolFastStep1 => 'Opciones de energía → Configuración del sistema';
+
+  @override
+  String get wolFastStep2 => 'Cambiar configuración no disponible';
+
+  @override
+  String get wolFastStep3 => 'Desmarcar \"Activar inicio rápido\"';
+
+  @override
+  String get wolDeviceManagerTitle => '3. Administrador de dispositivos';
+
+  @override
+  String get wolDevStep1 => 'Adaptador de red → Administración de energía';
+
+  @override
+  String get wolDevStep2 => 'Marcar \"Solo paquete mágico\"';
+
+  @override
+  String get wolDevStep3 => 'Adaptador de red → Avanzado';
+
+  @override
+  String get wolDevStep4 => 'Activar \"Wake on Magic Packet\"';
+
+  @override
+  String get wolMacConfigTitle => 'Configuración';
+
+  @override
+  String get wolMacStep1 => '1. Menú Apple → Preferencias del Sistema';
+
+  @override
+  String get wolMacStep2 => '2. Economizador de energía';
+
+  @override
+  String get wolMacStep3 => '3. Marcar \"Reactivar para acceso de red\"';
+
+  @override
+  String get sshKeySecurityTitle => 'Proteger sus claves';
+
+  @override
+  String get sshKeySecurityDesc =>
+      'Sus claves SSH funcionan como contraseñas que dan acceso a sus servidores. La clave privada NUNCA debe compartirse — ni por correo, mensajería, ni almacenarse en la nube. Comparta solo la clave pública con los servidores a los que desee conectarse. ChillShell almacena sus claves de forma segura únicamente en su dispositivo. Si sospecha que una clave ha sido comprometida, elimínela inmediatamente y cree una nueva.';
 }

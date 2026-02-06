@@ -31,6 +31,29 @@
 
 ---
 
+## État de la V1 — APK debug terminé
+
+**Build debug Android** : ✅ Fonctionnel et testé sur téléphone Android physique.
+
+**iOS** : ⚠️ Non testé — aucun iPhone disponible pour le moment. À tester avant publication sur l'App Store.
+
+| Fonctionnalité | Android | iOS (estimé) |
+|----------------|---------|-------------|
+| Interface / UI | ✅ Testé | ✅ Identique (Flutter) |
+| Connexion SSH | ✅ Testé | ✅ Devrait fonctionner |
+| Local Shell | ✅ Testé | ❌ Bloqué par Apple (message affiché) |
+| Background SSH | ✅ Foreground Service | ⚠️ iOS plus restrictif, à adapter |
+| Biométrie | ✅ Empreinte | ⚠️ Face ID (à tester) |
+| Splash screen | ✅ Configuré | ⚠️ LaunchScreen.storyboard à configurer |
+
+**Prochaines étapes avant déploiement** :
+1. Ajustements visuels mineurs (terminé)
+2. Site web ChillShell (en cours de brainstorming)
+3. Signature APK release + configuration Play Store
+4. Test iOS si appareil disponible
+
+---
+
 ## Session 6 Février 2026 - Audit complet (Qualité, Sécurité, Performance, Tests)
 
 ### Audit 1 — Qualité du code

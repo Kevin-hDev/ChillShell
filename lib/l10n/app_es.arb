@@ -164,5 +164,25 @@
   "shutdownPcMessage": "¿Realmente desea apagar {name}?\n\nLa conexión SSH se cerrará.",
   "shutdownAction": "Apagar",
   "searchPlaceholder": "Buscar...",
-  "autoDetect": "Automático"
+  "autoDetect": "Automático",
+
+  "wolBiosTitle": "1. BIOS",
+  "wolBiosEnablePcie": "Activar \"Power On By PCI-E\"",
+  "wolBiosDisableErp": "Desactivar \"ErP Ready\"",
+  "wolFastStartupTitle": "2. Inicio rápido",
+  "wolFastStep1": "Opciones de energía → Configuración del sistema",
+  "wolFastStep2": "Cambiar configuración no disponible",
+  "wolFastStep3": "Desmarcar \"Activar inicio rápido\"",
+  "wolDeviceManagerTitle": "3. Administrador de dispositivos",
+  "wolDevStep1": "Adaptador de red → Administración de energía",
+  "wolDevStep2": "Marcar \"Solo paquete mágico\"",
+  "wolDevStep3": "Adaptador de red → Avanzado",
+  "wolDevStep4": "Activar \"Wake on Magic Packet\"",
+  "wolMacConfigTitle": "Configuración",
+  "wolMacStep1": "1. Menú Apple → Preferencias del Sistema",
+  "wolMacStep2": "2. Economizador de energía",
+  "wolMacStep3": "3. Marcar \"Reactivar para acceso de red\"",
+
+  "sshKeySecurityTitle": "Proteger sus claves",
+  "sshKeySecurityDesc": "Sus claves SSH funcionan como contraseñas que dan acceso a sus servidores. La clave privada NUNCA debe compartirse — ni por correo, mensajería, ni almacenarse en la nube. Comparta solo la clave pública con los servidores a los que desee conectarse. ChillShell almacena sus claves de forma segura únicamente en su dispositivo. Si sospecha que una clave ha sido comprometida, elimínela inmediatamente y cree una nueva."
 }

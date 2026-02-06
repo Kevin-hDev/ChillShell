@@ -478,4 +478,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoDetect => 'Auto';
+
+  @override
+  String get wolBiosTitle => '1. BIOS';
+
+  @override
+  String get wolBiosEnablePcie => 'Enable \"Power On By PCI-E\"';
+
+  @override
+  String get wolBiosDisableErp => 'Disable \"ErP Ready\"';
+
+  @override
+  String get wolFastStartupTitle => '2. Fast Startup';
+
+  @override
+  String get wolFastStep1 => 'Power Options → System Settings';
+
+  @override
+  String get wolFastStep2 => 'Change unavailable settings';
+
+  @override
+  String get wolFastStep3 => 'Uncheck \"Turn on fast startup\"';
+
+  @override
+  String get wolDeviceManagerTitle => '3. Device Manager';
+
+  @override
+  String get wolDevStep1 => 'Network adapter → Power Management';
+
+  @override
+  String get wolDevStep2 => 'Check \"Magic Packet only\"';
+
+  @override
+  String get wolDevStep3 => 'Network adapter → Advanced';
+
+  @override
+  String get wolDevStep4 => 'Enable \"Wake on Magic Packet\"';
+
+  @override
+  String get wolMacConfigTitle => 'Configuration';
+
+  @override
+  String get wolMacStep1 => '1. Apple Menu → System Preferences';
+
+  @override
+  String get wolMacStep2 => '2. Energy Saver';
+
+  @override
+  String get wolMacStep3 => '3. Check \"Wake for network access\"';
+
+  @override
+  String get sshKeySecurityTitle => 'Protect your keys';
+
+  @override
+  String get sshKeySecurityDesc =>
+      'Your SSH keys work like passwords that give access to your servers. The private key must NEVER be shared — not by email, messaging, or cloud storage. Only share the public key with servers you want to connect to. ChillShell stores your keys securely on your device only. If you suspect a key has been compromised, delete it immediately and create a new one.';
 }

@@ -118,7 +118,10 @@ class AppearanceSection extends ConsumerWidget {
         SectionHeader(title: l10n.general.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
-          padding: const EdgeInsets.all(VibeTermSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            VibeTermSpacing.md, VibeTermSpacing.sm,
+            VibeTermSpacing.md, VibeTermSpacing.md,
+          ),
           decoration: BoxDecoration(
             color: theme.bgBlock,
             borderRadius: BorderRadius.circular(VibeTermRadius.md),
@@ -132,14 +135,15 @@ class AppearanceSection extends ConsumerWidget {
                 l10n.theme,
                 style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
               ),
-              const SizedBox(height: VibeTermSpacing.md),
+              const SizedBox(height: VibeTermSpacing.xs),
               // Grille de thèmes
               GridView.builder(
+                padding: EdgeInsets.zero,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  childAspectRatio: 0.85,
+                  childAspectRatio: 1.0,
                   crossAxisSpacing: VibeTermSpacing.sm,
                   mainAxisSpacing: VibeTermSpacing.sm,
                 ),

@@ -164,5 +164,25 @@
   "shutdownPcMessage": "Möchten Sie {name} wirklich herunterfahren?\n\nDie SSH-Verbindung wird geschlossen.",
   "shutdownAction": "Herunterfahren",
   "searchPlaceholder": "Suchen...",
-  "autoDetect": "Automatisch"
+  "autoDetect": "Automatisch",
+
+  "wolBiosTitle": "1. BIOS",
+  "wolBiosEnablePcie": "\"Power On By PCI-E\" aktivieren",
+  "wolBiosDisableErp": "\"ErP Ready\" deaktivieren",
+  "wolFastStartupTitle": "2. Schnellstart",
+  "wolFastStep1": "Energieoptionen → Systemeinstellungen",
+  "wolFastStep2": "Nicht verfügbare Einstellungen ändern",
+  "wolFastStep3": "\"Schnellstart aktivieren\" deaktivieren",
+  "wolDeviceManagerTitle": "3. Geräte-Manager",
+  "wolDevStep1": "Netzwerkadapter → Energieverwaltung",
+  "wolDevStep2": "\"Nur Magic Packet\" aktivieren",
+  "wolDevStep3": "Netzwerkadapter → Erweitert",
+  "wolDevStep4": "\"Wake on Magic Packet\" aktivieren",
+  "wolMacConfigTitle": "Konfiguration",
+  "wolMacStep1": "1. Apple-Menü → Systemeinstellungen",
+  "wolMacStep2": "2. Energie sparen",
+  "wolMacStep3": "3. \"Für Netzwerkzugriff reaktivieren\" aktivieren",
+
+  "sshKeySecurityTitle": "Ihre Schlüssel schützen",
+  "sshKeySecurityDesc": "Ihre SSH-Schlüssel funktionieren wie Passwörter, die Zugang zu Ihren Servern gewähren. Der private Schlüssel darf NIEMALS geteilt werden — nicht per E-Mail, Messenger oder Cloud-Speicher. Teilen Sie nur den öffentlichen Schlüssel mit den Servern, mit denen Sie sich verbinden möchten. ChillShell speichert Ihre Schlüssel sicher und ausschließlich auf Ihrem Gerät. Wenn Sie vermuten, dass ein Schlüssel kompromittiert wurde, löschen Sie ihn sofort und erstellen Sie einen neuen."
 }

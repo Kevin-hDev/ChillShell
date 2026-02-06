@@ -164,5 +164,25 @@
   "shutdownPcMessage": "Voulez-vous vraiment éteindre {name} ?\n\nLa connexion SSH sera fermée.",
   "shutdownAction": "Éteindre",
   "searchPlaceholder": "Rechercher...",
-  "autoDetect": "Auto"
+  "autoDetect": "Auto",
+
+  "wolBiosTitle": "1. BIOS",
+  "wolBiosEnablePcie": "Activer \"Power On By PCI-E\"",
+  "wolBiosDisableErp": "Désactiver \"ErP Ready\"",
+  "wolFastStartupTitle": "2. Démarrage rapide",
+  "wolFastStep1": "Options d'alimentation → Paramètre système",
+  "wolFastStep2": "Modifier les paramètres non disponibles",
+  "wolFastStep3": "Décocher \"Activer le démarrage rapide\"",
+  "wolDeviceManagerTitle": "3. Gestionnaire de périphériques",
+  "wolDevStep1": "Carte réseau → Gestion alimentation",
+  "wolDevStep2": "Cocher \"Paquet magique uniquement\"",
+  "wolDevStep3": "Carte réseau → Avancé",
+  "wolDevStep4": "Activer \"Wake on Magic Packet\"",
+  "wolMacConfigTitle": "Configuration",
+  "wolMacStep1": "1. Menu Apple → Préférences Système",
+  "wolMacStep2": "2. Économiseur d'énergie",
+  "wolMacStep3": "3. Cocher \"Réactiver pour l'accès au réseau\"",
+
+  "sshKeySecurityTitle": "Protéger vos clés",
+  "sshKeySecurityDesc": "Vos clés SSH fonctionnent comme des mots de passe qui donnent accès à vos serveurs. La clé privée ne doit JAMAIS être partagée — ni par email, messagerie, ni stockée dans le cloud. Partagez uniquement la clé publique avec les serveurs auxquels vous souhaitez vous connecter. ChillShell stocke vos clés de manière sécurisée uniquement sur votre appareil. Si vous suspectez qu'une clé a été compromise, supprimez-la immédiatement et créez-en une nouvelle."
 }

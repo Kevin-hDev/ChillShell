@@ -472,4 +472,59 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get autoDetect => '自动';
+
+  @override
+  String get wolBiosTitle => '1. BIOS';
+
+  @override
+  String get wolBiosEnablePcie => '启用 \"Power On By PCI-E\"';
+
+  @override
+  String get wolBiosDisableErp => '禁用 \"ErP Ready\"';
+
+  @override
+  String get wolFastStartupTitle => '2. 快速启动';
+
+  @override
+  String get wolFastStep1 => '电源选项 → 系统设置';
+
+  @override
+  String get wolFastStep2 => '更改不可用的设置';
+
+  @override
+  String get wolFastStep3 => '取消勾选\"启用快速启动\"';
+
+  @override
+  String get wolDeviceManagerTitle => '3. 设备管理器';
+
+  @override
+  String get wolDevStep1 => '网络适配器 → 电源管理';
+
+  @override
+  String get wolDevStep2 => '勾选\"仅限魔术数据包\"';
+
+  @override
+  String get wolDevStep3 => '网络适配器 → 高级';
+
+  @override
+  String get wolDevStep4 => '启用 \"Wake on Magic Packet\"';
+
+  @override
+  String get wolMacConfigTitle => '配置';
+
+  @override
+  String get wolMacStep1 => '1. Apple菜单 → 系统偏好设置';
+
+  @override
+  String get wolMacStep2 => '2. 节能';
+
+  @override
+  String get wolMacStep3 => '3. 勾选\"唤醒以进行网络访问\"';
+
+  @override
+  String get sshKeySecurityTitle => '保护您的密钥';
+
+  @override
+  String get sshKeySecurityDesc =>
+      '您的SSH密钥就像密码，可以授予您服务器的访问权限。私钥绝对不能分享——不能通过邮件、即时通讯或云存储。只将公钥分享给您要连接的服务器。ChillShell仅在您的设备上安全存储密钥。如果您怀疑密钥已被泄露，请立即删除并创建新的密钥。';
 }
