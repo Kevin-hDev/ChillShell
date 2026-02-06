@@ -1,7 +1,7 @@
 # Design : Refonte Settings (Tailscale + WOL + Clés SSH)
 
 > Date : 5 Février 2026
-> Status : Validé
+> Status : ✅ COMPLÉTÉ
 
 ---
 
@@ -272,4 +272,20 @@ En bas de la page WOL, après la liste des configs
 
 ---
 
-*Document validé le 5 Février 2026*
+## ✅ Implémentation complète
+
+Toutes les tâches ont été implémentées le 5 Février 2026 :
+
+- [x] Nouvel onglet "Accès" avec Tailscale + Clés SSH
+- [x] Settings screen 5 onglets : Connexion | Accès | Général | Sécurité | WOL
+- [x] Clés SSH simplifiées (Ed25519 uniquement, boutons renommés)
+- [x] Page WOL simplifiée (options avancées supprimées)
+- [x] Cards d'instructions WOL dépliables (Windows/Mac)
+- [x] Swipe-to-delete pour clés SSH et configs WOL
+- [x] Multi-sélection avec suppression multiple
+- [x] Page Connexion refactorisée (Connexion automatique avec radio-button)
+- [x] Traductions 5 langues
+
+---
+
+*Document validé et implémenté le 5 Février 2026*

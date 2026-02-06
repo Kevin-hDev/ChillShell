@@ -12,7 +12,7 @@
 - [x] Multi-onglets avec connexions SSH indépendantes
 - [x] Génération de clés SSH (Ed25519/RSA)
 - [x] Stockage sécurisé des clés (flutter_secure_storage)
-- [x] Authentification biométrique (FaceID/TouchID)
+- [x] Authentification biométrique (Code PIN / Empreinte digitale)
 - [x] Auto-lock après 10 minutes d'inactivité
 - [x] Thème Warp Dark
 - [x] Ghost text / suggestions de commandes
@@ -73,7 +73,7 @@
 
 ---
 
-## 🔄 V1.2 - Boutons & Mode Édition (En cours)
+## ✅ V1.2 - Boutons & Mode Édition (Complété - 3 Fév 2026)
 
 ### ✅ Foreground Service SSH (2 Fév 2026)
 
@@ -122,54 +122,138 @@
 
 **Settings réorganisés :**
 - [x] 4 onglets : Connexion | Thème | Sécurité | WOL
-- [x] Face ID et Empreinte séparés avec toggles indépendants
+- [x] Code PIN 6 chiffres et Empreinte séparés avec toggles indépendants
 - [x] Temps de verrouillage auto : 5min / 10min / 15min / 30min
 
-### Décisions de design (brainstorming 31 Jan 2026)
-- **Approche** : Boutons intelligents (contextuels) + quelques boutons permanents
-- **Flèches** : ↑↓ uniquement (pas ←→)
-- **Raccourcis abandonnés** : Ctrl+R, Ctrl+L, Ctrl+Z (pas essentiels sur mobile)
+### ✅ Bouton CTRL universel (2 Fév 2026)
 
-### Boutons à implémenter
+**Implémenté** : Nouveau système de raccourcis clavier universel.
 
-| Bouton | Type | Condition d'affichage | Action |
-|--------|------|----------------------|--------|
-| **Ctrl+D** | Intelligent | Shell actif, pas de process | EOF / Quitter shell |
-| **Navigation dossiers** | Permanent | Toujours | cd rapide (style Warp) |
-| **Ctrl+O** (nano) | Intelligent | Éditeur nano ouvert | Sauvegarder |
-| **Ctrl+X** (nano) | Intelligent | Éditeur nano ouvert | Quitter |
+- [x] **Bouton CTRL** - Remplace Send/Stop, supporte TOUS les raccourcis CTRL+A-Z
+- [x] **Flèches historique** - ↑↓ empilées verticalement, taille réduite (28x28)
+- [x] **Suppression Send/Stop** - Le clavier virtuel a déjà Enter
 
-### Mode édition (nano, vim)
-- [ ] **Détection éditeur** - Détecter quand nano/vim s'ouvre
-- [ ] **Terminal éditable** - Passer `readOnly: false` en mode édition
-- [ ] **Masquer champ saisie** - Le champ du bas disparaît
-- [ ] **Boutons nano** - Ctrl+O (sauvegarder) + Ctrl+X (quitter)
-- [ ] **Boutons vim** - Escape + possibilité de taper `:wq`, `:q!`
-- [ ] **Retour mode normal** - Quand l'éditeur se ferme
+**Fonctionnement du bouton CTRL :**
+1. Clic sur "CTRL" (vert) → devient "+" (jaune) = armé
+2. Tape une lettre → envoie CTRL+lettre
+3. Re-clic → désarme
 
-### Corrections
-- [ ] **Copier/coller terminal** - Menu contextuel natif après sélection
-- [ ] **Commandes interactives** - Ajouter : alsamixer, pulsemixer, nmtui, cfdisk, journalctl
+**Raccourcis disponibles :**
+| Raccourci | Action |
+|-----------|--------|
+| CTRL+C | Interrompre (SIGINT) |
+| CTRL+D | EOF / quitter shell |
+| CTRL+Z | Suspendre (SIGTSTP) |
+| CTRL+L | Clear screen |
+| CTRL+R | Recherche historique |
+| CTRL+W | Chercher (nano) / Effacer mot (shell) |
+| CTRL+O | Sauvegarder (nano) |
+| CTRL+X | Quitter (nano) |
 
-### UI cible V1.2
+### ✅ Boutons overlay (2 Fév 2026 soir)
+
+| Bouton | Type | Status | Description |
+|--------|------|--------|-------------|
+| **ESC** | Overlay terminal | ✅ Implémenté | Touche Escape (vim, menus) |
+| **Saut de ligne ↵** | Overlay terminal | ✅ Implémenté | Nouvelle ligne dans le champ |
+| **Scroll to bottom** | Tab bar intelligent | ✅ Implémenté | Apparaît si scrollé vers le haut |
+| **Navigation dossiers** | Tab bar dropdown | ✅ Implémenté | cd rapide (style Warp) |
+
+### ⏸️ Mode expanded (désactivé temporairement)
+
+**Problème** : Le swipe vers le haut pour agrandir le champ de saisie à 40% de l'écran cause un overflow quand le clavier virtuel apparaît (conflit avec `Scaffold.resizeToAvoidBottomInset`).
+
+**Workaround** : Le champ s'agrandit automatiquement avec `maxLines: null` quand on insère des sauts de ligne.
+
+**À résoudre** : Restructurer le layout ou utiliser `LayoutBuilder` pour gérer dynamiquement l'espace disponible.
+
+### ✅ Complétion intelligente (3 Fév 2026)
+
+**Implémenté** : Système de suggestions intelligent et sécurisé.
+
+- [x] **Historique intelligent** - Seules les commandes réussies sont enregistrées
+- [x] **Détection d'erreurs** - Parsing de la sortie terminal pour détecter les erreurs
+- [x] **Dictionnaire enrichi** - 400+ commandes (git, docker, npm, flutter, k8s, aws...)
+- [x] **Suggestions dès la 1ère lettre** - Algorithme refactorisé pour suggestions immédiates
+- [x] **Sécurité mots de passe** - Détection des prompts password, JAMAIS enregistrés
+- [x] **Bouton effacer historique** - Dans Paramètres → Sécurité
+
+**Remis à V1.3** : Analyse de chemin (ls silencieux pour `cd`/`cat`), TAB chaîné
+
+### ✅ Copier/Coller Terminal (3 Fév 2026) — VALIDÉ
+
+- [x] **Bouton Copier flottant** - Apparaît automatiquement quand texte sélectionné
+- [x] **Copie vers presse-papiers** - Utilise notification native du mobile
+- [x] **Menu contextuel desktop** - Clic droit → Copier/Coller
+- [x] **Fix overflow champ de saisie** - maxHeight: 225px + scroll interne
+
+✅ **Testé et validé** : Fonctionne correctement sur Android.
+
+### ✅ Fix D-pad universel (3 Fév 2026)
+
+- [x] **Support DECCKM** - Détection automatique du mode curseur du terminal
+- [x] **Mode normal** - `\x1b[A` pour nmtui, htop, fzf, etc.
+- [x] **Mode application** - `\x1bOA` pour alsamixer, pulsemixer, etc.
+- [x] **Compatible toutes apps TUI** - Fonctionne avec TOUTES les applications Linux
+
+### ✅ Mode édition (nano, vim) - 3 Fév 2026 soir
+
+**Implémenté** : Édition directe dans le terminal quand un éditeur s'ouvre.
+
+- [x] **Détection éditeur** - Séquences ANSI alternate screen (`\x1b[?1049h` / `\x1b[?1049l`)
+- [x] **Terminal éditable** - `readOnly: false`, `autofocus: true` en mode édition
+- [x] **Masquer champ saisie** - GhostTextInput invisible en mode édition
+- [x] **Boutons overlay** - 3 boutons droite (D-pad toggle, CTRL menu, Enter)
+- [x] **D-pad en croix** - Apparaît à gauche quand toggle activé
+- [x] **Menu CTRL** - Popup avec raccourcis courants (CTRL+C/D/Z/X/O/W/S/L)
+- [x] **Retour mode normal** - Automatique quand l'éditeur se ferme
+
+**Apps supportées** : nano, vim, nvim, less, htop, btop, ranger, mc, et toutes apps TUI.
+
+### UI actuelle V1.2
+
+**Mode normal :**
 ```
-Mode normal:
 ┌─────────────────────────────────────────────────────────────┐
-│ [📁~] [▲] > [Input field...........] [↑] [↓] [Ctrl+D] [Send]│
-│   ↑    ↑                              ↑   ↑     ↑       ↑   │
-│   │    │                              │   │     │       └─ Vert│
-│   │    │                              │   │     └─ Intelligent │
-│   │    │                              └───┴─ Si app interactive│
-│   │    └─ Historique                                        │
-│   └─ Navigation dossiers (permanent)                        │
-└─────────────────────────────────────────────────────────────┘
-
-Mode édition (nano):
-┌─────────────────────────────────────────────────────────────┐
-│                    Terminal éditable                        │
-│                    (clavier virtuel actif)                  │
+│ Header: [Logo] ChillShell  [Déconnect] [Tmux] [Settings]    │
 ├─────────────────────────────────────────────────────────────┤
-│              [Ctrl+O Sauvegarder] [Ctrl+X Quitter]          │
+│ Tabs: [●Terminal 1 ×]  [📁~] [↓] [+]                        │
+├─────────────────────────────────────────────────────────────┤
+│ Session info: ← tmux: vibe • 192.168...  Tailscale  ⏻      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│                    Terminal View (xterm)                    │
+│                                                             │
+│ [ESC]                                              [↵]      │
+├─────────────────────────────────────────────────────────────┤
+│ [↑]                                                         │
+│ [↓] > [Input field...........] [↑] [↓] [CTRL]              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Mode édition (nano, vim, less, htop...) :**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Header: [Logo] ChillShell  [Déconnect] [Tmux] [Settings]    │
+├─────────────────────────────────────────────────────────────┤
+│ Tabs: [●Terminal 1 ×]  [📁~] [↓] [+]                        │
+├─────────────────────────────────────────────────────────────┤
+│ Session info: ← tmux: vibe • 192.168...  Tailscale  ⏻      │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│                    Terminal View (xterm)                    │
+│           (clavier virtuel ouvert, saisie directe)          │
+│                                              ┌───┐          │
+│              ┌───┐                           │ ⊞ │          │
+│              │ ↑ │                           ├───┤          │
+│          ┌───┼───┼───┐                       │CTL│          │
+│          │ ← │   │ → │                       ├───┤          │
+│          └───┼───┼───┘                       │ ↵ │          │
+│              │ ↓ │                           └───┘          │
+│              └───┘                                          │
+│ (D-pad si activé)           (3 boutons permanents à droite) │
+├─────────────────────────────────────────────────────────────┤
+│ (GhostTextInput masqué en mode édition)                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -178,37 +262,135 @@ Mode édition (nano):
 
 ---
 
-## 🚀 V1.3 - Navigation & Productivité (Planifié)
+## ✅ V1.3 - International & Apparence (Complété - 3 Fév 2026)
 
-### Navigation
-- [ ] **Bouton Snippets** - Commandes favorites en accordéon (style Warp)
+### ✅ Multi-langues
+- [x] 🇬🇧 Anglais (défaut)
+- [x] 🇫🇷 Français
+- [x] 🇪🇸 Espagnol
+- [x] 🇩🇪 Allemand
+- [x] 🇨🇳 Chinois (amélioré par Kimi K2)
 
-### Productivité
-- [ ] **Complétion intelligente** - TAB chaîné, suggestions multiples
-- [ ] **Alias rapides** - Commandes personnalisées
+**~140 clés traduites** : interface complète, erreurs, WOL, sécurité, etc.
+
+### ✅ Taille de police configurable
+- [x] 5 tailles : XS (12px), S (14px), M (17px), L (20px), XL (24px)
+- [x] Nouvel onglet "Général" dans Settings
+
+### ✅ Réorganisation Settings
+- [x] 5 onglets : Connexion | Général | Thème | Sécurité | WOL
 
 ---
 
-## 🌍 V2.0 - International & Premium (Futur)
+## ✅ V1.4 - Upload Image pour Agents IA (Complété - 3-4 Fév 2026)
 
-### Multi-langues
-- [ ] Anglais (défaut)
-- [ ] Français
-- [ ] Espagnol
-- [ ] Allemand
-- [ ] Chinois
+### ✅ Upload d'images pour agents IA CLI
+
+Bouton permanent dans la barre d'onglets pour envoyer une image à un agent IA.
+
+- [x] **Bouton upload image** - Icône 📷 dans la barre d'onglets
+- [x] **Sélection galerie** - ImagePicker pour choisir l'image
+- [x] **Transfert SFTP** - Upload automatique vers `/tmp/vibeterm_image_<timestamp>.<ext>`
+- [x] **Shell local supporté** - Copie vers `/tmp` local
+- [x] **Chemin auto-collé** - Le chemin est inséré dans le terminal pour l'agent IA
+- [x] **Traduit 5 langues** - Messages d'upload en FR/EN/ES/DE/ZH
+
+**Apps CLI agents IA supportées :**
+| App | Commande |
+|-----|----------|
+| Claude Code | `claude` |
+| Aider | `aider` |
+| OpenCode | `opencode` |
+| Gemini CLI | `gemini` |
+| Cody | `cody` |
+| Amazon Q | `amazon-q`, `aws-q` |
+| Codex | `codex` |
+
+---
+
+## ✅ V1.5 - Sécurité PIN/Empreinte & Splash Screen (Complété - 5-6 Fév 2026)
+
+### ✅ Refonte sécurité (5-6 Fév 2026)
+
+**Face ID supprimé → Code PIN 6 chiffres**
+
+- [x] **Code PIN 6 chiffres** - Création avec double saisie, stockage sécurisé (flutter_secure_storage)
+- [x] **Désactivation sécurisée** - Demande le PIN actuel avant de désactiver
+- [x] **Empreinte digitale activée** - Vérifie biométrie Android avant d'activer le toggle
+- [x] **biometricOnly: true** - Empêche Android de proposer son propre PIN/pattern
+- [x] **Lock Screen refait** - 6 cercles + clavier numérique + bouton empreinte
+- [x] **PinService** - Nouveau service avec save/verify/delete/hasPin
+- [x] **Section renommée** - "DÉVERROUILLAGE" (plus de mention Face ID)
+
+**Fix Android requis pour empreinte :**
+- [x] Permissions `USE_BIOMETRIC` + `USE_FINGERPRINT` dans AndroidManifest
+- [x] `FlutterFragmentActivity` au lieu de `FlutterActivity` (requis par local_auth)
+
+### ✅ Splash Screen custom (5-6 Fév 2026)
+
+- [x] **Fond noir** - Remplace le fond blanc Flutter par défaut (#0F0F0F)
+- [x] **Icône ChillShell** - ICONE_APPLICATION.png au lieu du logo Flutter
+- [x] **Android 12+ splash** - `values-v31/styles.xml` pour le nouveau système splash
+- [x] **Icône adaptative** - `mipmap-anydpi-v26/ic_launcher.xml` avec padding 66%
+- [x] **5 densités** - mipmap hdpi/mdpi/xhdpi/xxhdpi/xxxhdpi régénérées
+
+### ✅ Renommage & Polish (5-6 Fév 2026)
+
+- [x] **VibeTerm → ChillShell** - `appName` dans toutes les localisations (5 ARB + 6 Dart)
+- [x] **CTRL ouvre le clavier** - `SystemChannels.textInput.invokeMethod('TextInput.show')`
+- [x] **Fix overflow paysage** - Page principale scrollable en mode landscape
+- [x] **Fix race condition** - Chargement async settings + `addPostFrameCallback` pour lock check
+
+---
+
+## ✅ V1.5.1 - Audit Complet (6 Fév 2026)
+
+### ✅ Audit Qualité
+- [x] Suppression imports inutilisés et variables mortes
+- [x] Fix lints (`use_null_aware_elements`, `const` manquants)
+- [x] Nettoyage code mort dans providers
+
+### ✅ Audit Sécurité
+- [x] **PIN hashé SHA-256 + salt** - Plus jamais stocké en clair
+- [x] **Migration PIN** - `migrateIfNeeded()` au démarrage pour les utilisateurs existants
+- [x] **Filtrage commandes sensibles** - 10 patterns (password, token, API keys, .env, id_rsa...)
+- [x] **Détection prompts** - sudo, SSH passphrase, GPG PIN → input jamais enregistré
+
+### ✅ Audit Performance
+- [x] **Riverpod `.select()`** - Rebuilds ciblés sur 4 widgets (au lieu de rebuild complet)
+- [x] **Pause timer SSH** - Timer connexion pausé en arrière-plan (économie batterie)
+- [x] **Fix fuite mémoire** - PTY subscription non nettoyée dans LocalShellService
+
+### ✅ Audit Tests — 96 tests
+- [x] 6 fichiers modèles testés (toJson/fromJson round-trip, defaults, copyWith)
+- [x] GhostTextEngine testé (suggestions, history, edge cases)
+- [x] TerminalNotifier testé (state, history, ghost text, commands)
+- [x] Sécurité testée (10 patterns sensibles, détection prompts, erreurs)
+- [x] Smoke test fixé (timeout pumpAndSettle → pump avec mock)
+
+**Résultat** : 96/96 tests passent, 0 issues analyse, APK build OK.
+
+---
+
+## 🚀 V1.6 - Navigation & Productivité (Futur)
+
+### Navigation & Productivité
+- [ ] **Bouton Snippets** - Commandes favorites en accordéon (style Warp)
+- [ ] **Complétion avancée** - Analyse de chemin (ls silencieux), TAB chaîné, suggestions multiples
+
+### Priorité basse
+- [ ] **Mosh support** - Connexions sur réseaux instables (notre foreground service suffit pour 90% des cas)
+
+---
+
+## 🔮 V2.0 - Premium & Sync (Futur lointain)
 
 ### Features avancées
-- [ ] **Mosh support** - Connexions persistantes sur réseaux instables
-- [ ] **SFTP** - Transfert de fichiers intégré
 - [ ] **Sync cross-device** - Synchronisation des connexions/snippets
 - [ ] **Settings avancés** - Plus d'options de personnalisation
 
 ### Monétisation
-- [ ] Version gratuite (1 connexion max)
-- [ ] Premium: 2.99€/mois sans engagement
-- [ ] 1 mois offert à la souscription
-- [ ] Si abandon du projet → Open source complet
+*À définir - en cours de réflexion*
 
 ---
 
@@ -235,19 +417,37 @@ flutter build apk --release
 ### Stack actuelle
 | Package | Version | Usage |
 |---------|---------|-------|
-| flutter_riverpod | 2.4.9 | State management |
+| flutter_riverpod | 2.6.1 | State management |
 | dartssh2 | 2.13.0 | Connexions SSH |
 | xterm | 4.0.0 | Rendu terminal |
-| flutter_secure_storage | 9.0.0 | Stockage clés |
-| local_auth | 2.1.8 | Biométrie |
+| flutter_secure_storage | 10.0.0 | Stockage clés |
+| local_auth | 3.0.0 | Biométrie |
 | flutter_foreground_task | 9.2.0 | Connexions persistantes en arrière-plan |
 | flutter_pty | 0.4.2 | Shell local Android |
 | wake_on_lan | 4.1.1+3 | Réveil PC à distance (Magic Packet) |
+| google_fonts | 8.0.1 | Police JetBrains Mono |
+| file_picker | 10.3.10 | Import fichiers/clés SSH |
 
-### À investiguer pour V1.3+
+### À investiguer pour V1.6+
 - `mosh` dart binding ou wrapper
 - `sftp` via dartssh2
 
 ---
 
-*Dernière mise à jour: 2 Février 2026 (Wake-on-LAN complet + foreground service SSH)*
+---
+
+## 🐛 Bugs connus
+
+### xterm.dart crash avec Codex/Claude Code
+
+**Status** : ⏸️ Mis de côté — à résoudre plus tard
+
+**Symptôme** : Apps TUI complexes (Codex CLI, Claude Code) crashent après 1-2 messages.
+
+**Cause** : Race condition dans xterm.dart entre resize et écriture buffer.
+
+**Voir** : `STATUS.md` pour les détails et pistes d'investigation.
+
+---
+
+*Dernière mise à jour: 6 Février 2026 (V1.5.1 - Audit complet : Qualité, Sécurité, Performance, 96 Tests)*

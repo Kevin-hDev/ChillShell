@@ -76,9 +76,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get disconnect => 'Desconectar';
 
   @override
-  String get disconnectAll => 'Desconectar todo';
-
-  @override
   String get disconnectConfirmTitle => 'Desconexión';
 
   @override
@@ -101,9 +98,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get add => 'Añadir';
 
   @override
-  String get edit => 'Editar';
-
-  @override
   String get retry => 'Reintentar';
 
   @override
@@ -120,9 +114,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reconnecting => 'Reconectando...';
-
-  @override
-  String get connectionLost => 'Conexión perdida';
 
   @override
   String get connectionError => 'Error de conexión';
@@ -156,9 +147,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get sshKeys => 'Claves SSH';
 
   @override
-  String get generateKey => 'Generar clave';
-
-  @override
   String get createSshKey => 'Crear clave SSH';
 
   @override
@@ -177,25 +165,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get keyName => 'Nombre de la clave';
 
   @override
-  String get keyType => 'Tipo de clave';
-
-  @override
   String get publicKey => 'Clave pública';
 
   @override
   String get privateKey => 'Clave privada';
 
   @override
-  String get copyPublicKey => 'Copiar clave pública';
-
-  @override
   String get keyCopied => 'Clave copiada al portapapeles';
 
   @override
   String get deleteKey => 'Eliminar clave';
-
-  @override
-  String get deleteKeyConfirm => '¿Eliminar esta clave SSH?';
 
   @override
   String get savedConnections => 'Conexiones guardadas';
@@ -220,12 +199,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get deleteConnection => 'Eliminar conexión';
-
-  @override
-  String get biometricUnlock => 'Desbloqueo biométrico';
-
-  @override
-  String get faceId => 'Face ID';
 
   @override
   String get unlock => 'Desbloqueo';
@@ -283,49 +256,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addWolConfig => 'Añadir configuración WOL';
 
   @override
-  String get wolName => 'Nombre';
-
-  @override
   String get macAddress => 'Dirección MAC';
 
   @override
   String get broadcastAddress => 'Dirección de difusión';
 
   @override
-  String get udpPort => 'Puerto UDP';
-
-  @override
-  String get linkedConnection => 'Conexión SSH asociada';
-
-  @override
   String get wolStart => 'WOL START';
 
   @override
-  String get wakingUp => 'Despertando...';
-
-  @override
-  String get waitingForBoot => 'Esperando arranque...';
-
-  @override
-  String get tryingToConnect => 'Intentando conectar...';
-
-  @override
-  String get pcAwake => '¡PC despierto!';
-
-  @override
-  String get wolFailed => 'Fallo de Wake-on-LAN';
-
-  @override
-  String get shutdown => 'Apagar';
-
-  @override
-  String get shutdownConfirm => '¿Apagar este PC?';
-
-  @override
   String get pressKeyForCtrl => 'Pulse una tecla...';
-
-  @override
-  String get swipeDownToReduce => 'Deslice hacia abajo para reducir...';
 
   @override
   String wolWakingUp(Object name) {
@@ -377,24 +317,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noSavedConnections => 'Sin conexiones guardadas';
-
-  @override
-  String get advancedOptions => 'Opciones avanzadas (WOL remoto)';
-
-  @override
-  String get broadcastOptional => 'Dirección broadcast (opcional)';
-
-  @override
-  String get defaultBroadcast => 'Por defecto: 255.255.255.255';
-
-  @override
-  String get udpPortOptional => 'Puerto UDP (opcional)';
-
-  @override
-  String get defaultPort => 'Por defecto: 9';
-
-  @override
-  String get portRange => 'Puerto entre 1 y 65535';
 
   @override
   String get pleaseSelectSshConnection =>
@@ -490,4 +412,73 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get uploadFailed => 'Error al subir la imagen';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String errorMessage(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get invalidKeyFormat => 'Formato de clave inválido';
+
+  @override
+  String keyImported(String name) {
+    return 'Clave \"$name\" importada';
+  }
+
+  @override
+  String get deleteKeyConfirmTitle => '¿Eliminar clave?';
+
+  @override
+  String get actionIrreversible => 'Esta acción es irreversible.';
+
+  @override
+  String deleteKeysConfirm(int count) {
+    return '¿Eliminar $count clave(s)?';
+  }
+
+  @override
+  String deleteConnectionsConfirm(int count) {
+    return '¿Eliminar $count conexión(es)?';
+  }
+
+  @override
+  String deleteWolConfigsConfirm(int count) {
+    return '¿Eliminar $count configuración(es)?';
+  }
+
+  @override
+  String sshKeyTypeLabel(String type) {
+    return 'Tipo: $type';
+  }
+
+  @override
+  String sshKeyHostLabel(String host) {
+    return 'Host: $host';
+  }
+
+  @override
+  String sshKeyLastUsedLabel(String date) {
+    return 'Último uso: $date';
+  }
+
+  @override
+  String get shutdownPcTitle => 'Apagar PC';
+
+  @override
+  String shutdownPcMessage(String name) {
+    return '¿Realmente desea apagar $name?\n\nLa conexión SSH se cerrará.';
+  }
+
+  @override
+  String get shutdownAction => 'Apagar';
+
+  @override
+  String get searchPlaceholder => 'Buscar...';
+
+  @override
+  String get autoDetect => 'Automático';
 }

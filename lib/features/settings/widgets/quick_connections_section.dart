@@ -7,6 +7,7 @@ import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../providers/settings_provider.dart';
 import 'section_header.dart';
+import 'selection_mixin.dart';
 
 class QuickConnectionsSection extends ConsumerStatefulWidget {
   const QuickConnectionsSection({super.key});
@@ -15,52 +16,23 @@ class QuickConnectionsSection extends ConsumerStatefulWidget {
   ConsumerState<QuickConnectionsSection> createState() => _QuickConnectionsSectionState();
 }
 
-class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSection> {
-  bool _isSelectionMode = false;
-  final Set<String> _selectedIds = {};
-
-  void _enterSelectionMode(String connectionId) {
-    setState(() {
-      _isSelectionMode = true;
-      _selectedIds.add(connectionId);
-    });
-  }
-
-  void _exitSelectionMode() {
-    setState(() {
-      _isSelectionMode = false;
-      _selectedIds.clear();
-    });
-  }
-
-  void _toggleSelection(String connectionId) {
-    setState(() {
-      if (_selectedIds.contains(connectionId)) {
-        _selectedIds.remove(connectionId);
-        if (_selectedIds.isEmpty) {
-          _isSelectionMode = false;
-        }
-      } else {
-        _selectedIds.add(connectionId);
-      }
-    });
-  }
-
+class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSection>
+    with SelectionModeMixin {
   Future<void> _deleteSelected() async {
     final theme = ref.read(vibeTermThemeProvider);
     final l10n = context.l10n;
-    final count = _selectedIds.length;
+    final count = selectedIds.length;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.bgBlock,
         title: Text(
-          'Supprimer $count connexion${count > 1 ? 's' : ''} ?',
+          l10n.deleteConnectionsConfirm(count),
           style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
         ),
         content: Text(
-          'Cette action est irréversible.',
+          l10n.actionIrreversible,
           style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
         ),
         actions: [
@@ -77,10 +49,10 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
     );
 
     if (confirmed == true) {
-      for (final id in _selectedIds) {
+      for (final id in selectedIds) {
         ref.read(settingsProvider.notifier).deleteSavedConnection(id);
       }
-      _exitSelectionMode();
+      exitSelectionMode();
     }
   }
 
@@ -137,20 +109,8 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
         // Liste des connexions automatiques
         SectionHeader(
           title: l10n.autoConnection.toUpperCase(),
-          trailing: _isSelectionMode
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.delete, color: theme.danger),
-                      onPressed: _selectedIds.isNotEmpty ? _deleteSelected : null,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: theme.textMuted),
-                      onPressed: _exitSelectionMode,
-                    ),
-                  ],
-                )
+          trailing: isSelectionMode
+              ? buildSelectionActions(theme: theme, onDelete: _deleteSelected)
               : null,
         ),
         const SizedBox(height: VibeTermSpacing.sm),
@@ -179,12 +139,12 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
                           connection: connection,
                           theme: theme,
                           isEnabled: autoConnectEnabled,
-                          isSelectionMode: _isSelectionMode,
-                          isSelected: _selectedIds.contains(connection.id),
+                          isSelectionMode: isSelectionMode,
+                          isSelected: selectedIds.contains(connection.id),
                           onSelect: () => ref.read(settingsProvider.notifier).selectAutoConnection(connection.id),
                           onDelete: () => _showDeleteDialog(context, connection.id, connection.name),
-                          onLongPress: () => _enterSelectionMode(connection.id),
-                          onSelectionToggle: () => _toggleSelection(connection.id),
+                          onLongPress: () => enterSelectionMode(connection.id),
+                          onSelectionToggle: () => toggleSelection(connection.id),
                         ),
                       ],
                     );

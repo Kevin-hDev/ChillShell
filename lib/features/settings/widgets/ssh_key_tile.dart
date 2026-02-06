@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../providers/settings_provider.dart';
 
@@ -82,23 +83,24 @@ class SSHKeyTile extends ConsumerWidget {
 
   Future<bool?> _confirmDelete(BuildContext context, WidgetRef ref) {
     final theme = ref.read(vibeTermThemeProvider);
+    final l10n = context.l10n;
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.bgBlock,
-        title: Text('Supprimer la clé ?', style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        title: Text(l10n.deleteKeyConfirmTitle, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
         content: Text(
-          'Cette action est irréversible.',
+          l10n.actionIrreversible,
           style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Annuler', style: TextStyle(color: theme.textMuted)),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Supprimer', style: TextStyle(color: theme.danger)),
+            child: Text(l10n.delete, style: TextStyle(color: theme.danger)),
           ),
         ],
       ),
@@ -107,6 +109,7 @@ class SSHKeyTile extends ConsumerWidget {
 
   void _showKeyDetails(BuildContext context, WidgetRef ref) {
     final theme = ref.read(vibeTermThemeProvider);
+    final l10n = context.l10n;
     showModalBottomSheet(
       context: context,
       backgroundColor: theme.bgBlock,
@@ -121,9 +124,9 @@ class SSHKeyTile extends ConsumerWidget {
           children: [
             Text(sshKey.name, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
             const SizedBox(height: VibeTermSpacing.sm),
-            Text('Type: ${sshKey.typeLabel}', style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
-            Text('Hôte: ${sshKey.host}', style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
-            Text('Dernière utilisation: ${sshKey.lastUsedLabel}', style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+            Text(l10n.sshKeyTypeLabel(sshKey.typeLabel), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+            Text(l10n.sshKeyHostLabel(sshKey.host), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+            Text(l10n.sshKeyLastUsedLabel(sshKey.lastUsedLabel), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
             const SizedBox(height: VibeTermSpacing.lg),
           ],
         ),

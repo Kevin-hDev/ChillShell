@@ -1,52 +1,50 @@
 # Mises à jour à appliquer plus tard
 
-> Dernière vérification: 2 Février 2026
+> Dernière vérification: 6 Février 2026
 
 Ce fichier liste les mises à jour de dépendances à faire quand on aura le temps.
 
 ---
 
-## ⚠️ Mises à jour majeures (Breaking Changes potentiels)
+## ✅ Migration Riverpod 3 (FAIT - 6 Fév 2026)
 
-Ces packages nécessitent une refactorisation du code.
-
-| Package | Actuel | Dernière | Notes |
-|---------|--------|----------|-------|
-| `flutter_riverpod` | 2.6.1 | 3.2.0 | **Grosse refacto** - API changée, tous les providers à revoir |
-| `riverpod_annotation` | 2.6.1 | 4.0.1 | Lié à flutter_riverpod |
-| `riverpod_generator` | 2.4.0 | 4.0.2 | Lié à flutter_riverpod |
-
-### Plan de migration Riverpod 3.x
-
-1. Créer une branche `upgrade-riverpod-3`
-2. Lire le guide de migration : https://riverpod.dev/docs/migration/from_riverpod_2_to_3
-3. Mettre à jour les packages
-4. Refactoriser tous les providers
-5. Tester l'app complètement
-6. Merger si OK
+| Package | Avant | Après | Notes |
+|---------|-------|-------|-------|
+| `flutter_riverpod` | 2.6.1 | 3.2.1 | StateNotifier → Notifier (6 fichiers providers + 3 fichiers UI) |
+| `riverpod_annotation` | 2.6.1 | — | Supprimé (pas utilisé dans le code) |
+| `riverpod_generator` | 2.4.0 | — | Supprimé (pas utilisé dans le code, aucun @riverpod) |
+| `build_runner` | 2.4.13 | — | Supprimé (plus nécessaire sans riverpod_generator) |
+| `custom_lint` | 0.5.11 | — | Supprimé (conflit analyzer avec Riverpod 3) |
 
 ---
 
-## 🔄 Mises à jour moyennes
+## ✅ Mises à jour moyennes (FAIT - 6 Fév 2026)
 
-Changements d'API possibles mais généralement rétrocompatibles.
-
-| Package | Actuel | Dernière | Notes |
-|---------|--------|----------|-------|
-| `flutter_secure_storage` | 9.2.4 | 10.0.0 | Vérifier les breaking changes |
-| `local_auth` | 2.3.0 | 3.0.0 | Biométrie - tester FaceID/TouchID |
-| `google_fonts` | 6.3.3 | 8.0.0 | Probablement safe |
+| Package | Avant | Après | Notes |
+|---------|-------|-------|-------|
+| `flutter_secure_storage` | 9.2.4 | 10.0.0 | Supprimé `encryptedSharedPreferences` (4 fichiers) |
+| `local_auth` | 2.3.0 | 3.0.0 | Migré `AuthenticationOptions` → params individuels |
+| `google_fonts` | 6.3.3 | 8.0.1 | Aucun changement de code |
+| `file_picker` | 8.3.7 | 10.3.10 | Aucun changement de code |
+| `flutter_lints` | 3.0.2 | 6.0.0 | Corrigé 4 nouveaux warnings lint |
 
 ---
 
-## ✅ Mises à jour mineures (Safe)
+## ⏳ Mises à jour bloquées
 
-Ces packages peuvent être mis à jour sans risque.
+| Package | Actuel | Dernière | Raison |
+|---------|--------|----------|--------|
+| `pointycastle` | 3.9.1 | 4.0.0 | Bloqué par dartssh2 (contrainte `^3.7.3`) |
 
-| Package | Actuel | Dernière | Notes |
-|---------|--------|----------|-------|
-| `permission_handler` | 11.4.0 | 12.0.1 | |
-| `pointycastle` | 3.9.1 | 4.0.0 | Cryptographie RSA |
+## 🗑️ Supprimé (6 Fév 2026)
+
+| Package | Notes |
+|---------|-------|
+| `permission_handler` | Inutilisé - aucun import dans le code |
+| `riverpod_annotation` | Pas utilisé (aucun @riverpod dans le code) |
+| `riverpod_generator` | Pas utilisé (aucun .g.dart généré) |
+| `build_runner` | Plus nécessaire sans riverpod_generator |
+| `custom_lint` | Incompatible avec Riverpod 3 (conflit analyzer) |
 
 ---
 

@@ -1,6 +1,524 @@
 # ChillShell - Status de développement
 
-> Dernière mise à jour: 2 Février 2026
+> Dernière mise à jour: 6 Février 2026
+
+---
+
+## 🐛 Bugs connus (à résoudre plus tard)
+
+### xterm.dart crash avec apps TUI complexes (Codex, Claude Code)
+
+**Symptôme** : Quand on utilise une app TUI comme Codex ou Claude Code, l'app crash après 1-2 messages envoyés.
+
+**Erreur** : `Failed assertion: 'attached': is not true` dans `xterm/src/utils/circular_buffer.dart`
+
+**Cause identifiée** : Race condition dans le package xterm.dart entre :
+- Le resize du terminal (quand le clavier s'ouvre/ferme)
+- L'écriture de données ANSI complexes dans le buffer
+
+**Ce qu'on a essayé** :
+- Throttle des événements resize (150ms) → insuffisant
+- Try-catch autour de terminal.write() → n'empêche pas les données perdues
+- Bloquer resize en alternate screen mode → pas assez, le crash arrive avant
+
+**Prochaines pistes** :
+- Mutex/lock pour synchroniser resize et write
+- Utiliser isolate pour le parsing ANSI
+- Ouvrir une issue sur le repo xterm.dart
+- Envisager un fork du package avec fix
+
+**Workaround temporaire** : Le try-catch évite le crash rouge, mais des données peuvent être perdues.
+
+---
+
+## Session 6 Février 2026 - Audit complet (Qualité, Sécurité, Performance, Tests)
+
+### Audit 1 — Qualité du code
+
+| Correction | Fichier |
+|------------|---------|
+| Suppression imports inutilisés | `ssh_service.dart`, `terminal_screen.dart`, `settings_screen.dart` |
+| Suppression variables mortes | `settings_provider.dart` (`_secureStorage`, `_connectionKey`) |
+| Remplacement `.toList()` par spread | `ghost_text_engine.dart` |
+| Fix lint `use_null_aware_elements` | `connection_dialog.dart`, `add_ssh_key_sheet.dart` |
+| Ajout const manquants | `settings_screen.dart`, `add_wol_sheet.dart` |
+
+### Audit 2 — Sécurité
+
+| Amélioration | Détail |
+|-------------|--------|
+| **PIN hashé SHA-256 + salt** | PinService utilise maintenant SHA-256 salé au lieu du stockage en clair |
+| **Migration PIN** | `migrateIfNeeded()` au démarrage convertit l'ancien format vers le nouveau |
+| **Commandes sensibles** | 10 patterns filtrés (password, token, API keys, .env, id_rsa...) |
+| **Détection prompts** | sudo, SSH passphrase, GPG PIN → input suivant jamais enregistré |
+| **Historique limité** | Max 200 commandes, doublons filtrés |
+
+### Audit 3 — Performance
+
+| Optimisation | Fichier |
+|-------------|---------|
+| `.select()` Riverpod (rebuilds ciblés) | `appearance_section.dart`, `ghost_text_input.dart`, `wol_section.dart`, `app_header.dart` |
+| Pause/resume timer SSH en arrière-plan | `ssh_provider.dart` + `main.dart` (lifecycle) |
+| Fix fuite mémoire PTY subscription | `local_shell_service.dart` |
+| Suppression `!` inutile après `.select()` | `ghost_text_input.dart` |
+
+### Audit 4 — Tests (96 tests)
+
+| Fichier de test | Tests | Couverture |
+|----------------|-------|------------|
+| `test/models/app_settings_test.dart` | 11 | toJson/fromJson, defaults, copyWith, enums |
+| `test/models/session_test.dart` | 5 | round-trip, missing optionals, copyWith |
+| `test/models/ssh_key_test.dart` | 5 | round-trip, typeLabel, all key types |
+| `test/models/saved_connection_test.dart` | 4 | round-trip, defaults, copyWith |
+| `test/models/wol_config_test.dart` | 4 | round-trip, defaults, copyWith |
+| `test/models/command_test.dart` | 6 | defaults, executionTimeLabel formats |
+| `test/providers/ghost_text_engine_test.dart` | 12 | suggestions, history, case, edge cases |
+| `test/providers/terminal_provider_test.dart` | 22 | state, history, ghost text, commands |
+| `test/security/sensitive_command_test.dart` | 24 | 10 patterns, prompts, errors |
+| `test/widget_test.dart` | 3 | smoke test (fixé timeout pumpAndSettle) |
+
+**Résultat** : 96/96 tests passent, 0 issues `flutter analyze`, APK build OK.
+
+---
+
+## Session 5-6 Février 2026 - V1.5 Sécurité PIN/Empreinte, Splash Screen, UI Polish
+
+### Refonte sécurité : Face ID → Code PIN 6 chiffres
+
+**Changement majeur** : Le déverrouillage Face ID a été supprimé et remplacé par un code PIN à 6 chiffres personnalisé.
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| **Code PIN 6 chiffres** | Toggle dans Settings → Sécurité, création avec double saisie |
+| **Désactivation sécurisée** | Demande le PIN actuel avant de désactiver |
+| **Empreinte digitale** | Activée et fonctionnelle (vérifie biométrie Android) |
+| **PinService** | Stockage sécurisé via `flutter_secure_storage` |
+| **Lock Screen refait** | 6 cercles + clavier numérique + bouton empreinte |
+| **Section renommée** | "DÉVERROUILLAGE" (au lieu de "DÉVERROUILLAGE BIOMÉTRIQUE") |
+
+### Activation empreinte digitale
+
+**Problème résolu** : Le toggle empreinte ne fonctionnait pas du tout.
+
+**Causes** (2 problèmes indépendants) :
+1. Permissions Android manquantes (`USE_BIOMETRIC`, `USE_FINGERPRINT`)
+2. `MainActivity` étendait `FlutterActivity` au lieu de `FlutterFragmentActivity` (requis par `local_auth`)
+
+**Fix supplémentaire** : `biometricOnly: true` dans `AuthenticationOptions` pour empêcher Android de proposer son propre PIN/pattern (qui rendait notre UI PIN obsolète).
+
+### Splash screen personnalisé
+
+**Problème résolu** : Le logo Flutter par défaut (oiseau bleu sur rond blanc) s'affichait au lancement.
+
+| Élément | Avant | Après |
+|---------|-------|-------|
+| **Fond** | Blanc | Noir (#0F0F0F) |
+| **Icône** | Logo Flutter | ICONE_APPLICATION.png |
+| **Android 12+** | Splash système | Splash custom via `values-v31/styles.xml` |
+| **Icône adaptative** | Pas configuré | `mipmap-anydpi-v26/ic_launcher.xml` avec padding |
+
+**Problème de crop résolu** : L'icône était tronquée dans le cercle Android 12+. Fix : redimensionné à 260x260 sur canvas 432x432 (zone de sécurité 66%).
+
+### Renommage VibeTerm → ChillShell
+
+- `appName` changé dans les 5 fichiers ARB + 6 fichiers Dart générés
+- `localizedReason` dans BiometricService mis à jour
+
+### Bouton CTRL ouvre le clavier
+
+**Problème** : Le bouton CTRL n'ouvrait le clavier virtuel que la première fois.
+
+**Investigation** : `FocusNode.hasFocus` reste `true` même quand le clavier est fermé sur Android → `requestFocus()` ne fait rien la 2ème fois.
+
+**Solution** : `SystemChannels.textInput.invokeMethod('TextInput.show')` force l'affichage du clavier sans manipulation de focus.
+
+### Fix overflow paysage
+
+**Problème** : "BOTTOM OVERFLOWED BY 89 PIXELS" sur la page principale en mode paysage.
+
+**Solution** : Remplacé `Padding` par `SingleChildScrollView` dans le contenu déconnecté de `terminal_screen.dart`.
+
+### Vérification auto-lock
+
+Vérifié que le verrouillage automatique (5/10/15/30 min) était déjà pleinement fonctionnel. Aucune modification nécessaire.
+
+### Fichiers créés
+
+| Fichier | Description |
+|---------|-------------|
+| `lib/services/pin_service.dart` | Service PIN (save, verify, delete, hasPin) |
+| `android/app/src/main/res/values/colors.xml` | Couleur splash noir |
+| `android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml` | Icône adaptative |
+| `android/app/src/main/res/values-v31/styles.xml` | Splash Android 12+ |
+| `android/app/src/main/res/drawable/ic_launcher_foreground.png` | Foreground icône |
+| `android/app/src/main/res/drawable/launch_image.png` | Image splash |
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `lib/models/app_settings.dart` | -`faceIdEnabled`, +`pinLockEnabled` |
+| `lib/features/settings/providers/settings_provider.dart` | -`toggleFaceId()`, +`togglePinLock()`, +`setPinCode()` |
+| `lib/features/settings/widgets/security_section.dart` | Toggle PIN + dialog création, vérification biométrie |
+| `lib/features/auth/screens/lock_screen.dart` | UI PIN (6 cercles + clavier) + bouton empreinte |
+| `lib/main.dart` | Logique lock avec PIN/empreinte, fix race condition async |
+| `lib/services/biometric_service.dart` | `biometricOnly: true`, texte ChillShell |
+| `android/app/src/main/AndroidManifest.xml` | +`USE_BIOMETRIC`, +`USE_FINGERPRINT` |
+| `android/app/src/main/kotlin/.../MainActivity.kt` | `FlutterFragmentActivity` |
+| `lib/features/terminal/widgets/ghost_text_input.dart` | CTRL + `SystemChannels.textInput.show` |
+| `lib/features/terminal/screens/terminal_screen.dart` | `SingleChildScrollView` mode paysage |
+| `android/app/src/main/res/drawable*/launch_background.xml` | Fond noir + icône |
+| `android/app/src/main/res/mipmap-*/ic_launcher.png` | 5 tailles régénérées |
+| `lib/l10n/app_*.arb` (5 fichiers) | `appName` → ChillShell, +`fingerprintUnavailable` |
+| `lib/l10n/app_localizations*.dart` (6 fichiers) | Regénérés |
+
+### Commits
+
+- `9d944d3` - feat: V1.4 - Sécurité PIN/empreinte, splash screen, UI polish (63 fichiers)
+
+---
+
+## Session 3-4 Février 2026 - V1.4 Upload Image pour Agents IA
+
+### Fonctionnalité complète : Transfert d'images vers agents IA CLI
+
+Nouveau bouton permanent dans la barre d'onglets permettant d'envoyer une image à un agent IA (Claude Code, Aider, etc.).
+
+### Fonctionnement
+
+1. Clic sur l'icône 📷 dans la barre d'onglets
+2. Sélection d'une image depuis la galerie
+3. **SSH** : Transfert SFTP automatique vers `/tmp/vibeterm_image_<timestamp>.<ext>`
+4. **Shell Local** : Copie vers `/tmp` local
+5. Le chemin est automatiquement collé dans le terminal
+
+### Détails techniques
+
+| Élément | Description |
+|---------|-------------|
+| **Widget** | `_ImageImportButton` dans `session_tab_bar.dart` |
+| **Icône** | `Icons.add_photo_alternate_outlined` (26x26) |
+| **Position** | Barre d'onglets, à gauche du bouton dossier |
+| **Logique** | `_handleImageImport()` dans `terminal_screen.dart` |
+| **Transfer** | SFTP via `ssh_service.dart` → `uploadFile()` |
+| **Destination** | `/tmp/vibeterm_image_<timestamp>.<extension>` |
+
+### Agents IA CLI supportés
+
+| Agent | Commande |
+|-------|----------|
+| Claude Code | `claude` |
+| Aider | `aider` |
+| OpenCode | `opencode` |
+| Gemini CLI | `gemini` |
+| Cody | `cody` |
+| Amazon Q | `amazon-q`, `aws-q` |
+| Codex | `codex` |
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `session_tab_bar.dart` | +`_ImageImportButton` widget |
+| `terminal_screen.dart` | +`_handleImageImport()` logique upload |
+| `ssh_provider.dart` | +`uploadFile()` méthode |
+| `ssh_service.dart` | +`uploadFile()` SFTP |
+| `app_*.arb` (5 langues) | +`uploadingImage`, +`uploadFailed` |
+
+---
+
+## Session 3 Février 2026 (nuit) - V1.3 Multi-langues
+
+### Fonctionnalité complète : Internationalisation
+
+L'application supporte maintenant 5 langues avec détection automatique de la langue système.
+
+### Langues supportées
+
+| Langue | Code | Fichier |
+|--------|------|---------|
+| 🇬🇧 Anglais | `en` | `app_en.arb` |
+| 🇫🇷 Français | `fr` | `app_fr.arb` |
+| 🇪🇸 Espagnol | `es` | `app_es.arb` |
+| 🇩🇪 Allemand | `de` | `app_de.arb` |
+| 🇨🇳 Chinois | `zh` | `app_zh.arb` |
+
+### Textes traduits (~140 clés)
+
+- Interface complète (Settings, Terminal, Connexion)
+- Messages d'erreur et confirmations
+- Wake-on-LAN (réveil PC, shutdown)
+- Sécurité (biométrie, auto-lock)
+- Copier/coller, historique
+
+### Taille de police configurable
+
+Nouvel onglet **Général** dans les paramètres avec :
+- Sélecteur de langue
+- Sélecteur de taille de police terminal (5 options)
+
+| Taille | Pixels |
+|--------|--------|
+| XS | 12px |
+| S | 14px |
+| M | 17px (défaut) |
+| L | 20px |
+| XL | 24px |
+
+### Fichiers créés/modifiés
+
+| Fichier | Description |
+|---------|-------------|
+| `lib/l10n/app_*.arb` | 5 fichiers de traduction |
+| `lib/l10n/app_localizations*.dart` | Classes générées Flutter |
+| `lib/features/settings/widgets/appearance_section.dart` | Onglet Général (langue + font) |
+| `lib/features/settings/screens/settings_screen.dart` | 5 onglets maintenant |
+| `lib/models/app_settings.dart` | +`locale`, +`terminalFontSize` |
+
+### Commits
+
+- `c640da9` - feat: V1.3 Multi-langues - 5 languages + font size settings
+- `ed83b6d` - fix(i18n): improve Chinese translation per Kimi K2 review
+
+---
+
+## Session 3 Février 2026 (soir) - Mode Édition (nano, vim)
+
+### Fonctionnalité complète : Édition directe dans le terminal
+
+Quand un éditeur (nano, vim, less, htop...) s'ouvre, le terminal passe automatiquement en mode édition avec des boutons overlay adaptés.
+
+### Détection automatique
+
+| Séquence ANSI | Signification | Action |
+|---------------|---------------|--------|
+| `\x1b[?1049h` | Entrée alternate screen | Activer mode édition |
+| `\x1b[?1049l` | Sortie alternate screen | Désactiver mode édition |
+
+**Apps supportées** : nano, vim, nvim, emacs, micro, helix, less, more, htop, btop, ranger, mc, nnn, et toutes les apps TUI utilisant l'alternate screen mode.
+
+### Changements UI en mode édition
+
+| Propriété | Mode normal | Mode édition |
+|-----------|-------------|--------------|
+| `readOnly` | `true` | `false` (saisie directe) |
+| `autofocus` | `false` | `true` (clavier s'ouvre) |
+| `GhostTextInput` | Visible | Masqué |
+| Boutons overlay | ESC + ↵ | D-pad toggle + CTRL + Enter |
+
+### Boutons overlay mode édition
+
+```
+              ┌───┐       ┌───┐
+              │ ↑ │       │ ⊞ │  ← Toggle D-pad
+          ┌───┼───┼───┐   ├───┤
+          │ ← │   │ → │   │CTL│  ← Menu raccourcis
+          └───┼───┼───┘   ├───┤
+              │ ↓ │       │ ↵ │  ← Enter
+              └───┘       └───┘
+```
+
+**Bouton CTRL** : Ouvre un menu popup avec les raccourcis courants :
+- CTRL+C (Interrompre)
+- CTRL+D (EOF/Quitter)
+- CTRL+Z (Suspendre)
+- CTRL+X (Quitter nano)
+- CTRL+O (Sauver nano)
+- CTRL+W (Chercher)
+- CTRL+S (Sauvegarder)
+- CTRL+L (Clear screen)
+
+### Fichiers créés/modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `terminal_provider.dart` | +`isEditorModeProvider` |
+| `terminal_view.dart` | Détection séquences ANSI + `readOnly` dynamique |
+| `terminal_action_buttons.dart` | +`EditorModeButtons` widget |
+| `terminal_screen.dart` | Affichage conditionnel overlay + masquage GhostTextInput |
+| `widgets.dart` | Export `terminal_action_buttons.dart` |
+
+### Flux complet
+
+```
+1. User tape "nano fichier.txt"
+           ↓
+2. nano envoie \x1b[?1049h (alternate screen)
+           ↓
+3. Détection → isEditorModeProvider = true
+           ↓
+4. Terminal: readOnly=false, clavier s'ouvre
+   GhostTextInput: masqué
+   Boutons overlay: affichés à droite
+           ↓
+5. User édite dans nano avec clavier + boutons
+           ↓
+6. User quitte nano (Ctrl+X via menu)
+           ↓
+7. nano envoie \x1b[?1049l (sortie alternate screen)
+           ↓
+8. Détection → isEditorModeProvider = false
+           ↓
+9. Retour mode normal (readOnly=true, GhostTextInput visible)
+```
+
+---
+
+## Session 3 Février 2026 - Complétion, Sécurité, Copier/Coller & Fix Overflow
+
+### Système de complétion refactorisé
+
+| Fonctionnalité | Status | Description |
+|----------------|--------|-------------|
+| **Historique intelligent** | ✅ | Seules les commandes réussies sont enregistrées |
+| **Détection d'erreurs** | ✅ | Parsing sortie terminal (command not found, etc.) |
+| **Dictionnaire 400+ commandes** | ✅ | git, docker, npm, flutter, k8s, aws, terraform... |
+| **Suggestions dès 1ère lettre** | ✅ | Algorithme refactorisé (était après mot complet) |
+| **Sécurité mots de passe** | ✅ | Détection prompts, JAMAIS enregistrés |
+| **Bouton effacer historique** | ✅ | Paramètres → Sécurité |
+
+### Copier/Coller Terminal
+
+| Fonctionnalité | Status | Description |
+|----------------|--------|-------------|
+| **Bouton Copier flottant** | ✅ | Apparaît en haut à droite quand texte sélectionné |
+| **ListenableBuilder** | ✅ | Écoute les changements de sélection du TerminalController |
+| **Menu contextuel desktop** | ✅ | Clic droit → Copier/Coller |
+| **Pas de double notification** | ✅ | Utilise notification native du mobile uniquement |
+
+**Note** : Le long press ne fonctionne pas car xterm l'utilise pour la sélection. Solution = bouton flottant automatique.
+
+### Fix Overflow Champ de Saisie
+
+**Problème résolu** : Le TextField avec `maxLines: null` grandissait vers le bas sans limite, passant derrière le clavier virtuel.
+
+**Root cause** : Pas de contrainte de hauteur sur le TextField multiligne.
+
+**Solution** :
+- `ConstrainedBox` avec `maxHeight: 225` (~9 lignes)
+- `SingleChildScrollView` avec `reverse: true` pour scroll automatique vers la dernière ligne
+- Le champ scroll maintenant au lieu de déborder
+
+**Fichier modifié** : `lib/features/terminal/widgets/ghost_text_input.dart`
+
+### Fix D-pad pour toutes les apps TUI
+
+**Problème** : Les flèches du D-pad ne fonctionnaient pas pour certaines apps (alsamixer fermait, pulsemixer ne répondait pas).
+
+**Root cause** : Les terminaux ont 2 modes de curseur (standard DECCKM) :
+- Mode normal : `\x1b[A` (nmtui, htop, fzf...)
+- Mode application : `\x1bOA` (alsamixer, pulsemixer...)
+
+On envoyait toujours le mode normal.
+
+**Solution** :
+- Ajouté `isApplicationCursorMode` dans `terminal_view.dart` qui lit `terminal.cursorKeysMode`
+- Ajouté `_sendArrowKey()` dans `ghost_text_input.dart` qui envoie le bon code selon le mode
+- Compatible avec TOUTES les apps TUI Linux maintenant
+
+**Fichiers modifiés** :
+- `lib/features/terminal/widgets/terminal_view.dart`
+- `lib/features/terminal/widgets/ghost_text_input.dart`
+
+### Sécurité des données sensibles
+
+**Problème résolu** : Les mots de passe sudo étaient enregistrés dans l'historique.
+
+**Solution multi-couche** :
+1. **Patterns sensibles** : `password`, `token`, `secret`, `api_key`, etc. jamais enregistrés
+2. **Détection prompts** : `[sudo] password`, `passphrase`, `enter password`...
+3. **Flag sécurité** : Quand prompt détecté → input suivant ignoré
+
+**Fichiers modifiés** :
+- `lib/features/terminal/providers/terminal_provider.dart` - Logique sécurité + suggestions
+- `lib/features/terminal/widgets/terminal_view.dart` - Interception output pour détection
+- `lib/features/settings/widgets/security_section.dart` - Bouton effacer historique
+
+### Remis à plus tard (V1.3)
+
+- **Analyse de chemin (ls silencieux)** - Suggérer fichiers/dossiers pour `cd`, `cat`
+- **Intelligence Git** - Suggérer branches locales
+- **TAB chaîné** - Suggestions multiples
+
+---
+
+## Session 2 Février 2026 (soir) - Boutons overlay et améliorations
+
+### Nouveaux boutons implémentés
+
+| Bouton | Emplacement | Action |
+|--------|-------------|--------|
+| **ESC** | Overlay bas-gauche du terminal | Envoie `\x1b` (Escape) |
+| **Saut de ligne ↵** | Overlay bas-droite du terminal | Insère `\n` dans le champ de saisie |
+| **Scroll to bottom ↓** | Tab bar (intelligent) | Scroll vers le bas du terminal |
+| **Bouton dossier 📁** | Tab bar (permanent) | Navigation rapide - À implémenter |
+
+### Scroll to bottom intelligent
+
+Le bouton apparaît **uniquement si** l'utilisateur a scrollé vers le haut dans le terminal (>50px du bas).
+Utilise un `StateProvider<bool>` (`terminalScrolledUpProvider`) mis à jour par le `ScrollController`.
+
+### Flèches historique empilées
+
+Les boutons ↑↓ pour naviguer dans l'historique sont maintenant **empilés verticalement** à gauche du champ de saisie (style Warp).
+
+### Bug connu : Mode expanded du champ de saisie
+
+**Problème** : Le mode "expanded" (swipe vers le haut pour agrandir le champ à 40% de l'écran) cause un overflow de layout quand le clavier virtuel apparaît.
+
+**Cause** : Conflit entre le `Scaffold.resizeToAvoidBottomInset` et la hauteur fixe du `AnimatedContainer`.
+
+**Statut** : **Désactivé temporairement** - Le code est en place mais commenté. À résoudre dans une session future avec une approche différente (probablement avec un `LayoutBuilder` ou restructuration du layout).
+
+**Workaround actuel** : Le champ s'agrandit automatiquement avec `maxLines: null` quand on ajoute des sauts de ligne.
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `lib/features/terminal/screens/terminal_screen.dart` | Boutons overlay ESC + Saut de ligne |
+| `lib/features/terminal/widgets/ghost_text_input.dart` | Flèches empilées, `maxLines: null`, mode expanded désactivé |
+| `lib/features/terminal/widgets/session_tab_bar.dart` | Bouton scroll to bottom + bouton dossier |
+| `lib/features/terminal/widgets/terminal_view.dart` | ScrollController + détection scroll |
+| `lib/features/terminal/widgets/terminal_action_buttons.dart` | +TerminalHistoryButton |
+| `lib/features/terminal/providers/terminal_provider.dart` | +terminalScrolledUpProvider |
+
+---
+
+## Session 2 Février 2026 (après-midi) - Bouton CTRL universel
+
+### Refonte de la barre de saisie
+
+**Changement majeur** : Simplification de l'interface avec un bouton CTRL universel.
+
+### Modifications
+
+| Changement | Détail |
+|------------|--------|
+| **Bouton CTRL** | Remplace Send/Stop - supporte TOUS les raccourcis CTRL+A-Z |
+| **Flèches historique** | Empilées verticalement (↑ au-dessus de ↓), taille 28x28 |
+| **Suppression Send** | Le clavier virtuel a déjà Enter |
+| **Suppression Stop** | Remplacé par CTRL+C |
+
+### Fonctionnement du bouton CTRL
+
+1. **Normal** : Bouton vert avec "CTRL"
+2. **Armé** : Clic → devient jaune avec "+"
+3. **Exécution** : Tape une lettre → envoie CTRL+lettre → redevient vert
+4. **Annuler** : Re-clic sur le bouton → désarme
+
+### Fichiers modifiés
+
+| Fichier | Modification |
+|---------|--------------|
+| `lib/features/terminal/widgets/terminal_action_buttons.dart` | +TerminalCtrlButton, -TerminalSendButton, -TerminalStopButton |
+| `lib/features/terminal/widgets/ghost_text_input.dart` | Nouvelle logique CTRL, flèches empilées |
+
+### Prochains boutons à implémenter
+
+- **Navigation dossiers** - cd rapide style Warp
+- **ESC** - Touche Escape (vim, menus)
+- **Saut de ligne** - Nouvelle ligne sans envoyer
 
 ---
 

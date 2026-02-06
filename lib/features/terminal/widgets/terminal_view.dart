@@ -152,7 +152,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     // Mettre à jour le provider seulement si la valeur change
     final currentValue = ref.read(terminalScrolledUpProvider);
     if (currentValue != isScrolledUp) {
-      ref.read(terminalScrolledUpProvider.notifier).state = isScrolledUp;
+      ref.read(terminalScrolledUpProvider.notifier).set(isScrolledUp);
     }
   }
 
@@ -361,7 +361,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       if (commandName != null && _trueEditorCommands.contains(commandName)) {
         final currentMode = ref.read(isEditorModeProvider);
         if (!currentMode) {
-          ref.read(isEditorModeProvider.notifier).state = true;
+          ref.read(isEditorModeProvider.notifier).set(true);
           debugPrint('EDITOR MODE: Entered for true editor "$commandName"');
         }
       } else {
@@ -380,7 +380,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       // Désactiver le mode éditeur si actif
       final currentMode = ref.read(isEditorModeProvider);
       if (currentMode) {
-        ref.read(isEditorModeProvider.notifier).state = false;
+        ref.read(isEditorModeProvider.notifier).set(false);
         debugPrint('EDITOR MODE: Exited alternate screen');
       }
     }

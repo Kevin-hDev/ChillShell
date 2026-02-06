@@ -22,11 +22,11 @@ class AppHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(activeSessionProvider);
-    final sshState = ref.watch(sshProvider);
+    final connectionState = ref.watch(sshProvider.select((s) => s.connectionState));
     final theme = ref.watch(vibeTermThemeProvider);
 
     // Afficher le bouton déconnexion si session SSH OU Local Shell connecté
-    final isConnected = session != null || sshState.connectionState == SSHConnectionState.connected;
+    final isConnected = session != null || connectionState == SSHConnectionState.connected;
 
     return Container(
       padding: const EdgeInsets.symmetric(

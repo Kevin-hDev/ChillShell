@@ -13,7 +13,7 @@ class SectionHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: VibeTermTypography.sectionLabel),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     );
   }

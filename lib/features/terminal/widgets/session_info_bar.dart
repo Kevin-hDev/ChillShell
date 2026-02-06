@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../settings/providers/wol_provider.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../providers/providers.dart';
@@ -193,6 +194,7 @@ class _ShutdownButton extends ConsumerWidget {
 
   Future<void> _showShutdownConfirmation(BuildContext context, WidgetRef ref) async {
     final theme = ref.read(vibeTermThemeProvider);
+    final l10n = context.l10n;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -207,20 +209,20 @@ class _ShutdownButton extends ConsumerWidget {
             Icon(Icons.power_settings_new, color: theme.danger, size: 24),
             const SizedBox(width: VibeTermSpacing.sm),
             Text(
-              'Éteindre le PC',
+              l10n.shutdownPcTitle,
               style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
             ),
           ],
         ),
         content: Text(
-          'Voulez-vous vraiment éteindre $wolConfigName ?\n\nLa connexion SSH sera fermée.',
+          l10n.shutdownPcMessage(wolConfigName),
           style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
-              'Annuler',
+              l10n.cancel,
               style: VibeTermTypography.sectionLabel.copyWith(color: theme.textMuted),
             ),
           ),
@@ -230,7 +232,7 @@ class _ShutdownButton extends ConsumerWidget {
               backgroundColor: theme.danger.withValues(alpha: 0.15),
             ),
             child: Text(
-              'Éteindre',
+              l10n.shutdownAction,
               style: VibeTermTypography.sectionLabel.copyWith(color: theme.danger),
             ),
           ),

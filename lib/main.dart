@@ -11,9 +11,13 @@ import 'features/settings/providers/settings_provider.dart';
 import 'features/terminal/providers/providers.dart';
 import 'services/biometric_service.dart';
 import 'services/foreground_ssh_service.dart';
+import 'services/pin_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   ForegroundSSHService.init();
+  // Migrer l'ancien PIN (v1 en clair) vers le nouveau format hashé si nécessaire
+  await PinService.migrateIfNeeded();
   runApp(const ProviderScope(child: VibeTermApp()));
 }
 
@@ -88,6 +92,9 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
       // App en arrière-plan - enregistrer le moment
       _backgroundTime = DateTime.now();
 
+      // Pause le timer de vérification SSH (économie batterie)
+      ref.read(sshProvider.notifier).pauseConnectionMonitor();
+
       // Démarrer le timer si auto-lock est activé
       if (settings.appSettings.autoLockEnabled && lockEnabled) {
         _autoLockTimer = Timer(autoLockDuration, () {
@@ -109,6 +116,9 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
         }
       }
       _backgroundTime = null;
+
+      // Reprendre le timer de vérification SSH
+      ref.read(sshProvider.notifier).resumeConnectionMonitor();
 
       // Vérifier et reconnecter les sessions SSH si nécessaire
       ref.read(sshProvider.notifier).checkAndReconnectIfNeeded();

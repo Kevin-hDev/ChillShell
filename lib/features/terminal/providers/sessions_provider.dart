@@ -2,8 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../models/models.dart';
 
-class SessionsNotifier extends StateNotifier<List<Session>> {
-  SessionsNotifier() : super([]);
+class SessionsNotifier extends Notifier<List<Session>> {
+  @override
+  List<Session> build() => [];
 
   final _uuid = const Uuid();
 
@@ -64,11 +65,20 @@ class SessionsNotifier extends StateNotifier<List<Session>> {
   }
 }
 
-final sessionsProvider = StateNotifierProvider<SessionsNotifier, List<Session>>(
-  (ref) => SessionsNotifier(),
+final sessionsProvider = NotifierProvider<SessionsNotifier, List<Session>>(
+  SessionsNotifier.new,
 );
 
-final activeSessionIndexProvider = StateProvider<int>((ref) => 0);
+class _ActiveSessionIndex extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void set(int value) => state = value;
+}
+
+final activeSessionIndexProvider = NotifierProvider<_ActiveSessionIndex, int>(
+  _ActiveSessionIndex.new,
+);
 
 final activeSessionProvider = Provider<Session?>((ref) {
   final sessions = ref.watch(sessionsProvider);

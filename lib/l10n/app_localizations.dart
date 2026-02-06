@@ -236,12 +236,6 @@ abstract class AppLocalizations {
   /// **'Disconnect'**
   String get disconnect;
 
-  /// No description provided for @disconnectAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Disconnect all'**
-  String get disconnectAll;
-
   /// No description provided for @disconnectConfirmTitle.
   ///
   /// In en, this message translates to:
@@ -284,12 +278,6 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
-  /// No description provided for @edit.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit'**
-  String get edit;
-
   /// No description provided for @retry.
   ///
   /// In en, this message translates to:
@@ -325,12 +313,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reconnecting...'**
   String get reconnecting;
-
-  /// No description provided for @connectionLost.
-  ///
-  /// In en, this message translates to:
-  /// **'Connection lost'**
-  String get connectionLost;
 
   /// No description provided for @connectionError.
   ///
@@ -392,12 +374,6 @@ abstract class AppLocalizations {
   /// **'SSH Keys'**
   String get sshKeys;
 
-  /// No description provided for @generateKey.
-  ///
-  /// In en, this message translates to:
-  /// **'Generate key'**
-  String get generateKey;
-
   /// No description provided for @createSshKey.
   ///
   /// In en, this message translates to:
@@ -434,12 +410,6 @@ abstract class AppLocalizations {
   /// **'Key name'**
   String get keyName;
 
-  /// No description provided for @keyType.
-  ///
-  /// In en, this message translates to:
-  /// **'Key type'**
-  String get keyType;
-
   /// No description provided for @publicKey.
   ///
   /// In en, this message translates to:
@@ -452,12 +422,6 @@ abstract class AppLocalizations {
   /// **'Private key'**
   String get privateKey;
 
-  /// No description provided for @copyPublicKey.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy public key'**
-  String get copyPublicKey;
-
   /// No description provided for @keyCopied.
   ///
   /// In en, this message translates to:
@@ -469,12 +433,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete key'**
   String get deleteKey;
-
-  /// No description provided for @deleteKeyConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete this SSH key?'**
-  String get deleteKeyConfirm;
 
   /// No description provided for @savedConnections.
   ///
@@ -523,18 +481,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete connection'**
   String get deleteConnection;
-
-  /// No description provided for @biometricUnlock.
-  ///
-  /// In en, this message translates to:
-  /// **'Biometric unlock'**
-  String get biometricUnlock;
-
-  /// No description provided for @faceId.
-  ///
-  /// In en, this message translates to:
-  /// **'Face ID'**
-  String get faceId;
 
   /// No description provided for @unlock.
   ///
@@ -644,12 +590,6 @@ abstract class AppLocalizations {
   /// **'Add WOL configuration'**
   String get addWolConfig;
 
-  /// No description provided for @wolName.
-  ///
-  /// In en, this message translates to:
-  /// **'Name'**
-  String get wolName;
-
   /// No description provided for @macAddress.
   ///
   /// In en, this message translates to:
@@ -662,77 +602,17 @@ abstract class AppLocalizations {
   /// **'Broadcast address'**
   String get broadcastAddress;
 
-  /// No description provided for @udpPort.
-  ///
-  /// In en, this message translates to:
-  /// **'UDP port'**
-  String get udpPort;
-
-  /// No description provided for @linkedConnection.
-  ///
-  /// In en, this message translates to:
-  /// **'Linked SSH connection'**
-  String get linkedConnection;
-
   /// No description provided for @wolStart.
   ///
   /// In en, this message translates to:
   /// **'WOL START'**
   String get wolStart;
 
-  /// No description provided for @wakingUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Waking up...'**
-  String get wakingUp;
-
-  /// No description provided for @waitingForBoot.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for boot...'**
-  String get waitingForBoot;
-
-  /// No description provided for @tryingToConnect.
-  ///
-  /// In en, this message translates to:
-  /// **'Trying to connect...'**
-  String get tryingToConnect;
-
-  /// No description provided for @pcAwake.
-  ///
-  /// In en, this message translates to:
-  /// **'PC is awake!'**
-  String get pcAwake;
-
-  /// No description provided for @wolFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Wake-on-LAN failed'**
-  String get wolFailed;
-
-  /// No description provided for @shutdown.
-  ///
-  /// In en, this message translates to:
-  /// **'Shutdown'**
-  String get shutdown;
-
-  /// No description provided for @shutdownConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Shutdown this PC?'**
-  String get shutdownConfirm;
-
   /// No description provided for @pressKeyForCtrl.
   ///
   /// In en, this message translates to:
   /// **'Press a key...'**
   String get pressKeyForCtrl;
-
-  /// No description provided for @swipeDownToReduce.
-  ///
-  /// In en, this message translates to:
-  /// **'Swipe down to reduce...'**
-  String get swipeDownToReduce;
 
   /// No description provided for @wolWakingUp.
   ///
@@ -823,42 +703,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No saved connections'**
   String get noSavedConnections;
-
-  /// No description provided for @advancedOptions.
-  ///
-  /// In en, this message translates to:
-  /// **'Advanced options (remote WOL)'**
-  String get advancedOptions;
-
-  /// No description provided for @broadcastOptional.
-  ///
-  /// In en, this message translates to:
-  /// **'Broadcast address (optional)'**
-  String get broadcastOptional;
-
-  /// No description provided for @defaultBroadcast.
-  ///
-  /// In en, this message translates to:
-  /// **'Default: 255.255.255.255'**
-  String get defaultBroadcast;
-
-  /// No description provided for @udpPortOptional.
-  ///
-  /// In en, this message translates to:
-  /// **'UDP port (optional)'**
-  String get udpPortOptional;
-
-  /// No description provided for @defaultPort.
-  ///
-  /// In en, this message translates to:
-  /// **'Default: 9'**
-  String get defaultPort;
-
-  /// No description provided for @portRange.
-  ///
-  /// In en, this message translates to:
-  /// **'Port between 1 and 65535'**
-  String get portRange;
 
   /// No description provided for @pleaseSelectSshConnection.
   ///
@@ -1027,6 +871,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Image upload failed'**
   String get uploadFailed;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @errorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String errorMessage(String error);
+
+  /// No description provided for @invalidKeyFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid key format'**
+  String get invalidKeyFormat;
+
+  /// No description provided for @keyImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Key \"{name}\" imported'**
+  String keyImported(String name);
+
+  /// No description provided for @deleteKeyConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete key?'**
+  String get deleteKeyConfirmTitle;
+
+  /// No description provided for @actionIrreversible.
+  ///
+  /// In en, this message translates to:
+  /// **'This action is irreversible.'**
+  String get actionIrreversible;
+
+  /// No description provided for @deleteKeysConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} key(s)?'**
+  String deleteKeysConfirm(int count);
+
+  /// No description provided for @deleteConnectionsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} connection(s)?'**
+  String deleteConnectionsConfirm(int count);
+
+  /// No description provided for @deleteWolConfigsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} config(s)?'**
+  String deleteWolConfigsConfirm(int count);
+
+  /// No description provided for @sshKeyTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Type: {type}'**
+  String sshKeyTypeLabel(String type);
+
+  /// No description provided for @sshKeyHostLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Host: {host}'**
+  String sshKeyHostLabel(String host);
+
+  /// No description provided for @sshKeyLastUsedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used: {date}'**
+  String sshKeyLastUsedLabel(String date);
+
+  /// No description provided for @shutdownPcTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shutdown PC'**
+  String get shutdownPcTitle;
+
+  /// No description provided for @shutdownPcMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you really want to shutdown {name}?\n\nSSH connection will be closed.'**
+  String shutdownPcMessage(String name);
+
+  /// No description provided for @shutdownAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Shutdown'**
+  String get shutdownAction;
+
+  /// No description provided for @searchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search...'**
+  String get searchPlaceholder;
+
+  /// No description provided for @autoDetect.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get autoDetect;
 }
 
 class _AppLocalizationsDelegate

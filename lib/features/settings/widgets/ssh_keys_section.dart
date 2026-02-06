@@ -6,6 +6,7 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../providers/settings_provider.dart';
 import 'section_header.dart';
+import 'selection_mixin.dart';
 import 'ssh_key_tile.dart';
 import 'add_ssh_key_sheet.dart';
 
@@ -16,52 +17,23 @@ class SSHKeysSection extends ConsumerStatefulWidget {
   ConsumerState<SSHKeysSection> createState() => _SSHKeysSectionState();
 }
 
-class _SSHKeysSectionState extends ConsumerState<SSHKeysSection> {
-  bool _isSelectionMode = false;
-  final Set<String> _selectedIds = {};
-
-  void _enterSelectionMode(String keyId) {
-    setState(() {
-      _isSelectionMode = true;
-      _selectedIds.add(keyId);
-    });
-  }
-
-  void _exitSelectionMode() {
-    setState(() {
-      _isSelectionMode = false;
-      _selectedIds.clear();
-    });
-  }
-
-  void _toggleSelection(String keyId) {
-    setState(() {
-      if (_selectedIds.contains(keyId)) {
-        _selectedIds.remove(keyId);
-        if (_selectedIds.isEmpty) {
-          _isSelectionMode = false;
-        }
-      } else {
-        _selectedIds.add(keyId);
-      }
-    });
-  }
-
+class _SSHKeysSectionState extends ConsumerState<SSHKeysSection>
+    with SelectionModeMixin {
   Future<void> _deleteSelected() async {
     final theme = ref.read(vibeTermThemeProvider);
     final l10n = context.l10n;
-    final count = _selectedIds.length;
+    final count = selectedIds.length;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.bgBlock,
         title: Text(
-          'Supprimer $count clé${count > 1 ? 's' : ''} ?',
+          l10n.deleteKeysConfirm(count),
           style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
         ),
         content: Text(
-          'Cette action est irréversible.',
+          l10n.actionIrreversible,
           style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
         ),
         actions: [
@@ -78,10 +50,10 @@ class _SSHKeysSectionState extends ConsumerState<SSHKeysSection> {
     );
 
     if (confirmed == true) {
-      for (final id in _selectedIds) {
+      for (final id in selectedIds) {
         await ref.read(settingsProvider.notifier).removeSSHKey(id);
       }
-      _exitSelectionMode();
+      exitSelectionMode();
     }
   }
 
@@ -96,20 +68,8 @@ class _SSHKeysSectionState extends ConsumerState<SSHKeysSection> {
       children: [
         SectionHeader(
           title: l10n.sshKeys.toUpperCase(),
-          trailing: _isSelectionMode
-              ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.delete, color: theme.danger),
-                      onPressed: _selectedIds.isNotEmpty ? _deleteSelected : null,
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close, color: theme.textMuted),
-                      onPressed: _exitSelectionMode,
-                    ),
-                  ],
-                )
+          trailing: isSelectionMode
+              ? buildSelectionActions(theme: theme, onDelete: _deleteSelected)
               : IconButton(
                   icon: Icon(Icons.add, color: theme.accent),
                   onPressed: () => _showAddKeySheet(context, theme),
@@ -143,10 +103,10 @@ class _SSHKeysSectionState extends ConsumerState<SSHKeysSection> {
                           ),
                         SSHKeyTile(
                           sshKey: key,
-                          isSelectionMode: _isSelectionMode,
-                          isSelected: _selectedIds.contains(key.id),
-                          onLongPress: () => _enterSelectionMode(key.id),
-                          onSelectionToggle: () => _toggleSelection(key.id),
+                          isSelectionMode: isSelectionMode,
+                          isSelected: selectedIds.contains(key.id),
+                          onLongPress: () => enterSelectionMode(key.id),
+                          onSelectionToggle: () => toggleSelection(key.id),
                         ),
                       ],
                     );
