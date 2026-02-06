@@ -9,13 +9,16 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appName => 'VibeTerm';
+  String get appName => 'ChillShell';
 
   @override
   String get settings => '设置';
 
   @override
   String get connection => '连接';
+
+  @override
+  String get access => '访问';
 
   @override
   String get general => '通用';
@@ -25,6 +28,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wol => 'WOL';
+
+  @override
+  String get remoteAccess => '远程访问';
+
+  @override
+  String get tailscaleDescription => '从世界任何地方连接到您的电脑';
+
+  @override
+  String get playStore => 'Play Store';
+
+  @override
+  String get appStore => 'App Store';
+
+  @override
+  String get website => '网站';
+
+  @override
+  String get noSshKeys => '没有SSH密钥。创建一个以连接。';
 
   @override
   String get theme => '主题';
@@ -54,7 +75,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get disconnect => '断开';
 
   @override
-  String get disconnectAll => '全部断开';
+  String get disconnectAll => '断开全部';
 
   @override
   String get disconnectConfirmTitle => '断开连接';
@@ -135,6 +156,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get generateKey => '生成密钥';
 
   @override
+  String get createSshKey => '创建SSH密钥';
+
+  @override
+  String get importKey => '导入密钥';
+
+  @override
+  String get importKeySubtitle => '.pem文件或私钥';
+
+  @override
+  String get selectFile => '选择文件';
+
+  @override
+  String get orPasteKey => '或粘贴密钥：';
+
+  @override
   String get keyName => '密钥名称';
 
   @override
@@ -162,6 +198,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get savedConnections => '已保存的连接';
 
   @override
+  String get autoConnection => '自动连接';
+
+  @override
   String get host => '主机';
 
   @override
@@ -186,7 +225,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get faceId => '面容ID';
 
   @override
+  String get unlock => '解锁';
+
+  @override
+  String get pinCode => 'PIN码';
+
+  @override
+  String get createPin => '创建PIN码';
+
+  @override
+  String get confirmPin => '确认PIN码';
+
+  @override
+  String get enterPin => '输入PIN码';
+
+  @override
+  String get pinMismatch => 'PIN码不匹配';
+
+  @override
+  String get wrongPin => 'PIN码错误';
+
+  @override
   String get fingerprint => '指纹';
+
+  @override
+  String get fingerprintUnavailable => '此设备未注册指纹';
 
   @override
   String get autoLock => '自动锁定';
@@ -379,6 +442,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noWolConfig => '暂无配置。添加一个以启用WOL。';
 
   @override
+  String get configRequired => '需要配置';
+
+  @override
+  String get wolDescription => 'Wake-on-LAN允许您从应用程序启动电脑。';
+
+  @override
+  String get turnOnCableRequired => '开机：需要以太网电缆';
+
+  @override
+  String get turnOffWifiOrCable => '关机：WiFi或电缆';
+
+  @override
+  String get fullGuide => '完整指南';
+
+  @override
+  String get linkCopied => '链接已复制';
+
+  @override
   String terminalTab(Object number) {
     return '终端 $number';
   }
@@ -394,4 +475,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privateKeyNotFound => '未找到私钥';
+
+  @override
+  String get uploadingImage => '正在上传图片...';
+
+  @override
+  String get uploadFailed => '图片上传失败';
 }

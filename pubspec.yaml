@@ -39,8 +39,11 @@ dependencies:
   uuid: ^4.2.1                      # IDs uniques
   path_provider: ^2.1.1             # Dossiers système
   permission_handler: ^11.1.0       # Permissions
+  image_picker: ^1.0.7              # Sélecteur d'images (import pour IA CLI)
+  file_picker: ^8.0.0+1             # Sélecteur de fichiers (import clés SSH)
   flutter_foreground_task: ^9.2.0   # Foreground service pour SSH
   wake_on_lan: ^4.1.1+3             # Wake-on-LAN (réveil PC à distance)
+  url_launcher: ^6.2.2              # Ouvrir URLs externes (Tailscale stores)
 
 dev_dependencies:
   flutter_test:

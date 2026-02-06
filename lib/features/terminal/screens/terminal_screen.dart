@@ -1,7 +1,9 @@
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -9,6 +11,7 @@ import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../../../models/wol_config.dart';
 import '../../../shared/widgets/app_header.dart';
+import '../../../shared/widgets/chillshell_loader.dart';
 import '../../../services/secure_storage_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../features/settings/providers/settings_provider.dart';
@@ -29,6 +32,8 @@ class TerminalScreen extends ConsumerStatefulWidget {
 class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   // GlobalKey pour accéder au GhostTextInput depuis le bouton saut de ligne
   final _ghostTextInputKey = GlobalKey<GhostTextInputState>();
+  // GlobalKey pour préserver l'animation du loader entre les rebuilds
+  final _loaderKey = GlobalKey();
 
   @override
   void initState() {
@@ -37,6 +42,17 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       _setupSSHCallbacks();
       _tryAutoConnect();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Pré-charger l'image du loader en mémoire AVANT d'en avoir besoin
+    // Sinon le premier décodage PNG + upload GPU cause des saccades
+    precacheImage(
+      const AssetImage('assets/images/chillshell_loader.png'),
+      context,
+    );
   }
 
   void _setupSSHCallbacks() {
@@ -89,8 +105,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     if (connections.isEmpty) return;
 
-    connections.sort((a, b) => (b.lastConnected ?? DateTime(2000)).compareTo(a.lastConnected ?? DateTime(2000)));
-    final lastConnection = connections.first;
+    // Trouver la connexion marquée comme auto-connexion (isQuickAccess = true)
+    final autoConnection = connections.where((c) => c.isQuickAccess).firstOrNull;
+    if (autoConnection == null) return;
+
+    final lastConnection = autoConnection;
 
     final privateKey = await SecureStorageService.getPrivateKey(lastConnection.keyId);
     if (privateKey == null || privateKey.isEmpty) return;
@@ -224,6 +243,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             onAddTab: _addNewTab,
             onAddSession: _showConnectionDialog,
             onScrollToBottom: () => terminalViewKey.currentState?.scrollToBottom(),
+            onImageImport: _handleImageImport,
           ),
           if (sshState.connectionState == SSHConnectionState.connected)
             const SessionInfoBar(),
@@ -312,8 +332,13 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(color: isReconnecting ? theme.warning : theme.accent),
-            const SizedBox(height: VibeTermSpacing.md),
+            ChillShellLoader(
+              key: _loaderKey, // Préserve l'animation entre rebuilds
+              size: 220,
+              style: LoaderAnimationStyle.rotateFloat,
+              duration: const Duration(milliseconds: 2500),
+            ),
+            const SizedBox(height: VibeTermSpacing.lg),
             Text(
               sshState.errorMessage ?? (isReconnecting ? l10n.reconnecting : l10n.connectionInProgress),
               style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
@@ -356,7 +381,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     final l10n = context.l10n;
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(VibeTermSpacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -391,12 +416,17 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             const SizedBox(height: VibeTermSpacing.md),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.accent,
-                foregroundColor: theme.bg,
+                backgroundColor: Colors.transparent,
+                foregroundColor: theme.accent,
                 padding: const EdgeInsets.symmetric(
                   horizontal: VibeTermSpacing.lg,
                   vertical: VibeTermSpacing.md,
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(VibeTermRadius.md),
+                  side: BorderSide(color: theme.accent),
+                ),
+                elevation: 0,
               ),
               onPressed: _showConnectionDialog,
               icon: const Icon(Icons.add),
@@ -425,7 +455,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           horizontal: VibeTermSpacing.lg,
           vertical: VibeTermSpacing.md,
         ),
-        side: isEnabled ? null : BorderSide(color: theme.border),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(VibeTermRadius.md),
+          side: isEnabled ? BorderSide.none : BorderSide(color: theme.border),
+        ),
+        elevation: 0,
       ),
       onPressed: isEnabled ? _handleWolStartPress : null,
       icon: Icon(
@@ -677,6 +711,90 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
       // Sélectionner le nouvel onglet
       ref.read(activeSessionIndexProvider.notifier).state = newSessions.length - 1;
+    }
+  }
+
+  /// Gère l'import d'une image pour les agents IA CLI
+  /// Transfère l'image vers le serveur SSH via SFTP, puis colle le chemin distant
+  Future<void> _handleImageImport() async {
+    final l10n = context.l10n;
+    final theme = ref.read(vibeTermThemeProvider);
+    final sshState = ref.read(sshProvider);
+
+    // Vérifier qu'on est connecté
+    if (sshState.connectionState != SSHConnectionState.connected) {
+      return;
+    }
+
+    // Pour les shells locaux, on utilise le chemin local directement
+    final currentTabId = sshState.currentTabId;
+    final isLocalTab = currentTabId != null && sshState.localTabIds.contains(currentTabId);
+
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedFile == null) return;
+
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = pickedFile.path.split('.').last;
+
+      if (isLocalTab) {
+        // Shell local : copier vers /tmp local et coller le chemin
+        final tempDir = await getTemporaryDirectory();
+        final localPath = '${tempDir.path}/vibeterm_image_$timestamp.$extension';
+        await File(pickedFile.path).copy(localPath);
+        ref.read(sshProvider.notifier).write(localPath);
+      } else {
+        // SSH : transférer via SFTP vers le serveur
+        final remotePath = '/tmp/vibeterm_image_$timestamp.$extension';
+
+        // Afficher un indicateur de chargement
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.uploadingImage),
+              backgroundColor: theme.accent,
+              duration: const Duration(seconds: 30),
+            ),
+          );
+        }
+
+        final uploadedPath = await ref.read(sshProvider.notifier).uploadFile(
+          localPath: pickedFile.path,
+          remotePath: remotePath,
+        );
+
+        // Fermer le snackbar de chargement
+        if (mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        }
+
+        if (uploadedPath != null) {
+          // Succès : coller le chemin distant dans le terminal
+          ref.read(sshProvider.notifier).write(uploadedPath);
+        } else {
+          // Échec : afficher une erreur
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(l10n.uploadFailed),
+                backgroundColor: theme.danger,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // Erreur : afficher un message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.uploadFailed),
+            backgroundColor: theme.danger,
+          ),
+        );
+      }
     }
   }
 

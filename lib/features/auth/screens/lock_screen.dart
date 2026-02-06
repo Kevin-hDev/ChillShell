@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../services/biometric_service.dart';
+import '../../../services/pin_service.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
   final VoidCallback onUnlocked;
-  final bool biometricUnavailable;
+  final bool pinEnabled;
+  final bool fingerprintEnabled;
 
   const LockScreen({
     super.key,
     required this.onUnlocked,
-    this.biometricUnavailable = false,
+    this.pinEnabled = false,
+    this.fingerprintEnabled = false,
   });
 
   @override
@@ -21,21 +25,21 @@ class LockScreen extends ConsumerStatefulWidget {
 }
 
 class _LockScreenState extends ConsumerState<LockScreen> {
-  bool _isAuthenticating = false;
+  String _pin = '';
   String? _errorMessage;
+  bool _isAuthenticating = false;
 
   @override
   void initState() {
     super.initState();
-    // Tenter l'authentification automatiquement au démarrage (si biométrie disponible)
-    if (!widget.biometricUnavailable) {
-      _authenticate();
+    // Lancer l'empreinte automatiquement si activée
+    if (widget.fingerprintEnabled) {
+      _authenticateFingerprint();
     }
   }
 
-  Future<void> _authenticate() async {
+  Future<void> _authenticateFingerprint() async {
     if (_isAuthenticating) return;
-
     setState(() {
       _isAuthenticating = true;
       _errorMessage = null;
@@ -45,18 +49,43 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       final success = await BiometricService.authenticate();
       if (success) {
         widget.onUnlocked();
-      } else {
-        setState(() {
-          _errorMessage = 'Authentification annulée';
-        });
+        return;
       }
-    } catch (e) {
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() => _isAuthenticating = false);
+    }
+  }
+
+  void _addDigit(String digit) {
+    if (_pin.length >= 6) return;
+    setState(() {
+      _pin += digit;
+      _errorMessage = null;
+    });
+    if (_pin.length == 6) {
+      _verifyPin();
+    }
+  }
+
+  void _removeDigit() {
+    if (_pin.isEmpty) return;
+    setState(() {
+      _pin = _pin.substring(0, _pin.length - 1);
+      _errorMessage = null;
+    });
+  }
+
+  Future<void> _verifyPin() async {
+    final verified = await PinService.verifyPin(_pin);
+    if (verified) {
+      widget.onUnlocked();
+    } else {
+      HapticFeedback.heavyImpact();
       setState(() {
-        _errorMessage = 'Erreur d\'authentification';
-      });
-    } finally {
-      setState(() {
-        _isAuthenticating = false;
+        _pin = '';
+        _errorMessage = context.l10n.wrongPin;
       });
     }
   }
@@ -70,28 +99,19 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       backgroundColor: theme.bg,
       body: SafeArea(
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(VibeTermSpacing.lg),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: theme.accent,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '>_',
-                      style: TextStyle(
-                        color: theme.bg,
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/images/ICONE_CHILL.png',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
                   ),
                 ),
                 const SizedBox(height: VibeTermSpacing.lg),
@@ -107,93 +127,205 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                 const SizedBox(height: VibeTermSpacing.sm),
 
                 Text(
-                  l10n.biometricUnlock,
+                  l10n.enterPin,
                   style: VibeTermTypography.caption.copyWith(
-                    color: widget.biometricUnavailable
-                        ? theme.warning
-                        : theme.textMuted,
+                    color: theme.textMuted,
                   ),
                 ),
                 const SizedBox(height: VibeTermSpacing.xl),
 
-                // Message biométrie indisponible
-                if (widget.biometricUnavailable) ...[
-                  Container(
-                    padding: const EdgeInsets.all(VibeTermSpacing.md),
-                    decoration: BoxDecoration(
-                      color: theme.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(VibeTermRadius.md),
-                      border: Border.all(
-                        color: theme.warning.withValues(alpha: 0.3),
+                // PIN entry (si PIN activé)
+                if (widget.pinEnabled) ...[
+                  // 6 cercles
+                  _PinDots(length: _pin.length, theme: theme),
+
+                  // Erreur
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: VibeTermSpacing.sm),
+                    Text(
+                      _errorMessage!,
+                      style: VibeTermTypography.caption.copyWith(
+                        color: theme.danger,
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.warning_amber_rounded,
-                          color: theme.warning,
-                          size: 32,
-                        ),
-                        const SizedBox(height: VibeTermSpacing.sm),
-                        Text(
-                          l10n.biometricUnlock,
-                          textAlign: TextAlign.center,
-                          style: VibeTermTypography.caption.copyWith(
-                            color: theme.text,
-                          ),
-                        ),
-                      ],
-                    ),
+                  ],
+                  const SizedBox(height: VibeTermSpacing.lg),
+
+                  // Clavier numérique
+                  _PinKeypad(
+                    onDigit: _addDigit,
+                    onDelete: _removeDigit,
+                    theme: theme,
                   ),
                 ],
 
-                // Erreur
-                if (_errorMessage != null && !widget.biometricUnavailable) ...[
-                  Text(
-                    _errorMessage!,
-                    style: VibeTermTypography.caption.copyWith(
-                      color: theme.danger,
-                    ),
-                  ),
-                  const SizedBox(height: VibeTermSpacing.md),
-                ],
-
-                // Bouton (caché si biométrie indisponible)
-                if (!widget.biometricUnavailable) ...[
-                  if (_isAuthenticating)
-                    CircularProgressIndicator(color: theme.accent)
-                  else
-                    GestureDetector(
-                      onTap: _authenticate,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: VibeTermSpacing.lg,
-                          vertical: VibeTermSpacing.md,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.accent,
-                          borderRadius: BorderRadius.circular(VibeTermRadius.md),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.fingerprint,
+                // Bouton empreinte (si activée)
+                if (widget.fingerprintEnabled) ...[
+                  const SizedBox(height: VibeTermSpacing.lg),
+                  GestureDetector(
+                    onTap: _isAuthenticating ? null : _authenticateFingerprint,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: VibeTermSpacing.lg,
+                        vertical: VibeTermSpacing.md,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.accent,
+                        borderRadius: BorderRadius.circular(VibeTermRadius.md),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _isAuthenticating
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: theme.bg,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Icon(Icons.fingerprint, color: theme.bg),
+                          const SizedBox(width: VibeTermSpacing.sm),
+                          Text(
+                            l10n.fingerprint,
+                            style: VibeTermTypography.itemTitle.copyWith(
                               color: theme.bg,
                             ),
-                            const SizedBox(width: VibeTermSpacing.sm),
-                            Text(
-                              l10n.fingerprint,
-                              style: VibeTermTypography.itemTitle.copyWith(
-                                color: theme.bg,
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
+                  ),
                 ],
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 6 cercles indicateurs de PIN
+class _PinDots extends StatelessWidget {
+  final int length;
+  final VibeTermThemeData theme;
+
+  const _PinDots({required this.length, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(6, (index) {
+        final isFilled = index < length;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8),
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isFilled ? theme.accent : Colors.transparent,
+            border: Border.all(
+              color: isFilled ? theme.accent : theme.textMuted,
+              width: 2,
+            ),
+          ),
+        );
+      }),
+    );
+  }
+}
+
+/// Clavier numérique
+class _PinKeypad extends StatelessWidget {
+  final ValueChanged<String> onDigit;
+  final VoidCallback onDelete;
+  final VibeTermThemeData theme;
+
+  const _PinKeypad({
+    required this.onDigit,
+    required this.onDelete,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _buildRow(['1', '2', '3']),
+        const SizedBox(height: 8),
+        _buildRow(['4', '5', '6']),
+        const SizedBox(height: 8),
+        _buildRow(['7', '8', '9']),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 72, height: 56),
+            const SizedBox(width: 12),
+            _buildKey('0'),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 72,
+              height: 56,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    onDelete();
+                  },
+                  child: Center(
+                    child: Icon(
+                      Icons.backspace_outlined,
+                      color: theme.textMuted,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRow(List<String> digits) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: digits.map((d) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: _buildKey(d),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildKey(String digit) {
+    return SizedBox(
+      width: 72,
+      height: 56,
+      child: Material(
+        color: theme.bgBlock,
+        borderRadius: BorderRadius.circular(VibeTermRadius.md),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(VibeTermRadius.md),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onDigit(digit);
+          },
+          child: Center(
+            child: Text(
+              digit,
+              style: VibeTermTypography.appTitle.copyWith(
+                color: theme.text,
+                fontSize: 24,
+              ),
             ),
           ),
         ),

@@ -49,37 +49,47 @@ class SessionInfoBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          // Partie gauche : tmux + IP
-          Text(
-            '\u2190 tmux: ',
-            style: VibeTermTypography.caption.copyWith(
-              color: theme.textMuted,
-              fontSize: 11,
+          // Partie gauche : tmux + IP (utilise l'espace disponible)
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '\u2190 tmux: ',
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.textMuted,
+                      fontSize: 11,
+                    ),
+                  ),
+                  TextSpan(
+                    text: session.tmuxSession ?? 'vibe',
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.accent,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 11,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' \u2022 ',
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.textMuted,
+                      fontSize: 11,
+                    ),
+                  ),
+                  TextSpan(
+                    text: session.host,
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.text,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
-          Text(
-            session.tmuxSession ?? 'vibe',
-            style: VibeTermTypography.caption.copyWith(
-              color: theme.accent,
-              fontWeight: FontWeight.w500,
-              fontSize: 11,
-            ),
-          ),
-          Text(
-            ' \u2022 ',
-            style: VibeTermTypography.caption.copyWith(
-              color: theme.textMuted,
-              fontSize: 11,
-            ),
-          ),
-          Text(
-            session.host,  // IP complète, pas de troncature
-            style: VibeTermTypography.caption.copyWith(
-              color: theme.text,
-              fontSize: 11,
-            ),
-          ),
-          const Spacer(),
+          const SizedBox(width: VibeTermSpacing.sm),
           // Temps d'exécution (si présent)
           if (executionTimeText != null) ...[
             Icon(

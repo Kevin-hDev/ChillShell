@@ -127,6 +127,15 @@ class SSHNotifier extends StateNotifier<SSHState> {
   Timer? _connectionCheckTimer;
   bool _isCreatingTab = false;
 
+  /// Throttle pour les resize PTY (évite le spam SIGWINCH pendant l'animation clavier)
+  static const _resizeThrottleMs = 150;
+  Timer? _resizeThrottleTimer;
+  DateTime? _lastResizeSent;
+  /// Dernières dimensions demandées par onglet (pour le throttle)
+  final Map<String, (int, int)> _pendingResizes = {};
+  /// Dernières dimensions envoyées par onglet (pour éviter les doublons)
+  final Map<String, (int, int)> _lastSentSizes = {};
+
   /// Indique si une création d'onglet est en cours
   bool get isCreatingTab => _isCreatingTab;
   bool _isDisposed = false;
@@ -179,6 +188,10 @@ class SSHNotifier extends StateNotifier<SSHState> {
       errorMessage: null,
       reconnectAttempts: 0,
     );
+
+    // Laisser le temps au loader de s'afficher et démarrer son animation
+    // avant de lancer les opérations crypto qui bloquent le thread UI
+    await Future<void>.delayed(const Duration(milliseconds: 150));
 
     final connectionInfo = SSHConnectionInfo(
       host: host,
@@ -383,6 +396,10 @@ class SSHNotifier extends StateNotifier<SSHState> {
       _tabServices.remove(tabId);
     }
 
+    // Nettoyer les données de resize pour cet onglet
+    _pendingResizes.remove(tabId);
+    _lastSentSizes.remove(tabId);
+
     // Retirer l'ID de la liste
     final newTabIds = state.tabIds.where((id) => id != tabId).toList();
 
@@ -572,6 +589,8 @@ class SSHNotifier extends StateNotifier<SSHState> {
     _connectionCheckTimer = null;
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
+    _resizeThrottleTimer?.cancel();
+    _resizeThrottleTimer = null;
     super.dispose();
   }
 
@@ -659,6 +678,20 @@ class SSHNotifier extends StateNotifier<SSHState> {
     }
   }
 
+  /// Exécute une commande silencieusement via le canal SSH exec.
+  /// La commande N'apparaît PAS dans le terminal interactif.
+  /// Retourne la sortie de la commande ou null en cas d'erreur.
+  Future<String?> executeCommandSilently(String command) async {
+    final currentTabId = state.currentTabId;
+    if (currentTabId == null) return null;
+
+    // Ne fonctionne pas pour les shells locaux
+    if (state.localTabIds.contains(currentTabId)) return null;
+
+    final sshService = _tabServices[currentTabId];
+    return sshService?.executeCommandSilently(command);
+  }
+
   /// Écrit vers un onglet spécifique par ID
   void writeToTab(String tabId, String data) {
     debugPrint('DEBUG writeToTab: tabId=$tabId, isLocal=${state.localTabIds.contains(tabId)}');
@@ -689,12 +722,63 @@ class SSHNotifier extends StateNotifier<SSHState> {
   }
 
   /// Redimensionne le PTY d'un onglet spécifique par ID
+  /// Utilise un throttle de 150ms pour limiter le spam SIGWINCH pendant l'animation du clavier
   void resizeTerminalForTab(String tabId, int width, int height) {
-    if (state.localTabIds.contains(tabId)) {
-      _localTabServices[tabId]?.resize(width, height);
-      return;
+    // Ignorer les dimensions invalides
+    if (width <= 0 || height <= 0) return;
+
+    // Vérifier si les dimensions sont identiques aux dernières envoyées
+    final lastSent = _lastSentSizes[tabId];
+    if (lastSent != null && lastSent.$1 == width && lastSent.$2 == height) {
+      return; // Pas de changement, ignorer
     }
-    _tabServices[tabId]?.resizeTerminal(width, height);
+
+    // Stocker les dimensions demandées pour ce tab
+    _pendingResizes[tabId] = (width, height);
+
+    // Calculer le temps depuis le dernier resize envoyé
+    final now = DateTime.now();
+    final timeSinceLastSend = _lastResizeSent == null
+        ? _resizeThrottleMs
+        : now.difference(_lastResizeSent!).inMilliseconds;
+
+    if (timeSinceLastSend >= _resizeThrottleMs) {
+      // Assez de temps écoulé: envoyer immédiatement
+      _flushPendingResizes();
+    } else {
+      // Pas assez de temps: programmer l'envoi après le délai restant
+      _resizeThrottleTimer?.cancel();
+      final remainingDelay = _resizeThrottleMs - timeSinceLastSend;
+      _resizeThrottleTimer = Timer(Duration(milliseconds: remainingDelay), () {
+        _flushPendingResizes();
+      });
+    }
+  }
+
+  /// Envoie tous les resize en attente
+  void _flushPendingResizes() {
+    _lastResizeSent = DateTime.now();
+
+    for (final entry in _pendingResizes.entries) {
+      final tabId = entry.key;
+      final (width, height) = entry.value;
+
+      // Vérifier à nouveau si les dimensions ont changé depuis le dernier envoi
+      final lastSent = _lastSentSizes[tabId];
+      if (lastSent != null && lastSent.$1 == width && lastSent.$2 == height) {
+        continue; // Pas de changement
+      }
+
+      debugPrint('PTY RESIZE SEND: tab=$tabId, ${width}x$height');
+      _lastSentSizes[tabId] = (width, height);
+
+      if (state.localTabIds.contains(tabId)) {
+        _localTabServices[tabId]?.resize(width, height);
+      } else {
+        _tabServices[tabId]?.resizeTerminal(width, height);
+      }
+    }
+    _pendingResizes.clear();
   }
 
   // === Gestion du bouton Send/Stop par onglet ===
@@ -879,6 +963,25 @@ class SSHNotifier extends StateNotifier<SSHState> {
     // Envoie le caractère Ctrl+C (ASCII 3)
     write('\x03');
     setCurrentTabRunning(false);
+  }
+
+  /// Transfère un fichier vers le serveur SSH via SFTP.
+  /// Retourne le chemin distant si succès, null si échec.
+  Future<String?> uploadFile({
+    required String localPath,
+    required String remotePath,
+  }) async {
+    final currentTabId = state.currentTabId;
+    if (currentTabId == null) return null;
+
+    // Ne fonctionne pas pour les shells locaux
+    if (state.localTabIds.contains(currentTabId)) return null;
+
+    final sshService = _tabServices[currentTabId];
+    return sshService?.uploadFile(
+      localPath: localPath,
+      remotePath: remotePath,
+    );
   }
 }
 

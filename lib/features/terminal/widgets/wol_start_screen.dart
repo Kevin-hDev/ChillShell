@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
-import '../../../core/theme/typography.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../models/wol_config.dart';
 import '../../../services/wol_service.dart';
@@ -15,7 +15,7 @@ import '../../../services/wol_service.dart';
 /// Affiche une animation de chargement et les infos de progression
 /// pendant que le service WOL tente de réveiller le PC et d'établir
 /// une connexion SSH.
-class WolStartScreen extends StatefulWidget {
+class WolStartScreen extends ConsumerStatefulWidget {
   /// Configuration WOL du PC à réveiller
   final WolConfig config;
 
@@ -41,10 +41,10 @@ class WolStartScreen extends StatefulWidget {
   });
 
   @override
-  State<WolStartScreen> createState() => _WolStartScreenState();
+  ConsumerState<WolStartScreen> createState() => _WolStartScreenState();
 }
 
-class _WolStartScreenState extends State<WolStartScreen>
+class _WolStartScreenState extends ConsumerState<WolStartScreen>
     with TickerProviderStateMixin {
   /// Service WOL pour gérer le réveil
   final WolService _wolService = WolService();
@@ -55,6 +55,10 @@ class _WolStartScreenState extends State<WolStartScreen>
 
   /// Animation de rotation pour l'indicateur de chargement
   late AnimationController _rotationController;
+
+  /// Fade-in pour masquer les saccades des premières frames
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   /// Progression actuelle du polling
   WolProgress? _progress;
@@ -90,6 +94,16 @@ class _WolStartScreenState extends State<WolStartScreen>
       vsync: this,
     );
     _rotationController.repeat();
+
+    // Fade-in pour masquer les saccades initiales
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..forward();
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    );
 
     // Timer pour le chronomètre
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -149,21 +163,28 @@ class _WolStartScreenState extends State<WolStartScreen>
     _elapsedTimer?.cancel();
     _pulseController.dispose();
     _rotationController.dispose();
+    _fadeController.dispose();
     _wolService.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = ref.watch(vibeTermThemeProvider);
     return Scaffold(
-      backgroundColor: VibeTermColors.bg,
+      backgroundColor: theme.bg,
       body: SafeArea(
-        child: _isSuccess ? _buildSuccessScreen() : _buildLoadingScreen(),
+        child: _isSuccess
+            ? _buildSuccessScreen(theme)
+            : FadeTransition(
+                opacity: _fadeAnimation,
+                child: _buildLoadingScreen(theme),
+              ),
       ),
     );
   }
 
-  Widget _buildLoadingScreen() {
+  Widget _buildLoadingScreen(VibeTermThemeData theme) {
     final l10n = context.l10n;
     return Center(
       child: Padding(
@@ -182,7 +203,7 @@ class _WolStartScreenState extends State<WolStartScreen>
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: VibeTermColors.accent,
+                      color: theme.accent,
                       letterSpacing: 2,
                     ),
                   ),
@@ -205,7 +226,7 @@ class _WolStartScreenState extends State<WolStartScreen>
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: VibeTermColors.border,
+                        color: theme.border,
                         width: 3,
                       ),
                     ),
@@ -220,17 +241,17 @@ class _WolStartScreenState extends State<WolStartScreen>
                         value: _progress?.progress,
                         strokeWidth: 4,
                         backgroundColor: Colors.transparent,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          VibeTermColors.accent,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.accent,
                         ),
                       ),
                     ),
                   ),
                   // Icône d'éclair au centre
-                  const Icon(
+                  Icon(
                     Icons.bolt,
                     size: 40,
-                    color: VibeTermColors.accent,
+                    color: theme.accent,
                   ),
                 ],
               ),
@@ -240,7 +261,11 @@ class _WolStartScreenState extends State<WolStartScreen>
             // Message de statut
             Text(
               l10n.wolWakingUp(widget.config.name),
-              style: VibeTermTypography.itemTitle,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: theme.text,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: VibeTermSpacing.lg),
@@ -249,7 +274,10 @@ class _WolStartScreenState extends State<WolStartScreen>
             if (_progress != null)
               Text(
                 l10n.wolAttempt(_progress!.attempt.toString(), _progress!.maxAttempts.toString()),
-                style: VibeTermTypography.itemDescription,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 13,
+                  color: theme.textMuted,
+                ),
               ),
             const SizedBox(height: VibeTermSpacing.sm),
 
@@ -259,7 +287,7 @@ class _WolStartScreenState extends State<WolStartScreen>
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 24,
                 fontWeight: FontWeight.w500,
-                color: VibeTermColors.textMuted,
+                color: theme.textMuted,
               ),
             ),
             const SizedBox(height: VibeTermSpacing.xl),
@@ -274,14 +302,14 @@ class _WolStartScreenState extends State<WolStartScreen>
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(VibeTermRadius.md),
-                  side: const BorderSide(color: VibeTermColors.border),
+                  side: BorderSide(color: theme.border),
                 ),
               ),
               child: Text(
                 l10n.cancel,
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 16,
-                  color: VibeTermColors.textMuted,
+                  color: theme.textMuted,
                 ),
               ),
             ),
@@ -291,7 +319,7 @@ class _WolStartScreenState extends State<WolStartScreen>
     );
   }
 
-  Widget _buildSuccessScreen() {
+  Widget _buildSuccessScreen(VibeTermThemeData theme) {
     final l10n = context.l10n;
     return Center(
       child: Padding(
@@ -305,12 +333,12 @@ class _WolStartScreenState extends State<WolStartScreen>
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: VibeTermColors.success.withValues(alpha: 0.2),
+                color: theme.success.withValues(alpha: 0.2),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.check_circle,
                 size: 50,
-                color: VibeTermColors.success,
+                color: theme.success,
               ),
             ),
             const SizedBox(height: VibeTermSpacing.lg),
@@ -321,7 +349,7 @@ class _WolStartScreenState extends State<WolStartScreen>
               style: GoogleFonts.jetBrainsMono(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: VibeTermColors.success,
+                color: theme.success,
               ),
             ),
             const SizedBox(height: VibeTermSpacing.md),
@@ -329,14 +357,21 @@ class _WolStartScreenState extends State<WolStartScreen>
             // "PC Bureau allumé"
             Text(
               l10n.wolPcAwake(widget.config.name),
-              style: VibeTermTypography.itemTitle,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: theme.text,
+              ),
             ),
             const SizedBox(height: VibeTermSpacing.sm),
 
             // "Connexion SSH établie"
             Text(
               l10n.wolSshEstablished,
-              style: VibeTermTypography.itemDescription,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 13,
+                color: theme.textMuted,
+              ),
             ),
           ],
         ),

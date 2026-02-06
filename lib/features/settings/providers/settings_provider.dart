@@ -45,7 +45,21 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       final settings = await _storage.getSettings();
       // Utiliser SecureStorageService pour les clés SSH (cohérence avec savePrivateKey)
       final sshKeys = await SecureStorageService.loadKeyMetadata();
-      final savedConnections = await _storage.getSavedConnections();
+      var savedConnections = await _storage.getSavedConnections();
+
+      // S'assurer qu'une seule connexion est marquée comme quick access
+      final activeCount = savedConnections.where((c) => c.isQuickAccess).length;
+      if (savedConnections.isNotEmpty && activeCount != 1) {
+        // Si 0 ou plus de 1 connexion active, normaliser : seule la première est active
+        savedConnections = savedConnections.asMap().entries.map((entry) {
+          return entry.value.copyWith(isQuickAccess: entry.key == 0);
+        }).toList();
+        // Sauvegarder les connexions normalisées
+        for (final c in savedConnections) {
+          _storage.saveConnection(c);
+        }
+      }
+
       state = state.copyWith(
         appSettings: settings,
         sshKeys: sshKeys,
@@ -100,9 +114,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     _saveSettings();
   }
 
-  void toggleFaceId(bool enabled) {
+  void togglePinLock(bool enabled) {
     state = state.copyWith(
-      appSettings: state.appSettings.copyWith(faceIdEnabled: enabled),
+      appSettings: state.appSettings.copyWith(pinLockEnabled: enabled),
     );
     _saveSettings();
   }
@@ -166,24 +180,42 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     _saveSettings();
   }
 
-  void toggleQuickAccess(String connectionId) {
+  /// Sélectionne UNE connexion comme connexion automatique.
+  /// Désélectionne automatiquement l'ancienne.
+  Future<void> selectAutoConnection(String connectionId) async {
     final connections = state.savedConnections.map((c) {
-      if (c.id == connectionId) {
-        return c.copyWith(isQuickAccess: !c.isQuickAccess);
-      }
-      return c;
+      // La connexion sélectionnée devient active, les autres sont désactivées
+      return c.copyWith(isQuickAccess: c.id == connectionId);
     }).toList();
     state = state.copyWith(savedConnections: connections);
-    // Sauvegarder chaque connexion modifiée
-    for (final c in connections.where((c) => c.id == connectionId)) {
-      _storage.saveConnection(c);
+    // Sauvegarder toutes les connexions modifiées (avec await pour persister avant fermeture)
+    for (final c in connections) {
+      await _storage.saveConnection(c);
     }
   }
 
   void deleteSavedConnection(String id) {
-    state = state.copyWith(
-      savedConnections: state.savedConnections.where((c) => c.id != id).toList(),
-    );
+    final wasSelected = state.savedConnections.firstWhere(
+      (c) => c.id == id,
+      orElse: () => const SavedConnection(id: '', name: '', host: '', username: '', keyId: ''),
+    ).isQuickAccess;
+
+    var newConnections = state.savedConnections.where((c) => c.id != id).toList();
+
+    // Si la connexion supprimée était sélectionnée, sélectionner la première de la liste
+    if (wasSelected && newConnections.isNotEmpty) {
+      newConnections = newConnections.asMap().entries.map((entry) {
+        final index = entry.key;
+        final c = entry.value;
+        return c.copyWith(isQuickAccess: index == 0);
+      }).toList();
+      // Sauvegarder la nouvelle sélection
+      if (newConnections.isNotEmpty) {
+        _storage.saveConnection(newConnections.first);
+      }
+    }
+
+    state = state.copyWith(savedConnections: newConnections);
     _storage.deleteSavedConnection(id);
   }
 }

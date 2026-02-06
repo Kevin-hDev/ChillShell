@@ -19,6 +19,28 @@ const _alternateScreenExit = '\x1b[?1049l';
 const _alternateScreenEnterAlt = '\x1b[?47h';
 const _alternateScreenExitAlt = '\x1b[?47l';
 
+/// Liste blanche des vrais éditeurs qui nécessitent le mode éditeur
+/// (saisie directe au clavier, pas de champ de texte)
+/// Les CLI modernes (claude, opencode, vibe, codex, etc.) utilisent aussi
+/// l'alternate screen mais attendent du texte via stdin → mode NORMAL
+const _trueEditorCommands = <String>{
+  // Éditeurs de texte
+  'nano', 'vim', 'vi', 'nvim', 'neovim', 'emacs', 'micro', 'joe', 'pico',
+  'ne', 'mcedit', 'ed', 'ex', 'view', 'rvim', 'rview', 'vimdiff',
+  // Pagers (lecture seule avec navigation)
+  'less', 'more', 'most', 'pg',
+  // Moniteurs système avec interface interactive
+  'htop', 'btop', 'top', 'atop', 'gtop', 'glances', 'nvtop', 'radeontop',
+  's-tui', 'nmon', 'bmon', 'iotop', 'iftop', 'nethogs',
+  // File managers
+  'mc', 'ranger', 'nnn', 'lf', 'vifm', 'ncdu', 'fff', 'cfm',
+  // TUI interactives nécessitant touches directes
+  'alsamixer', 'ncmpcpp', 'cmus', 'mocp', 'tig', 'lazygit', 'lazydocker',
+  'k9s', 'tmux', 'screen', 'byobu',
+  // Menus et sélecteurs (quand lancés seuls, pas via pipe)
+  'dialog', 'whiptail',
+};
+
 /// Widget principal pour afficher le terminal xterm connecte via SSH.
 class VibeTerminalView extends ConsumerStatefulWidget {
   const VibeTerminalView({super.key});
@@ -43,17 +65,29 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   TerminalTheme? _cachedTheme;
   VibeTermThemeData? _lastThemeData;
 
+  /// Accumulateur pour le scroll tactile en alternate buffer
+  /// Permet de convertir les pixels en PageUp/PageDown
+  double _altBufferScrollAccumulator = 0.0;
+
+  /// État du alternate buffer pour le terminal courant
+  /// Utilisé pour déclencher un rebuild quand l'état change
+  bool _isInAltBuffer = false;
+
+  bool _lastIsEditorMode = false;
+
   /// Retourne le theme terminal depuis le cache ou le crée si nécessaire
-  TerminalTheme _getTerminalTheme(VibeTermThemeData theme) {
-    // Retourner le cache si le theme n'a pas changé
-    if (_cachedTheme != null && _lastThemeData == theme) {
+  TerminalTheme _getTerminalTheme(VibeTermThemeData theme, {bool isEditorMode = false}) {
+    // Retourner le cache si le theme et le mode n'ont pas changé
+    if (_cachedTheme != null && _lastThemeData == theme && _lastIsEditorMode == isEditorMode) {
       return _cachedTheme!;
     }
 
     // Créer et cacher le nouveau theme
     _lastThemeData = theme;
+    _lastIsEditorMode = isEditorMode;
     _cachedTheme = TerminalTheme(
-      cursor: theme.accent,
+      // Curseur visible seulement en mode éditeur (transparent en mode normal)
+      cursor: isEditorMode ? theme.accent : Colors.transparent,
       selection: theme.accent.withValues(alpha: 0.3),
       foreground: theme.text,
       background: theme.bg,
@@ -141,13 +175,65 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     return terminal?.cursorKeysMode ?? false;
   }
 
+  /// Gère le scroll tactile en alternate buffer
+  /// Convertit les pixels en PageUp/PageDown pour les CLI modernes
+  void _handleAltBufferScroll(DragUpdateDetails details, Terminal terminal) {
+    _altBufferScrollAccumulator += details.delta.dy;
+
+    // Seuil plus bas pour un scroll fluide (environ 1 ligne)
+    const scrollThreshold = 30.0;
+
+    if (_altBufferScrollAccumulator.abs() > scrollThreshold) {
+      // Doigt vers le bas (delta < 0) = scroll up = wheel up
+      // Doigt vers le haut (delta > 0) = scroll down = wheel down
+      final bool scrollUp = _altBufferScrollAccumulator < 0;
+
+      // Envoyer DEUX formats de mouse wheel pour compatibilité maximale :
+      // 1. Format X10 (ancien, plus compatible) : \x1b[M + (32+button) + (32+col) + (32+row)
+      //    Button: 64 = wheel up, 65 = wheel down
+      // 2. Format SGR 1006 (moderne) : \x1b[<button;col;rowM
+
+      final int buttonCode = scrollUp ? 64 : 65;
+      const int col = 1;
+      const int row = 1;
+
+      // Format SGR 1006 (moderne, fonctionnait pour Vibe)
+      final String sgrSequence = '\x1b[<$buttonCode;$col;${row}M';
+
+      // Envoyer au serveur SSH
+      ref.read(sshProvider.notifier).write(sgrSequence);
+
+      // Forcer un redraw du terminal local après le scroll
+      // Cela aide si l'app distante scroll mais n'envoie pas de refresh
+      terminal.notifyListeners();
+
+      debugPrint('ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} sent + redraw');
+
+      _altBufferScrollAccumulator = 0.0;
+    }
+  }
+
+  /// Réinitialise l'accumulateur au début d'un nouveau geste
+  void _resetAltBufferScroll() {
+    _altBufferScrollAccumulator = 0.0;
+  }
+
   /// Retourne ou crée le terminal pour l'onglet donné
   Terminal _getOrCreateTerminal(String tabId) {
     if (!_terminals.containsKey(tabId)) {
       final terminal = Terminal(maxLines: 10000);
       terminal.onOutput = (data) => _handleTerminalOutput(data, tabId);
       // Synchroniser la taille du terminal avec le PTY distant
+      // MAIS pas pendant l'alternate screen mode (apps CLI modernes)
       terminal.onResize = (width, height, pixelWidth, pixelHeight) {
+        // Ne pas envoyer de resize pendant l'alternate screen mode
+        // pour éviter la corruption d'affichage (Codex, etc.)
+        // On utilise _isInAltBuffer (notre tracking) plutôt que terminal.isUsingAltBuffer
+        // car notre détection est mise à jour dès réception des séquences ANSI
+        if (_isInAltBuffer) {
+          debugPrint('RESIZE: Skipped (alternate screen active - our tracking)');
+          return;
+        }
         ref.read(sshProvider.notifier).resizeTerminalForTab(tabId, width, height);
       };
       _terminals[tabId] = terminal;
@@ -182,7 +268,15 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       _subscriptions[tabId] = outputStream.listen(
         (data) {
           final decoded = utf8.decode(data, allowMalformed: true);
-          terminal.write(decoded);
+          // Wrapper dans try-catch car xterm.dart peut crasher lors de
+          // race conditions entre write() et resize (bug connu avec TUI apps)
+          try {
+            terminal.write(decoded);
+          } catch (e) {
+            // Ignorer silencieusement les erreurs de buffer xterm.dart
+            // Cela arrive quand resize et write sont concurrents
+            debugPrint('XTERM: Buffer error (ignored): ${e.runtimeType}');
+          }
           // Envoyer la sortie au provider pour détecter les erreurs de commande
           ref.read(terminalProvider.notifier).onTerminalOutput(decoded);
           // Détecter l'alternate screen mode (nano, vim, less, htop, etc.)
@@ -244,24 +338,67 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   }
 
   /// Détecte les séquences d'entrée/sortie de l'alternate screen mode
-  /// et met à jour isEditorModeProvider
+  /// et met à jour isEditorModeProvider UNIQUEMENT pour les vrais éditeurs
   void _detectAlternateScreenMode(String output) {
-    // Entrée en mode édition (nano, vim, less, htop, etc.)
+    // Entrée en alternate screen
     if (output.contains(_alternateScreenEnter) || output.contains(_alternateScreenEnterAlt)) {
-      final currentMode = ref.read(isEditorModeProvider);
-      if (!currentMode) {
-        ref.read(isEditorModeProvider.notifier).state = true;
-        debugPrint('EDITOR MODE: Entered alternate screen (nano/vim/less/htop)');
+      // Mettre à jour l'état alt buffer pour le scroll custom
+      if (!_isInAltBuffer) {
+        _isInAltBuffer = true;
+        if (mounted) setState(() {});
+        debugPrint('ALT_BUFFER: Entered alternate screen');
+      }
+
+      // Vérifier si la commande en cours est un vrai éditeur
+      final currentTabId = ref.read(sshProvider).currentTabId;
+      final currentCommand = currentTabId != null
+          ? ref.read(sshProvider).tabCurrentCommand[currentTabId]
+          : null;
+
+      // Extraire le nom de la commande (premier mot, sans chemin)
+      final commandName = _extractCommandName(currentCommand);
+
+      if (commandName != null && _trueEditorCommands.contains(commandName)) {
+        final currentMode = ref.read(isEditorModeProvider);
+        if (!currentMode) {
+          ref.read(isEditorModeProvider.notifier).state = true;
+          debugPrint('EDITOR MODE: Entered for true editor "$commandName"');
+        }
+      } else {
+        debugPrint('EDITOR MODE: Skipped for CLI app "${commandName ?? "unknown"}" (alternate screen but not a true editor)');
       }
     }
-    // Sortie du mode édition
+    // Sortie du mode alternate screen
     else if (output.contains(_alternateScreenExit) || output.contains(_alternateScreenExitAlt)) {
+      // Mettre à jour l'état alt buffer
+      if (_isInAltBuffer) {
+        _isInAltBuffer = false;
+        if (mounted) setState(() {});
+        debugPrint('ALT_BUFFER: Exited alternate screen');
+      }
+
+      // Désactiver le mode éditeur si actif
       final currentMode = ref.read(isEditorModeProvider);
       if (currentMode) {
         ref.read(isEditorModeProvider.notifier).state = false;
         debugPrint('EDITOR MODE: Exited alternate screen');
       }
     }
+  }
+
+  /// Extrait le nom de la commande (sans chemin, sans arguments)
+  String? _extractCommandName(String? command) {
+    if (command == null || command.isEmpty) return null;
+
+    // Prendre le premier mot
+    final parts = command.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return null;
+
+    // Retirer le chemin (ex: /usr/bin/nano → nano)
+    final fullPath = parts.first;
+    final name = fullPath.split('/').last;
+
+    return name.toLowerCase();
   }
 
   @override
@@ -342,28 +479,47 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     // Afficher le terminal xterm avec bouton Copier flottant
     // Key avec l'ID stable pour forcer Flutter à recréer le widget
     // ClipRect pour empêcher le contenu de déborder sur les barres au-dessus
+
+    // Widget terminal de base
+    final terminalWidget = TerminalView(
+      terminal,
+      key: ValueKey('terminal_${currentTabId}_$isEditorMode'),
+      controller: terminalController,
+      scrollController: _scrollController,
+      // En mode édition : autofocus pour ouvrir le clavier, readOnly=false pour saisie directe
+      autofocus: isEditorMode,
+      readOnly: !isEditorMode,  // Mode normal: true (champ en bas), Mode édition: false (saisie directe)
+      hardwareKeyboardOnly: !isEditorMode,  // Mode édition: clavier virtuel autorisé
+      backgroundOpacity: 0,
+      theme: _getTerminalTheme(theme, isEditorMode: isEditorMode),
+      textStyle: TerminalStyle(
+        fontSize: fontSize,
+        fontFamily: 'JetBrainsMono',
+      ),
+      // Désactiver simulateScroll car on gère nous-mêmes le scroll en alternate buffer
+      // avec mouse wheel SGR au lieu de flèches (mieux pour les CLI modernes comme Vibe)
+      simulateScroll: false,
+      // Clic droit pour desktop
+      onSecondaryTapDown: (details, _) => _showContextMenu(context, details.globalPosition, terminal, theme),
+    );
+
     return ClipRect(
       child: Stack(
         children: [
-          // Terminal
-          TerminalView(
-            terminal,
-            key: ValueKey('terminal_${currentTabId}_$isEditorMode'),
-            controller: terminalController,
-            scrollController: _scrollController,
-            // En mode édition : autofocus pour ouvrir le clavier, readOnly=false pour saisie directe
-            autofocus: isEditorMode,
-            readOnly: !isEditorMode,  // Mode normal: true (champ en bas), Mode édition: false (saisie directe)
-            hardwareKeyboardOnly: !isEditorMode,  // Mode édition: clavier virtuel autorisé
-            backgroundOpacity: 0,
-            theme: _getTerminalTheme(theme),
-            textStyle: TerminalStyle(
-              fontSize: fontSize,
-              fontFamily: 'JetBrainsMono',
+          // Terminal toujours en bas du stack
+          terminalWidget,
+          // En alternate buffer ET pas en mode éditeur (CLI modernes comme Vibe)
+          // → GestureDetector transparent PAR-DESSUS le terminal pour capturer le scroll
+          // → Envoie des mouse wheel SGR pour les apps qui supportent (Vibe fonctionne)
+          // Note: OpenCode ne répond pas à ces événements (limitation OpenTUI)
+          if (_isInAltBuffer && !isEditorMode)
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onVerticalDragStart: (_) => _resetAltBufferScroll(),
+                onVerticalDragUpdate: (details) => _handleAltBufferScroll(details, terminal),
+              ),
             ),
-            // Clic droit pour desktop
-            onSecondaryTapDown: (details, _) => _showContextMenu(context, details.globalPosition, terminal, theme),
-          ),
           // Bouton Copier flottant (apparaît quand sélection active)
           ListenableBuilder(
             listenable: terminalController,

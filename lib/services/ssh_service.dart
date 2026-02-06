@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
 
@@ -31,6 +32,10 @@ class SSHException implements Exception {
   }
 }
 
+/// Parse les clés SSH dans un isolate séparé pour ne pas bloquer le thread UI.
+/// Fonction top-level requise par compute().
+List<SSHKeyPair> _parseSSHKeys(String pem) => SSHKeyPair.fromPem(pem);
+
 class SSHService {
   SSHClient? _client;
   SSHSession? _session;
@@ -47,9 +52,15 @@ class SSHService {
     Duration keepAliveInterval = const Duration(seconds: 30),
   }) async {
     try {
-      final keys = SSHKeyPair.fromPem(privateKey);
+      // Parsing de la clé dans un ISOLATE SÉPARÉ (ne bloque pas le thread UI)
+      final keys = await compute(_parseSSHKeys, privateKey);
+
+      // Connexion TCP (async, ne bloque pas)
+      final socket = await SSHSocket.connect(host, port);
+
+      // Handshake SSH + authentification
       _client = SSHClient(
-        await SSHSocket.connect(host, port),
+        socket,
         username: username,
         identities: keys,
         keepAliveInterval: keepAliveInterval,
@@ -94,7 +105,10 @@ class SSHService {
   /// Redimensionne le PTY distant pour correspondre à la taille du terminal
   void resizeTerminal(int width, int height) {
     if (_session != null) {
+      debugPrint('SSH RESIZE: Sending SIGWINCH ${width}x$height to remote PTY');
       _session!.resizeTerminal(width, height);
+    } else {
+      debugPrint('SSH RESIZE: No session available!');
     }
   }
 
@@ -112,6 +126,21 @@ class SSHService {
 
   /// Détecte le système d'exploitation du serveur distant.
   ///
+  /// Exécute une commande via le canal SSH exec (silencieux).
+  /// La commande n'apparaît PAS dans le terminal interactif.
+  /// Retourne la sortie de la commande ou null en cas d'erreur.
+  Future<String?> executeCommandSilently(String command) async {
+    if (_client == null) return null;
+
+    try {
+      final result = await _client!.run(command);
+      return String.fromCharCodes(result);
+    } catch (e) {
+      debugPrint('SSHService: executeCommandSilently error: $e');
+      return null;
+    }
+  }
+
   /// Exécute `uname -s` et parse le résultat :
   /// - "Linux" → retourne "linux"
   /// - "Darwin" → retourne "macos"
@@ -137,6 +166,38 @@ class SSHService {
       debugPrint('SSHService: Error detecting OS: $e');
       // En cas d'erreur (probablement Windows où uname n'existe pas)
       return 'windows';
+    }
+  }
+
+  /// Transfère un fichier local vers le serveur via SFTP.
+  /// Retourne le chemin distant si succès, null si échec.
+  Future<String?> uploadFile({
+    required String localPath,
+    required String remotePath,
+  }) async {
+    if (_client == null) return null;
+
+    try {
+      final sftp = await _client!.sftp();
+      final localFile = await File(localPath).readAsBytes();
+
+      // Ouvrir/créer le fichier distant en écriture
+      final remoteFile = await sftp.open(
+        remotePath,
+        mode: SftpFileOpenMode.create |
+            SftpFileOpenMode.write |
+            SftpFileOpenMode.truncate,
+      );
+
+      // Écrire les données
+      await remoteFile.writeBytes(localFile);
+      await remoteFile.close();
+
+      debugPrint('SSHService: File uploaded to $remotePath');
+      return remotePath;
+    } catch (e) {
+      debugPrint('SSHService: SFTP upload error: $e');
+      return null;
     }
   }
 

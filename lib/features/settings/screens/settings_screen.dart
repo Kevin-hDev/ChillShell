@@ -4,8 +4,8 @@ import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../shared/widgets/app_header.dart';
-import '../widgets/ssh_keys_section.dart';
 import '../widgets/quick_connections_section.dart';
+import '../widgets/access_section.dart';
 import '../widgets/appearance_section.dart';
 import '../widgets/security_section.dart';
 import '../widgets/wol_section.dart';
@@ -27,7 +27,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -60,11 +60,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               children: const [
                 // Onglet 1: Connexion
                 _ConnectionTab(),
-                // Onglet 2: Général (Thème + Langue + Taille police)
+                // Onglet 2: Accès (Tailscale + Clés SSH)
+                _AccessTab(),
+                // Onglet 3: Général (Thème + Langue + Taille police)
                 _GeneralTab(),
-                // Onglet 3: Sécurité
+                // Onglet 4: Sécurité
                 _SecurityTab(),
-                // Onglet 4: WOL
+                // Onglet 5: WOL
                 _WolTab(),
               ],
             ),
@@ -98,10 +100,13 @@ class _SettingsTabBar extends StatelessWidget {
       ),
       child: TabBar(
         controller: tabController,
+        isScrollable: true,
+        tabAlignment: TabAlignment.start,
         labelColor: theme.accent,
         unselectedLabelColor: theme.textMuted,
         indicatorColor: theme.accent,
         indicatorWeight: 2,
+        labelPadding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.md),
         labelStyle: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
@@ -114,6 +119,7 @@ class _SettingsTabBar extends StatelessWidget {
         ),
         tabs: [
           Tab(text: l10n.connection),
+          Tab(text: l10n.access),
           Tab(text: l10n.general),
           Tab(text: l10n.security),
           Tab(text: l10n.wol),
@@ -123,7 +129,7 @@ class _SettingsTabBar extends StatelessWidget {
   }
 }
 
-/// Onglet Connexion : Clés SSH + Connexions rapides + Connexions sauvegardées
+/// Onglet Connexion : Connexions rapides + Connexions sauvegardées
 class _ConnectionTab extends StatelessWidget {
   const _ConnectionTab();
 
@@ -132,12 +138,20 @@ class _ConnectionTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(VibeTermSpacing.md),
       children: const [
-        SSHKeysSection(),
-        SizedBox(height: VibeTermSpacing.lg),
         QuickConnectionsSection(),
         SizedBox(height: VibeTermSpacing.xl),
       ],
     );
+  }
+}
+
+/// Onglet Accès : Tailscale + Clés SSH
+class _AccessTab extends StatelessWidget {
+  const _AccessTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AccessSection();
   }
 }
 
