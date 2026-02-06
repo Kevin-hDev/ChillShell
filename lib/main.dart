@@ -56,20 +56,18 @@ class AppRoot extends ConsumerStatefulWidget {
 }
 
 class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
-  bool _isLocked = true;
-  bool _checkingBiometric = true;
-  bool _biometricUnavailable = false;
+  bool _isLocked = false;
+  bool _lockStatusReady = false;
+  bool _checkingLock = false;
+  bool _pinEnabled = false;
+  bool _fingerprintEnabled = false;
   Timer? _autoLockTimer;
   DateTime? _backgroundTime;
-
-  // Durée avant verrouillage automatique (10 minutes)
-  static const _autoLockDuration = Duration(minutes: 10);
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkBiometricStatus();
   }
 
   @override
@@ -82,14 +80,17 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final settings = ref.read(settingsProvider);
+    final lockEnabled = settings.appSettings.pinLockEnabled ||
+        settings.appSettings.fingerprintEnabled;
+    final autoLockDuration = Duration(minutes: settings.appSettings.autoLockMinutes);
 
     if (state == AppLifecycleState.paused) {
       // App en arrière-plan - enregistrer le moment
       _backgroundTime = DateTime.now();
 
       // Démarrer le timer si auto-lock est activé
-      if (settings.appSettings.autoLockEnabled && settings.appSettings.biometricEnabled) {
-        _autoLockTimer = Timer(_autoLockDuration, () {
+      if (settings.appSettings.autoLockEnabled && lockEnabled) {
+        _autoLockTimer = Timer(autoLockDuration, () {
           if (mounted) {
             setState(() => _isLocked = true);
           }
@@ -101,9 +102,9 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
 
       if (_backgroundTime != null &&
           settings.appSettings.autoLockEnabled &&
-          settings.appSettings.biometricEnabled) {
+          lockEnabled) {
         final elapsed = DateTime.now().difference(_backgroundTime!);
-        if (elapsed >= _autoLockDuration) {
+        if (elapsed >= autoLockDuration) {
           setState(() => _isLocked = true);
         }
       }
@@ -114,32 +115,37 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _checkBiometricStatus() async {
-    final settings = ref.read(settingsProvider);
+  /// Vérifie le verrouillage une fois les paramètres chargés
+  Future<void> _checkLockStatus(SettingsState settings) async {
+    if (_checkingLock) return;
+    _checkingLock = true;
 
-    if (settings.appSettings.biometricEnabled) {
-      final isAvailable = await BiometricService.isAvailable();
-      if (isAvailable) {
+    final pinEnabled = settings.appSettings.pinLockEnabled;
+    final fingerprintEnabled = settings.appSettings.fingerprintEnabled;
+
+    if (pinEnabled || fingerprintEnabled) {
+      // Vérifier si l'empreinte est dispo sur l'appareil
+      bool fingerprintAvailable = false;
+      if (fingerprintEnabled) {
+        fingerprintAvailable = await BiometricService.isAvailable();
+      }
+
+      if (mounted) {
         setState(() {
           _isLocked = true;
-          _checkingBiometric = false;
-          _biometricUnavailable = false;
-        });
-      } else {
-        // Biométrie non disponible - garder verrouillé avec message
-        setState(() {
-          _isLocked = true;
-          _checkingBiometric = false;
-          _biometricUnavailable = true;
+          _pinEnabled = pinEnabled;
+          _fingerprintEnabled = fingerprintAvailable;
+          _lockStatusReady = true;
         });
       }
     } else {
-      // Biométrie désactivée, déverrouiller directement
-      setState(() {
-        _isLocked = false;
-        _checkingBiometric = false;
-        _biometricUnavailable = false;
-      });
+      // Aucun verrouillage activé, déverrouiller directement
+      if (mounted) {
+        setState(() {
+          _isLocked = false;
+          _lockStatusReady = true;
+        });
+      }
     }
   }
 
@@ -151,7 +157,16 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (_checkingBiometric) {
+    final settings = ref.watch(settingsProvider);
+
+    // Attendre que les paramètres soient chargés depuis le stockage
+    if (settings.isLoading || !_lockStatusReady) {
+      // Paramètres chargés → lancer la vérification après le frame actuel
+      if (!settings.isLoading && !_checkingLock) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _checkLockStatus(settings);
+        });
+      }
       return const Scaffold(
         backgroundColor: Color(0xFF0F0F0F),
         body: Center(
@@ -165,7 +180,8 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
     if (_isLocked) {
       return LockScreen(
         onUnlocked: _unlock,
-        biometricUnavailable: _biometricUnavailable,
+        pinEnabled: _pinEnabled,
+        fingerprintEnabled: _fingerprintEnabled,
       );
     }
 

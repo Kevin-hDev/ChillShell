@@ -1,12 +1,20 @@
 {
   "@@locale": "zh",
-  "appName": "VibeTerm",
+  "appName": "ChillShell",
 
   "settings": "设置",
   "connection": "连接",
+  "access": "访问",
   "general": "通用",
   "security": "安全",
   "wol": "WOL",
+
+  "remoteAccess": "远程访问",
+  "tailscaleDescription": "从世界任何地方连接到您的电脑",
+  "playStore": "Play Store",
+  "appStore": "App Store",
+  "website": "网站",
+  "noSshKeys": "没有SSH密钥。创建一个以连接。",
 
   "theme": "主题",
   "language": "语言",
@@ -49,6 +57,11 @@
 
   "sshKeys": "SSH密钥",
   "generateKey": "生成密钥",
+  "createSshKey": "创建SSH密钥",
+  "importKey": "导入密钥",
+  "importKeySubtitle": ".pem文件或私钥",
+  "selectFile": "选择文件",
+  "orPasteKey": "或粘贴密钥：",
   "keyName": "密钥名称",
   "keyType": "密钥类型",
   "publicKey": "公钥",
@@ -59,6 +72,7 @@
   "deleteKeyConfirm": "删除此SSH密钥？",
 
   "savedConnections": "已保存的连接",
+  "autoConnection": "自动连接",
   "host": "主机",
   "port": "端口",
   "username": "用户名",
@@ -68,7 +82,15 @@
 
   "biometricUnlock": "生物识别解锁",
   "faceId": "面容ID",
+  "unlock": "解锁",
+  "pinCode": "PIN码",
+  "createPin": "创建PIN码",
+  "confirmPin": "确认PIN码",
+  "enterPin": "输入PIN码",
+  "pinMismatch": "PIN码不匹配",
+  "wrongPin": "PIN码错误",
   "fingerprint": "指纹",
+  "fingerprintUnavailable": "此设备未注册指纹",
   "autoLock": "自动锁定",
   "autoLockTime": "锁定时间",
   "minutes": "分钟",
@@ -136,9 +158,19 @@
 
   "noWolConfig": "暂无配置。添加一个以启用WOL。",
 
+  "configRequired": "需要配置",
+  "wolDescription": "Wake-on-LAN允许您从应用程序启动电脑。",
+  "turnOnCableRequired": "开机：需要以太网电缆",
+  "turnOffWifiOrCable": "关机：WiFi或电缆",
+  "fullGuide": "完整指南",
+  "linkCopied": "链接已复制",
+
   "terminalTab": "终端 {number}",
   "wakeUpPc": "唤醒电脑",
   "connectionLostSnack": "连接丢失",
   "unableToCreateTab": "无法创建新标签页",
-  "privateKeyNotFound": "未找到私钥"
+  "privateKeyNotFound": "未找到私钥",
+
+  "uploadingImage": "正在上传图片...",
+  "uploadFailed": "图片上传失败"
 }

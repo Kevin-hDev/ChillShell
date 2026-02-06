@@ -8,35 +8,75 @@ import '../providers/settings_provider.dart';
 
 class SSHKeyTile extends ConsumerWidget {
   final SSHKey sshKey;
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onSelectionToggle;
 
-  const SSHKeyTile({super.key, required this.sshKey});
+  const SSHKeyTile({
+    super.key,
+    required this.sshKey,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+    this.onLongPress,
+    this.onSelectionToggle,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(vibeTermThemeProvider);
 
-    return Dismissible(
-      key: Key(sshKey.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        color: theme.danger,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: VibeTermSpacing.md),
-        child: const Icon(Icons.delete, color: Colors.white),
-      ),
-      confirmDismiss: (direction) => _confirmDelete(context, ref),
-      onDismissed: (direction) {
-        ref.read(settingsProvider.notifier).removeSSHKey(sshKey.id);
-      },
-      child: ListTile(
-        leading: Icon(Icons.key, color: theme.accent),
-        title: Text(sshKey.name, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
-        subtitle: Text(
-          '${sshKey.typeLabel} • ${_formatDate(sshKey.createdAt)}',
-          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+    // En mode sélection, pas de swipe
+    if (isSelectionMode) {
+      return _buildTile(context, ref, theme);
+    }
+
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Dismissible(
+        key: Key(sshKey.id),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          color: theme.danger,
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: VibeTermSpacing.md),
+          child: const Icon(Icons.delete, color: Colors.white),
         ),
-        onTap: () => _showKeyDetails(context, ref),
+        confirmDismiss: (direction) => _confirmDelete(context, ref),
+        onDismissed: (direction) {
+          ref.read(settingsProvider.notifier).removeSSHKey(sshKey.id);
+        },
+        child: _buildTileContent(context, ref, theme),
       ),
+    );
+  }
+
+  Widget _buildTile(BuildContext context, WidgetRef ref, VibeTermThemeData theme) {
+    return ListTile(
+      leading: Checkbox(
+        value: isSelected,
+        onChanged: (_) => onSelectionToggle?.call(),
+        activeColor: theme.accent,
+        side: BorderSide(color: theme.textMuted),
+      ),
+      title: Text(sshKey.name, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
+      subtitle: Text(
+        '${sshKey.typeLabel} • ${_formatDate(sshKey.createdAt)}',
+        style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+      ),
+      onTap: onSelectionToggle,
+    );
+  }
+
+  Widget _buildTileContent(BuildContext context, WidgetRef ref, VibeTermThemeData theme) {
+    return ListTile(
+      leading: Icon(Icons.key, color: theme.accent),
+      title: Text(sshKey.name, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
+      subtitle: Text(
+        '${sshKey.typeLabel} • ${_formatDate(sshKey.createdAt)}',
+        style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+      ),
+      onTap: () => _showKeyDetails(context, ref),
     );
   }
 

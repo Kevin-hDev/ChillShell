@@ -63,6 +63,8 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
     if (input.isEmpty) {
       debugPrint('DEBUG _onSubmit: Sending Enter (\\r) to tab ${sshState.currentTabId}');
       sshNotifier.write('\r');
+      // Garder le clavier ouvert
+      _focusNode.requestFocus();
       return;
     }
 
@@ -91,6 +93,11 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
     _controller.clear();
     terminalNotifier.setInput('');
 
+    // Garder le clavier ouvert après submission
+    // Cela évite les resize events pendant l'exécution de la commande
+    // et améliore l'UX (on peut taper plusieurs commandes)
+    _focusNode.requestFocus();
+
     // Valider la commande après un délai (si pas d'erreur détectée dans la sortie)
     _validateCommandAfterDelay(terminalNotifier);
   }
@@ -108,6 +115,10 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
     setState(() {
       _ctrlArmed = !_ctrlArmed;
     });
+    if (_ctrlArmed) {
+      _focusNode.requestFocus();
+      SystemChannels.textInput.invokeMethod('TextInput.show');
+    }
   }
 
   void _sendCtrlKey(String letter) {

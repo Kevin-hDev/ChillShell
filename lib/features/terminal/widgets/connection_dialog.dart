@@ -9,6 +9,7 @@ import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
 import '../../../services/storage_service.dart';
 import '../../settings/providers/settings_provider.dart';
+import '../../../shared/widgets/chillshell_loader.dart';
 
 class ConnectionDialog extends ConsumerStatefulWidget {
   const ConnectionDialog({super.key});
@@ -24,6 +25,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   String? _selectedKeyId;
   List<SavedConnection> _savedConnections = [];
   bool _showSavedConnections = true;
+  bool _isLoading = true; // Empêche le flash du formulaire pendant le chargement
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       setState(() {
         _savedConnections = connections;
         _showSavedConnections = connections.isNotEmpty;
+        _isLoading = false; // Chargement terminé
       });
     }
   }
@@ -52,7 +55,6 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final theme = ref.watch(vibeTermThemeProvider);
     final sshKeys = settings.sshKeys;
@@ -69,26 +71,18 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(l10n.newConnection, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
-                  ),
-                  if (_savedConnections.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        setState(() => _showSavedConnections = !_showSavedConnections);
-                      },
-                      child: Text(
-                        _showSavedConnections ? l10n.add : l10n.savedConnections,
-                        style: TextStyle(color: theme.accent),
-                      ),
+              // Attendre que le chargement soit terminé pour éviter le flash
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: ChillShellLoader(
+                      size: 100,
+                      style: LoaderAnimationStyle.float,
                     ),
-                ],
-              ),
-              const SizedBox(height: VibeTermSpacing.md),
-
-              if (_showSavedConnections && _savedConnections.isNotEmpty)
+                  ),
+                )
+              else if (_showSavedConnections && _savedConnections.isNotEmpty)
                 _buildSavedConnectionsList(context, theme)
               else
                 _buildNewConnectionForm(context, sshKeys, theme),
@@ -101,17 +95,31 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
   Widget _buildSavedConnectionsList(BuildContext context, VibeTermThemeData theme) {
     final l10n = context.l10n;
+    // Hauteur max pour ~4 connexions (chaque tuile ~85px)
+    const maxListHeight = 340.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.savedConnections, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
         const SizedBox(height: VibeTermSpacing.sm),
-        ..._savedConnections.map((connection) => _SavedConnectionTile(
-          connection: connection,
-          onTap: () => _connectWithSaved(connection),
-          onDelete: () => _deleteSavedConnection(connection),
-          theme: theme,
-        )),
+        // Liste scrollable si plus de 4 connexions
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: maxListHeight),
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _savedConnections.length,
+            itemBuilder: (context, index) {
+              final connection = _savedConnections[index];
+              return _SavedConnectionTile(
+                connection: connection,
+                onTap: () => _connectWithSaved(connection),
+                onDelete: () => _deleteSavedConnection(connection),
+                theme: theme,
+              );
+            },
+          ),
+        ),
         const SizedBox(height: VibeTermSpacing.md),
         Center(
           child: TextButton.icon(
@@ -134,6 +142,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Titre
+        Text(l10n.newConnection, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        const SizedBox(height: VibeTermSpacing.md),
         // Host
         _buildTextField(
           controller: _hostController,

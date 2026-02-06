@@ -36,8 +36,7 @@ class AppSettings {
   final bool notifyOnDisconnect;
   final bool biometricEnabled;
   final bool autoLockEnabled;
-  // Nouveaux champs pour paramétrage fin
-  final bool faceIdEnabled;
+  final bool pinLockEnabled;
   final bool fingerprintEnabled;
   final int autoLockMinutes;  // 5, 10, 15 ou 30
   final bool wolEnabled;  // Wake-on-LAN
@@ -52,7 +51,7 @@ class AppSettings {
     this.notifyOnDisconnect = false,
     this.biometricEnabled = false,
     this.autoLockEnabled = false,
-    this.faceIdEnabled = false,
+    this.pinLockEnabled = false,
     this.fingerprintEnabled = false,
     this.autoLockMinutes = 10,
     this.wolEnabled = false,
@@ -67,7 +66,7 @@ class AppSettings {
     bool? notifyOnDisconnect,
     bool? biometricEnabled,
     bool? autoLockEnabled,
-    bool? faceIdEnabled,
+    bool? pinLockEnabled,
     bool? fingerprintEnabled,
     int? autoLockMinutes,
     bool? wolEnabled,
@@ -82,7 +81,7 @@ class AppSettings {
       notifyOnDisconnect: notifyOnDisconnect ?? this.notifyOnDisconnect,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       autoLockEnabled: autoLockEnabled ?? this.autoLockEnabled,
-      faceIdEnabled: faceIdEnabled ?? this.faceIdEnabled,
+      pinLockEnabled: pinLockEnabled ?? this.pinLockEnabled,
       fingerprintEnabled: fingerprintEnabled ?? this.fingerprintEnabled,
       autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
       wolEnabled: wolEnabled ?? this.wolEnabled,
@@ -98,7 +97,7 @@ class AppSettings {
     'notifyOnDisconnect': notifyOnDisconnect,
     'biometricEnabled': biometricEnabled,
     'autoLockEnabled': autoLockEnabled,
-    'faceIdEnabled': faceIdEnabled,
+    'pinLockEnabled': pinLockEnabled,
     'fingerprintEnabled': fingerprintEnabled,
     'autoLockMinutes': autoLockMinutes,
     'wolEnabled': wolEnabled,
@@ -113,7 +112,7 @@ class AppSettings {
     notifyOnDisconnect: json['notifyOnDisconnect'] as bool? ?? false,
     biometricEnabled: json['biometricEnabled'] as bool? ?? false,
     autoLockEnabled: json['autoLockEnabled'] as bool? ?? false,
-    faceIdEnabled: json['faceIdEnabled'] as bool? ?? false,
+    pinLockEnabled: json['pinLockEnabled'] as bool? ?? false,
     fingerprintEnabled: json['fingerprintEnabled'] as bool? ?? false,
     autoLockMinutes: json['autoLockMinutes'] as int? ?? 10,
     wolEnabled: json['wolEnabled'] as bool? ?? false,

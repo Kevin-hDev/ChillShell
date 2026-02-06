@@ -29,11 +29,8 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _macController = TextEditingController();
-  final _broadcastController = TextEditingController(text: '255.255.255.255');
-  final _portController = TextEditingController(text: '9');
 
   String? _selectedConnectionId;
-  bool _showAdvanced = false;
   bool _isSaving = false;
 
   /// Regex pour valider le format MAC XX:XX:XX:XX:XX:XX
@@ -43,8 +40,6 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
   void dispose() {
     _nameController.dispose();
     _macController.dispose();
-    _broadcastController.dispose();
-    _portController.dispose();
     super.dispose();
   }
 
@@ -145,11 +140,13 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
               GestureDetector(
                 onTap: _showMacHelp,
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      l10n.howToFindMac,
-                      style: VibeTermTypography.caption.copyWith(color: theme.accent),
+                    Flexible(
+                      child: Text(
+                        l10n.howToFindMac,
+                        style: VibeTermTypography.caption.copyWith(color: theme.accent),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 4),
                     const Text(
@@ -165,10 +162,6 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
               _buildLabel(l10n.linkedSshConnection, theme),
               const SizedBox(height: VibeTermSpacing.xs),
               _buildConnectionDropdown(savedConnections, theme),
-              const SizedBox(height: VibeTermSpacing.md),
-
-              // Options avancées
-              _buildAdvancedSection(theme),
               const SizedBox(height: VibeTermSpacing.lg),
 
               // Bouton Enregistrer
@@ -283,6 +276,7 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
           value: _selectedConnectionId,
           isExpanded: true,
           dropdownColor: theme.bgElevated,
+          itemHeight: 60, // Hauteur suffisante pour 2 lignes
           hint: Text(
             l10n.selectConnection,
             style: VibeTermTypography.input.copyWith(color: theme.textMuted),
@@ -334,93 +328,6 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                 },
         ),
       ),
-    );
-  }
-
-  Widget _buildAdvancedSection(VibeTermThemeData theme) {
-    final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Séparateur avec titre
-        GestureDetector(
-          onTap: () => setState(() => _showAdvanced = !_showAdvanced),
-          child: Row(
-            children: [
-              Expanded(child: Divider(color: theme.border)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.sm),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.advancedOptions,
-                      style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      _showAdvanced ? Icons.expand_less : Icons.expand_more,
-                      size: 16,
-                      color: theme.textMuted,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(child: Divider(color: theme.border)),
-            ],
-          ),
-        ),
-        if (_showAdvanced) ...[
-          const SizedBox(height: VibeTermSpacing.md),
-
-          // Adresse broadcast
-          _buildLabel(l10n.broadcastOptional, theme),
-          const SizedBox(height: VibeTermSpacing.xs),
-          _buildTextField(
-            controller: _broadcastController,
-            hint: '255.255.255.255',
-            theme: theme,
-            keyboardType: TextInputType.text,
-          ),
-          const SizedBox(height: VibeTermSpacing.xs),
-          Text(
-            l10n.defaultBroadcast,
-            style: VibeTermTypography.caption.copyWith(
-              color: theme.textMuted,
-              fontSize: 11,
-            ),
-          ),
-          const SizedBox(height: VibeTermSpacing.md),
-
-          // Port UDP
-          _buildLabel(l10n.udpPortOptional, theme),
-          const SizedBox(height: VibeTermSpacing.xs),
-          _buildTextField(
-            controller: _portController,
-            hint: '9',
-            theme: theme,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            validator: (value) {
-              if (value != null && value.isNotEmpty) {
-                final port = int.tryParse(value);
-                if (port == null || port < 1 || port > 65535) {
-                  return l10n.portRange;
-                }
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: VibeTermSpacing.xs),
-          Text(
-            l10n.defaultPort,
-            style: VibeTermTypography.caption.copyWith(
-              color: theme.textMuted,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -511,19 +418,15 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
       // Récupérer les valeurs
       final name = _nameController.text.trim();
       final mac = _macController.text.toUpperCase().trim();
-      final broadcast = _broadcastController.text.trim().isNotEmpty
-          ? _broadcastController.text.trim()
-          : '255.255.255.255';
-      final port = int.tryParse(_portController.text.trim()) ?? 9;
 
-      // Créer la configuration avec un UUID unique
+      // Créer la configuration avec valeurs par défaut
       final config = WolConfig(
         id: const Uuid().v4(),
         name: name,
         macAddress: mac,
         sshConnectionId: _selectedConnectionId!,
-        broadcastAddress: broadcast,
-        port: port,
+        broadcastAddress: '255.255.255.255',
+        port: 9,
       );
 
       // Sauvegarder via le provider

@@ -8,16 +8,90 @@ import '../../../models/models.dart';
 import '../providers/settings_provider.dart';
 import 'section_header.dart';
 
-class QuickConnectionsSection extends ConsumerWidget {
+class QuickConnectionsSection extends ConsumerStatefulWidget {
   const QuickConnectionsSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuickConnectionsSection> createState() => _QuickConnectionsSectionState();
+}
+
+class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSection> {
+  bool _isSelectionMode = false;
+  final Set<String> _selectedIds = {};
+
+  void _enterSelectionMode(String connectionId) {
+    setState(() {
+      _isSelectionMode = true;
+      _selectedIds.add(connectionId);
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedIds.clear();
+    });
+  }
+
+  void _toggleSelection(String connectionId) {
+    setState(() {
+      if (_selectedIds.contains(connectionId)) {
+        _selectedIds.remove(connectionId);
+        if (_selectedIds.isEmpty) {
+          _isSelectionMode = false;
+        }
+      } else {
+        _selectedIds.add(connectionId);
+      }
+    });
+  }
+
+  Future<void> _deleteSelected() async {
+    final theme = ref.read(vibeTermThemeProvider);
+    final l10n = context.l10n;
+    final count = _selectedIds.length;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        title: Text(
+          'Supprimer $count connexion${count > 1 ? 's' : ''} ?',
+          style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+        ),
+        content: Text(
+          'Cette action est irréversible.',
+          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete, style: TextStyle(color: theme.danger)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      for (final id in _selectedIds) {
+        ref.read(settingsProvider.notifier).deleteSavedConnection(id);
+      }
+      _exitSelectionMode();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final settings = ref.watch(settingsProvider);
     final savedConnections = settings.savedConnections;
     final appSettings = settings.appSettings;
     final theme = ref.watch(vibeTermThemeProvider);
+    final autoConnectEnabled = appSettings.autoConnectOnStart;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,10 +134,24 @@ class QuickConnectionsSection extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: VibeTermSpacing.md),
-        // Liste des connexions sauvegardées
-        Text(
-          l10n.savedConnections,
-          style: VibeTermTypography.sectionLabel.copyWith(color: theme.textMuted),
+        // Liste des connexions automatiques
+        SectionHeader(
+          title: l10n.autoConnection.toUpperCase(),
+          trailing: _isSelectionMode
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.delete, color: theme.danger),
+                      onPressed: _selectedIds.isNotEmpty ? _deleteSelected : null,
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: theme.textMuted),
+                      onPressed: _exitSelectionMode,
+                    ),
+                  ],
+                )
+              : null,
         ),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
@@ -90,8 +178,13 @@ class QuickConnectionsSection extends ConsumerWidget {
                         _ConnectionItem(
                           connection: connection,
                           theme: theme,
-                          onToggleQuickAccess: () => ref.read(settingsProvider.notifier).toggleQuickAccess(connection.id),
-                          onDelete: () => _showDeleteDialog(context, ref, connection.id, connection.name),
+                          isEnabled: autoConnectEnabled,
+                          isSelectionMode: _isSelectionMode,
+                          isSelected: _selectedIds.contains(connection.id),
+                          onSelect: () => ref.read(settingsProvider.notifier).selectAutoConnection(connection.id),
+                          onDelete: () => _showDeleteDialog(context, connection.id, connection.name),
+                          onLongPress: () => _enterSelectionMode(connection.id),
+                          onSelectionToggle: () => _toggleSelection(connection.id),
                         ),
                       ],
                     );
@@ -102,7 +195,7 @@ class QuickConnectionsSection extends ConsumerWidget {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, WidgetRef ref, String id, String name) {
+  void _showDeleteDialog(BuildContext context, String id, String name) {
     final l10n = context.l10n;
     final theme = ref.read(vibeTermThemeProvider);
     showDialog(
@@ -165,47 +258,117 @@ class _SettingsToggle extends StatelessWidget {
 class _ConnectionItem extends StatelessWidget {
   final SavedConnection connection;
   final VibeTermThemeData theme;
-  final VoidCallback onToggleQuickAccess;
+  final bool isEnabled;
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback onSelect;
   final VoidCallback onDelete;
+  final VoidCallback onLongPress;
+  final VoidCallback onSelectionToggle;
 
   const _ConnectionItem({
     required this.connection,
     required this.theme,
-    required this.onToggleQuickAccess,
+    required this.isEnabled,
+    required this.isSelectionMode,
+    required this.isSelected,
+    required this.onSelect,
     required this.onDelete,
+    required this.onLongPress,
+    required this.onSelectionToggle,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        width: 10,
-        height: 10,
-        decoration: BoxDecoration(
-          color: connection.isQuickAccess ? theme.success : theme.textMuted,
-          shape: BoxShape.circle,
+    final isActive = connection.isQuickAccess;
+    final isDisabled = !isEnabled;
+
+    // En mode sélection, pas de swipe
+    if (isSelectionMode) {
+      return _buildTile(context, isActive, isDisabled);
+    }
+
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Dismissible(
+        key: Key(connection.id),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          color: theme.danger,
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: VibeTermSpacing.md),
+          child: const Icon(Icons.delete, color: Colors.white),
         ),
+        confirmDismiss: (direction) => _confirmDelete(context),
+        onDismissed: (direction) => onDelete(),
+        child: _buildTile(context, isActive, isDisabled),
       ),
+    );
+  }
+
+  Widget _buildTile(BuildContext context, bool isActive, bool isDisabled) {
+    final textColor = isDisabled ? theme.textMuted.withValues(alpha: 0.5) : theme.text;
+    final subtitleColor = isDisabled ? theme.textMuted.withValues(alpha: 0.3) : theme.textMuted;
+
+    return ListTile(
+      leading: isSelectionMode
+          ? Checkbox(
+              value: isSelected,
+              onChanged: (_) => onSelectionToggle(),
+              activeColor: theme.accent,
+              side: BorderSide(color: theme.textMuted),
+            )
+          : Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: isActive && !isDisabled ? theme.accent : Colors.transparent,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDisabled ? theme.textMuted.withValues(alpha: 0.3) : (isActive ? theme.accent : theme.textMuted),
+                  width: 2,
+                ),
+              ),
+              child: isActive && !isDisabled
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : null,
+            ),
       title: Text(
         connection.name,
-        style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+        style: VibeTermTypography.itemTitle.copyWith(color: textColor),
       ),
       subtitle: Text(
         '${connection.username}@${connection.host}:${connection.port}',
-        style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+        style: VibeTermTypography.itemDescription.copyWith(color: subtitleColor),
       ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Switch(
-            value: connection.isQuickAccess,
-            activeTrackColor: theme.accent.withValues(alpha: 0.5),
-            activeThumbColor: theme.accent,
-            onChanged: (_) => onToggleQuickAccess(),
+      onTap: isSelectionMode
+          ? onSelectionToggle
+          : (isDisabled ? null : onSelect),
+    );
+  }
+
+  Future<bool?> _confirmDelete(BuildContext context) {
+    final l10n = context.l10n;
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        title: Text(
+          l10n.deleteConnectionConfirm,
+          style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+        ),
+        content: Text(
+          connection.name,
+          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
           ),
-          IconButton(
-            icon: Icon(Icons.delete_outline, color: theme.textMuted),
-            onPressed: onDelete,
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.delete, style: TextStyle(color: theme.danger)),
           ),
         ],
       ),

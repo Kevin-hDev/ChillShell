@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/typography.dart';
 import '../../core/theme/spacing.dart';
 import '../../core/theme/theme_provider.dart';
-import '../../models/models.dart';
 import '../../features/terminal/providers/providers.dart';
 
 class AppHeader extends ConsumerWidget {
@@ -23,7 +22,11 @@ class AppHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(activeSessionProvider);
+    final sshState = ref.watch(sshProvider);
     final theme = ref.watch(vibeTermThemeProvider);
+
+    // Afficher le bouton déconnexion si session SSH OU Local Shell connecté
+    final isConnected = session != null || sshState.connectionState == SSHConnectionState.connected;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -41,62 +44,25 @@ class AppHeader extends ConsumerWidget {
         child: Row(
           children: [
             // Logo
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: theme.accent,
-                borderRadius: BorderRadius.circular(VibeTermRadius.md),
-              ),
-              child: Center(
-                child: Text(
-                  '>_',
-                  style: TextStyle(
-                    color: theme.bg,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(VibeTermRadius.md),
+              child: Image.asset(
+                'assets/images/ICONE_CHILL.png',
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
               ),
             ),
             const SizedBox(width: VibeTermSpacing.sm),
-            // Title & subtitle
+            // Title (IP retirée - déjà visible dans la barre d'info)
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'ChillShell',
-                    style: VibeTermTypography.appTitle.copyWith(color: theme.text),
-                  ),
-                  if (session != null)
-                    Row(
-                      children: [
-                        Container(
-                          width: VibeTermSizes.statusDotSmall,
-                          height: VibeTermSizes.statusDotSmall,
-                          decoration: BoxDecoration(
-                            color: session.status == ConnectionStatus.connected
-                                ? theme.success
-                                : theme.textMuted,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          session.host,
-                          style: VibeTermTypography.caption.copyWith(
-                            color: theme.accent,
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
+              child: Text(
+                'ChillShell',
+                style: VibeTermTypography.appTitle.copyWith(color: theme.text),
               ),
             ),
             // Nav buttons
-            if (session != null && onDisconnect != null) ...[
+            if (isConnected && onDisconnect != null) ...[
               _NavButton(
                 icon: Icons.logout,
                 isActive: false,
@@ -161,11 +127,11 @@ class _NavButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 33,   // Réduit de 44 → 33 (25%)
+        height: 33,
         decoration: BoxDecoration(
           color: isActive ? theme.bgElevated : theme.bgBlock,
-          borderRadius: BorderRadius.circular(VibeTermRadius.md),
+          borderRadius: BorderRadius.circular(VibeTermRadius.sm),  // Radius réduit aussi
           border: Border.all(
             color: borderColor,
             width: isActive ? 1.5 : 1,
@@ -174,7 +140,7 @@ class _NavButton extends StatelessWidget {
         child: Icon(
           icon,
           color: iconColor,
-          size: 22,
+          size: 17,  // Réduit de 22 → 17
         ),
       ),
     );

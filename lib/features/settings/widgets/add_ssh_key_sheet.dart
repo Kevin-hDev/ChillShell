@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -19,14 +21,19 @@ class AddSSHKeySheet extends ConsumerStatefulWidget {
 
 class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
   bool _showGenerateForm = false;
+  bool _showImportForm = false;
   bool _isGenerating = false;
+  bool _isImporting = false;
   String? _generatedPublicKey;
   final _nameController = TextEditingController();
-  String _selectedType = 'Ed25519';
+  final _importNameController = TextEditingController();
+  final _privateKeyController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
+    _importNameController.dispose();
+    _privateKeyController.dispose();
     super.dispose();
   }
 
@@ -42,33 +49,37 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
         top: VibeTermSpacing.md,
         bottom: MediaQuery.of(context).viewInsets.bottom + VibeTermSpacing.md,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.sshKeys, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
-          const SizedBox(height: VibeTermSpacing.md),
-          if (!_showGenerateForm) ...[
-            _OptionTile(
-              icon: Icons.file_upload,
-              title: l10n.privateKey,
-              subtitle: '.pem / .pub',
-              onTap: _importKey,
-              theme: theme,
-            ),
-            const SizedBox(height: VibeTermSpacing.sm),
-            _OptionTile(
-              icon: Icons.auto_fix_high,
-              title: l10n.generateKey,
-              subtitle: l10n.keyType,
-              onTap: () => setState(() => _showGenerateForm = true),
-              theme: theme,
-            ),
-          ] else ...[
-            _buildGenerateForm(context, theme),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.sshKeys, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+            const SizedBox(height: VibeTermSpacing.md),
+            if (!_showGenerateForm && !_showImportForm) ...[
+              _OptionTile(
+                icon: Icons.add_circle_outline,
+                title: l10n.createSshKey,
+                subtitle: 'Ed25519',
+                onTap: () => setState(() => _showGenerateForm = true),
+                theme: theme,
+              ),
+              const SizedBox(height: VibeTermSpacing.sm),
+              _OptionTile(
+                icon: Icons.file_upload,
+                title: l10n.importKey,
+                subtitle: l10n.importKeySubtitle,
+                onTap: () => setState(() => _showImportForm = true),
+                theme: theme,
+              ),
+            ] else if (_showGenerateForm) ...[
+              _buildGenerateForm(context, theme),
+            ] else if (_showImportForm) ...[
+              _buildImportForm(context, theme),
+            ],
+            const SizedBox(height: VibeTermSpacing.md),
           ],
-          const SizedBox(height: VibeTermSpacing.md),
-        ],
+        ),
       ),
     );
   }
@@ -162,25 +173,32 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
             ),
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.md),
-        Text(l10n.keyType, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
-        const SizedBox(height: VibeTermSpacing.xs),
-        Row(
-          children: [
-            _TypeChip(
-              label: 'Ed25519',
-              isSelected: _selectedType == 'Ed25519',
-              onTap: _isGenerating ? null : () => setState(() => _selectedType = 'Ed25519'),
-              theme: theme,
-            ),
-            const SizedBox(width: VibeTermSpacing.sm),
-            _TypeChip(
-              label: 'RSA 4096',
-              isSelected: _selectedType == 'RSA 4096',
-              onTap: _isGenerating ? null : () => setState(() => _selectedType = 'RSA 4096'),
-              theme: theme,
-            ),
-          ],
+        const SizedBox(height: VibeTermSpacing.sm),
+        // Type de clé fixé à Ed25519 (le plus sécurisé)
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: VibeTermSpacing.md,
+            vertical: VibeTermSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: theme.accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            border: Border.all(color: theme.accent.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock, size: 14, color: theme.accent),
+              const SizedBox(width: VibeTermSpacing.xs),
+              Text(
+                'Ed25519',
+                style: VibeTermTypography.caption.copyWith(
+                  color: theme.accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: VibeTermSpacing.md),
         Row(
@@ -205,7 +223,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                         color: theme.bg,
                       ),
                     )
-                  : Text(l10n.generateKey),
+                  : Text(l10n.createSshKey),
             ),
           ],
         ),
@@ -213,8 +231,211 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
     );
   }
 
-  void _importKey() {
-    Navigator.pop(context);
+  Widget _buildImportForm(BuildContext context, VibeTermThemeData theme) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _importNameController,
+          style: VibeTermTypography.input.copyWith(color: theme.text),
+          enabled: !_isImporting,
+          decoration: InputDecoration(
+            labelText: l10n.keyName,
+            labelStyle: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theme.border),
+              borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theme.accent),
+              borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            ),
+          ),
+        ),
+        const SizedBox(height: VibeTermSpacing.md),
+        Text(
+          l10n.privateKey,
+          style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
+        ),
+        const SizedBox(height: VibeTermSpacing.xs),
+        // Bouton pour sélectionner un fichier
+        OutlinedButton.icon(
+          onPressed: _isImporting ? null : _pickKeyFile,
+          icon: Icon(Icons.folder_open, color: theme.accent, size: 18),
+          label: Text(
+            l10n.selectFile,
+            style: VibeTermTypography.caption.copyWith(color: theme.accent),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: theme.border),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            ),
+          ),
+        ),
+        const SizedBox(height: VibeTermSpacing.sm),
+        Text(
+          l10n.orPasteKey,
+          style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+        ),
+        const SizedBox(height: VibeTermSpacing.xs),
+        TextField(
+          controller: _privateKeyController,
+          style: VibeTermTypography.caption.copyWith(
+            color: theme.text,
+            fontFamily: 'JetBrainsMono',
+            fontSize: 11,
+          ),
+          enabled: !_isImporting,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----',
+            hintStyle: VibeTermTypography.caption.copyWith(
+              color: theme.textMuted,
+              fontSize: 10,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theme.border),
+              borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: theme.accent),
+              borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            ),
+          ),
+        ),
+        const SizedBox(height: VibeTermSpacing.md),
+        Row(
+          children: [
+            TextButton(
+              onPressed: _isImporting ? null : () => setState(() => _showImportForm = false),
+              child: Text(l10n.cancel, style: TextStyle(color: theme.accent)),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.accent,
+                foregroundColor: theme.bg,
+              ),
+              onPressed: _isImporting ? null : _doImportKey,
+              child: _isImporting
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.bg,
+                      ),
+                    )
+                  : Text(l10n.importKey),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickKeyFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+
+        // Lire le contenu du fichier
+        String? content;
+        if (file.bytes != null) {
+          content = String.fromCharCodes(file.bytes!);
+        } else if (file.path != null) {
+          final fileContent = await _readFileContent(file.path!);
+          content = fileContent;
+        }
+
+        if (content != null && content.isNotEmpty) {
+          setState(() {
+            _privateKeyController.text = content!;
+            // Utiliser le nom du fichier comme nom de clé si vide
+            if (_importNameController.text.isEmpty && file.name.isNotEmpty) {
+              _importNameController.text = file.name.replaceAll(RegExp(r'\.(pem|key|pub)$'), '');
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    }
+  }
+
+  Future<String?> _readFileContent(String path) async {
+    try {
+      final content = await File(path).readAsString();
+      return content;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> _doImportKey() async {
+    final name = _importNameController.text.trim();
+    final privateKey = _privateKeyController.text.trim();
+
+    if (name.isEmpty || privateKey.isEmpty) return;
+
+    // Vérifier que c'est une clé valide
+    if (!privateKey.contains('PRIVATE KEY')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Format de clé invalide')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isImporting = true);
+
+    try {
+      final keyId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      // Détecter le type de clé
+      final keyType = privateKey.contains('ED25519') || privateKey.contains('ed25519')
+          ? SSHKeyType.ed25519
+          : SSHKeyType.rsa;
+
+      await SecureStorageService.savePrivateKey(keyId, privateKey);
+
+      final newKey = SSHKey(
+        id: keyId,
+        name: name,
+        host: '*',
+        type: keyType,
+        privateKey: '',
+        createdAt: DateTime.now(),
+      );
+
+      await ref.read(settingsProvider.notifier).addSSHKey(newKey);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Clé "$name" importée')),
+        );
+      }
+    } catch (e) {
+      setState(() => _isImporting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _generateKey() async {
@@ -226,13 +447,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
       final keyName = _nameController.text.trim();
       final comment = '$keyName@vibeterm';
 
-      final keyPair = _selectedType == 'Ed25519'
-          ? await KeyGenerationService.generateEd25519(comment)
-          : await KeyGenerationService.generateRSA4096(comment);
-
-      final keyType = _selectedType == 'Ed25519'
-          ? SSHKeyType.ed25519
-          : SSHKeyType.rsa;
+      // Toujours Ed25519 (le plus sécurisé)
+      final keyPair = await KeyGenerationService.generateEd25519(comment);
+      const keyType = SSHKeyType.ed25519;
 
       final keyId = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -310,42 +527,3 @@ class _OptionTile extends StatelessWidget {
   }
 }
 
-class _TypeChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback? onTap;
-  final VibeTermThemeData theme;
-
-  const _TypeChip({
-    required this.label,
-    required this.isSelected,
-    this.onTap,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: VibeTermSpacing.md,
-          vertical: VibeTermSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? theme.accent : theme.bg,
-          borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-          border: Border.all(
-            color: isSelected ? theme.accent : theme.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: VibeTermTypography.caption.copyWith(
-            color: isSelected ? theme.bg : theme.text,
-          ),
-        ),
-      ),
-    );
-  }
-}

@@ -1,12 +1,20 @@
 {
   "@@locale": "en",
-  "appName": "VibeTerm",
+  "appName": "ChillShell",
 
   "settings": "Settings",
   "connection": "Connection",
+  "access": "Access",
   "general": "General",
   "security": "Security",
   "wol": "WOL",
+
+  "remoteAccess": "Remote Access",
+  "tailscaleDescription": "Connect to your PC from anywhere in the world",
+  "playStore": "Play Store",
+  "appStore": "App Store",
+  "website": "Website",
+  "noSshKeys": "No SSH keys. Create one to connect.",
 
   "theme": "Theme",
   "language": "Language",
@@ -49,6 +57,11 @@
 
   "sshKeys": "SSH Keys",
   "generateKey": "Generate key",
+  "createSshKey": "Create SSH Key",
+  "importKey": "Import Key",
+  "importKeySubtitle": ".pem file or private key",
+  "selectFile": "Select a file",
+  "orPasteKey": "Or paste the key:",
   "keyName": "Key name",
   "keyType": "Key type",
   "publicKey": "Public key",
@@ -59,6 +72,7 @@
   "deleteKeyConfirm": "Delete this SSH key?",
 
   "savedConnections": "Saved connections",
+  "autoConnection": "Auto connection",
   "host": "Host",
   "port": "Port",
   "username": "Username",
@@ -68,7 +82,15 @@
 
   "biometricUnlock": "Biometric unlock",
   "faceId": "Face ID",
+  "unlock": "Unlock",
+  "pinCode": "PIN Code",
+  "createPin": "Create your PIN",
+  "confirmPin": "Confirm your PIN",
+  "enterPin": "Enter your PIN",
+  "pinMismatch": "PINs do not match",
+  "wrongPin": "Wrong PIN",
   "fingerprint": "Fingerprint",
+  "fingerprintUnavailable": "No fingerprint registered on this device",
   "autoLock": "Auto-lock",
   "autoLockTime": "Auto-lock time",
   "minutes": "minutes",
@@ -136,9 +158,19 @@
 
   "noWolConfig": "No configuration. Add one to enable WOL.",
 
+  "configRequired": "Configuration required",
+  "wolDescription": "Wake-on-LAN lets you turn on your PC from the app.",
+  "turnOnCableRequired": "Turn on: Ethernet cable required",
+  "turnOffWifiOrCable": "Turn off: WiFi or cable",
+  "fullGuide": "Full guide",
+  "linkCopied": "Link copied",
+
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "Wake up a PC",
   "connectionLostSnack": "Connection lost",
   "unableToCreateTab": "Unable to create a new tab",
-  "privateKeyNotFound": "Private key not found"
+  "privateKeyNotFound": "Private key not found",
+
+  "uploadingImage": "Uploading image...",
+  "uploadFailed": "Image upload failed"
 }

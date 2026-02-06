@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'VibeTerm'**
+  /// **'ChillShell'**
   String get appName;
 
   /// No description provided for @settings.
@@ -121,6 +121,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection'**
   String get connection;
+
+  /// No description provided for @access.
+  ///
+  /// In en, this message translates to:
+  /// **'Access'**
+  String get access;
 
   /// No description provided for @general.
   ///
@@ -139,6 +145,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'WOL'**
   String get wol;
+
+  /// No description provided for @remoteAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Remote Access'**
+  String get remoteAccess;
+
+  /// No description provided for @tailscaleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect to your PC from anywhere in the world'**
+  String get tailscaleDescription;
+
+  /// No description provided for @playStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Store'**
+  String get playStore;
+
+  /// No description provided for @appStore.
+  ///
+  /// In en, this message translates to:
+  /// **'App Store'**
+  String get appStore;
+
+  /// No description provided for @website.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get website;
+
+  /// No description provided for @noSshKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'No SSH keys. Create one to connect.'**
+  String get noSshKeys;
 
   /// No description provided for @theme.
   ///
@@ -356,6 +398,36 @@ abstract class AppLocalizations {
   /// **'Generate key'**
   String get generateKey;
 
+  /// No description provided for @createSshKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Create SSH Key'**
+  String get createSshKey;
+
+  /// No description provided for @importKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Key'**
+  String get importKey;
+
+  /// No description provided for @importKeySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'.pem file or private key'**
+  String get importKeySubtitle;
+
+  /// No description provided for @selectFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a file'**
+  String get selectFile;
+
+  /// No description provided for @orPasteKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Or paste the key:'**
+  String get orPasteKey;
+
   /// No description provided for @keyName.
   ///
   /// In en, this message translates to:
@@ -410,6 +482,12 @@ abstract class AppLocalizations {
   /// **'Saved connections'**
   String get savedConnections;
 
+  /// No description provided for @autoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto connection'**
+  String get autoConnection;
+
   /// No description provided for @host.
   ///
   /// In en, this message translates to:
@@ -458,11 +536,59 @@ abstract class AppLocalizations {
   /// **'Face ID'**
   String get faceId;
 
+  /// No description provided for @unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlock;
+
+  /// No description provided for @pinCode.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN Code'**
+  String get pinCode;
+
+  /// No description provided for @createPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your PIN'**
+  String get createPin;
+
+  /// No description provided for @confirmPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm your PIN'**
+  String get confirmPin;
+
+  /// No description provided for @enterPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN'**
+  String get enterPin;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'PINs do not match'**
+  String get pinMismatch;
+
+  /// No description provided for @wrongPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong PIN'**
+  String get wrongPin;
+
   /// No description provided for @fingerprint.
   ///
   /// In en, this message translates to:
   /// **'Fingerprint'**
   String get fingerprint;
+
+  /// No description provided for @fingerprintUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No fingerprint registered on this device'**
+  String get fingerprintUnavailable;
 
   /// No description provided for @autoLock.
   ///
@@ -824,6 +950,42 @@ abstract class AppLocalizations {
   /// **'No configuration. Add one to enable WOL.'**
   String get noWolConfig;
 
+  /// No description provided for @configRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Configuration required'**
+  String get configRequired;
+
+  /// No description provided for @wolDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake-on-LAN lets you turn on your PC from the app.'**
+  String get wolDescription;
+
+  /// No description provided for @turnOnCableRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on: Ethernet cable required'**
+  String get turnOnCableRequired;
+
+  /// No description provided for @turnOffWifiOrCable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off: WiFi or cable'**
+  String get turnOffWifiOrCable;
+
+  /// No description provided for @fullGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Full guide'**
+  String get fullGuide;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Link copied'**
+  String get linkCopied;
+
   /// No description provided for @terminalTab.
   ///
   /// In en, this message translates to:
@@ -853,6 +1015,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Private key not found'**
   String get privateKeyNotFound;
+
+  /// No description provided for @uploadingImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading image...'**
+  String get uploadingImage;
+
+  /// No description provided for @uploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Image upload failed'**
+  String get uploadFailed;
 }
 
 class _AppLocalizationsDelegate

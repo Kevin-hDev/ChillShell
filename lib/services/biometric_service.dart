@@ -28,10 +28,10 @@ class BiometricService {
   static Future<bool> authenticate() async {
     try {
       return await _auth.authenticate(
-        localizedReason: 'Déverrouillez VibeTerm pour accéder à vos sessions SSH',
+        localizedReason: 'Déverrouillez ChillShell pour accéder à vos sessions SSH',
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false, // Permet aussi PIN/pattern si biométrie échoue
+          biometricOnly: true, // Empreinte uniquement, notre UI gère le code PIN
         ),
       );
     } on PlatformException catch (e) {

@@ -1,12 +1,20 @@
 {
   "@@locale": "de",
-  "appName": "VibeTerm",
+  "appName": "ChillShell",
 
   "settings": "Einstellungen",
   "connection": "Verbindung",
+  "access": "Zugang",
   "general": "Allgemein",
   "security": "Sicherheit",
   "wol": "WOL",
+
+  "remoteAccess": "Fernzugriff",
+  "tailscaleDescription": "Verbinden Sie sich von überall auf der Welt mit Ihrem PC",
+  "playStore": "Play Store",
+  "appStore": "App Store",
+  "website": "Webseite",
+  "noSshKeys": "Keine SSH-Schlüssel. Erstellen Sie einen, um sich zu verbinden.",
 
   "theme": "Thema",
   "language": "Sprache",
@@ -49,6 +57,11 @@
 
   "sshKeys": "SSH-Schlüssel",
   "generateKey": "Schlüssel generieren",
+  "createSshKey": "SSH-Schlüssel erstellen",
+  "importKey": "Schlüssel importieren",
+  "importKeySubtitle": ".pem-Datei oder privater Schlüssel",
+  "selectFile": "Datei auswählen",
+  "orPasteKey": "Oder Schlüssel einfügen:",
   "keyName": "Schlüsselname",
   "keyType": "Schlüsseltyp",
   "publicKey": "Öffentlicher Schlüssel",
@@ -59,6 +72,7 @@
   "deleteKeyConfirm": "Diesen SSH-Schlüssel löschen?",
 
   "savedConnections": "Gespeicherte Verbindungen",
+  "autoConnection": "Automatische Verbindung",
   "host": "Host",
   "port": "Port",
   "username": "Benutzername",
@@ -68,7 +82,15 @@
 
   "biometricUnlock": "Biometrische Entsperrung",
   "faceId": "Face ID",
+  "unlock": "Entsperrung",
+  "pinCode": "PIN-Code",
+  "createPin": "PIN erstellen",
+  "confirmPin": "PIN bestätigen",
+  "enterPin": "PIN eingeben",
+  "pinMismatch": "PINs stimmen nicht überein",
+  "wrongPin": "Falscher PIN",
   "fingerprint": "Fingerabdruck",
+  "fingerprintUnavailable": "Kein Fingerabdruck auf diesem Gerät registriert",
   "autoLock": "Automatische Sperre",
   "autoLockTime": "Sperrzeit",
   "minutes": "Minuten",
@@ -136,9 +158,19 @@
 
   "noWolConfig": "Keine Konfiguration. Fügen Sie eine hinzu, um WOL zu aktivieren.",
 
+  "configRequired": "Konfiguration erforderlich",
+  "wolDescription": "Wake-on-LAN ermöglicht das Einschalten Ihres PCs über die App.",
+  "turnOnCableRequired": "Einschalten: Ethernet-Kabel erforderlich",
+  "turnOffWifiOrCable": "Ausschalten: WiFi oder Kabel",
+  "fullGuide": "Vollständige Anleitung",
+  "linkCopied": "Link kopiert",
+
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "PC aufwecken",
   "connectionLostSnack": "Verbindung verloren",
   "unableToCreateTab": "Tab konnte nicht erstellt werden",
-  "privateKeyNotFound": "Privater Schlüssel nicht gefunden"
+  "privateKeyNotFound": "Privater Schlüssel nicht gefunden",
+
+  "uploadingImage": "Bild wird hochgeladen...",
+  "uploadFailed": "Bild-Upload fehlgeschlagen"
 }

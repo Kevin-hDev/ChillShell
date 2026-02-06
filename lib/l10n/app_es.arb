@@ -1,12 +1,20 @@
 {
   "@@locale": "es",
-  "appName": "VibeTerm",
+  "appName": "ChillShell",
 
   "settings": "Ajustes",
   "connection": "Conexión",
+  "access": "Acceso",
   "general": "General",
   "security": "Seguridad",
   "wol": "WOL",
+
+  "remoteAccess": "Acceso remoto",
+  "tailscaleDescription": "Conéctate a tu PC desde cualquier parte del mundo",
+  "playStore": "Play Store",
+  "appStore": "App Store",
+  "website": "Sitio web",
+  "noSshKeys": "Sin claves SSH. Crea una para conectarte.",
 
   "theme": "Tema",
   "language": "Idioma",
@@ -49,6 +57,11 @@
 
   "sshKeys": "Claves SSH",
   "generateKey": "Generar clave",
+  "createSshKey": "Crear clave SSH",
+  "importKey": "Importar clave",
+  "importKeySubtitle": "Archivo .pem o clave privada",
+  "selectFile": "Seleccionar archivo",
+  "orPasteKey": "O pega la clave:",
   "keyName": "Nombre de la clave",
   "keyType": "Tipo de clave",
   "publicKey": "Clave pública",
@@ -59,6 +72,7 @@
   "deleteKeyConfirm": "¿Eliminar esta clave SSH?",
 
   "savedConnections": "Conexiones guardadas",
+  "autoConnection": "Conexión automática",
   "host": "Host",
   "port": "Puerto",
   "username": "Usuario",
@@ -68,7 +82,15 @@
 
   "biometricUnlock": "Desbloqueo biométrico",
   "faceId": "Face ID",
+  "unlock": "Desbloqueo",
+  "pinCode": "Código PIN",
+  "createPin": "Crear su PIN",
+  "confirmPin": "Confirmar su PIN",
+  "enterPin": "Ingrese su PIN",
+  "pinMismatch": "Los PIN no coinciden",
+  "wrongPin": "PIN incorrecto",
   "fingerprint": "Huella dactilar",
+  "fingerprintUnavailable": "No hay huella registrada en este dispositivo",
   "autoLock": "Bloqueo automático",
   "autoLockTime": "Tiempo de bloqueo",
   "minutes": "minutos",
@@ -136,9 +158,19 @@
 
   "noWolConfig": "Sin configuración. Añada una para activar WOL.",
 
+  "configRequired": "Configuración requerida",
+  "wolDescription": "Wake-on-LAN te permite encender tu PC desde la app.",
+  "turnOnCableRequired": "Encender: cable Ethernet requerido",
+  "turnOffWifiOrCable": "Apagar: WiFi o cable",
+  "fullGuide": "Guía completa",
+  "linkCopied": "Enlace copiado",
+
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "Encender un PC",
   "connectionLostSnack": "Conexión perdida",
   "unableToCreateTab": "No se pudo crear una nueva pestaña",
-  "privateKeyNotFound": "Clave privada no encontrada"
+  "privateKeyNotFound": "Clave privada no encontrada",
+
+  "uploadingImage": "Subiendo imagen...",
+  "uploadFailed": "Error al subir la imagen"
 }

@@ -9,13 +9,16 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'VibeTerm';
+  String get appName => 'ChillShell';
 
   @override
   String get settings => 'Settings';
 
   @override
   String get connection => 'Connection';
+
+  @override
+  String get access => 'Access';
 
   @override
   String get general => 'General';
@@ -25,6 +28,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wol => 'WOL';
+
+  @override
+  String get remoteAccess => 'Remote Access';
+
+  @override
+  String get tailscaleDescription =>
+      'Connect to your PC from anywhere in the world';
+
+  @override
+  String get playStore => 'Play Store';
+
+  @override
+  String get appStore => 'App Store';
+
+  @override
+  String get website => 'Website';
+
+  @override
+  String get noSshKeys => 'No SSH keys. Create one to connect.';
 
   @override
   String get theme => 'Theme';
@@ -137,6 +159,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generateKey => 'Generate key';
 
   @override
+  String get createSshKey => 'Create SSH Key';
+
+  @override
+  String get importKey => 'Import Key';
+
+  @override
+  String get importKeySubtitle => '.pem file or private key';
+
+  @override
+  String get selectFile => 'Select a file';
+
+  @override
+  String get orPasteKey => 'Or paste the key:';
+
+  @override
   String get keyName => 'Key name';
 
   @override
@@ -164,6 +201,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedConnections => 'Saved connections';
 
   @override
+  String get autoConnection => 'Auto connection';
+
+  @override
   String get host => 'Host';
 
   @override
@@ -188,7 +228,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get faceId => 'Face ID';
 
   @override
+  String get unlock => 'Unlock';
+
+  @override
+  String get pinCode => 'PIN Code';
+
+  @override
+  String get createPin => 'Create your PIN';
+
+  @override
+  String get confirmPin => 'Confirm your PIN';
+
+  @override
+  String get enterPin => 'Enter your PIN';
+
+  @override
+  String get pinMismatch => 'PINs do not match';
+
+  @override
+  String get wrongPin => 'Wrong PIN';
+
+  @override
   String get fingerprint => 'Fingerprint';
+
+  @override
+  String get fingerprintUnavailable =>
+      'No fingerprint registered on this device';
 
   @override
   String get autoLock => 'Auto-lock';
@@ -382,6 +447,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noWolConfig => 'No configuration. Add one to enable WOL.';
 
   @override
+  String get configRequired => 'Configuration required';
+
+  @override
+  String get wolDescription =>
+      'Wake-on-LAN lets you turn on your PC from the app.';
+
+  @override
+  String get turnOnCableRequired => 'Turn on: Ethernet cable required';
+
+  @override
+  String get turnOffWifiOrCable => 'Turn off: WiFi or cable';
+
+  @override
+  String get fullGuide => 'Full guide';
+
+  @override
+  String get linkCopied => 'Link copied';
+
+  @override
   String terminalTab(Object number) {
     return 'Terminal $number';
   }
@@ -397,4 +481,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privateKeyNotFound => 'Private key not found';
+
+  @override
+  String get uploadingImage => 'Uploading image...';
+
+  @override
+  String get uploadFailed => 'Image upload failed';
 }

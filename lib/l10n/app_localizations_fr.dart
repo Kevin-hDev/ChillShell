@@ -9,13 +9,16 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
-  String get appName => 'VibeTerm';
+  String get appName => 'ChillShell';
 
   @override
   String get settings => 'Paramètres';
 
   @override
   String get connection => 'Connexion';
+
+  @override
+  String get access => 'Accès';
 
   @override
   String get general => 'Général';
@@ -25,6 +28,25 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get wol => 'WOL';
+
+  @override
+  String get remoteAccess => 'Accès distant';
+
+  @override
+  String get tailscaleDescription =>
+      'Connectez-vous à votre PC de n\'importe où dans le monde';
+
+  @override
+  String get playStore => 'Play Store';
+
+  @override
+  String get appStore => 'App Store';
+
+  @override
+  String get website => 'Site web';
+
+  @override
+  String get noSshKeys => 'Aucune clé SSH. Créez-en une pour vous connecter.';
 
   @override
   String get theme => 'Thème';
@@ -137,6 +159,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get generateKey => 'Générer une clé';
 
   @override
+  String get createSshKey => 'Créer une clé SSH';
+
+  @override
+  String get importKey => 'Importer une clé';
+
+  @override
+  String get importKeySubtitle => 'Fichier .pem ou clé privée';
+
+  @override
+  String get selectFile => 'Sélectionner un fichier';
+
+  @override
+  String get orPasteKey => 'Ou collez la clé :';
+
+  @override
   String get keyName => 'Nom de la clé';
 
   @override
@@ -164,6 +201,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get savedConnections => 'Connexions sauvegardées';
 
   @override
+  String get autoConnection => 'Connexion automatique';
+
+  @override
   String get host => 'Hôte';
 
   @override
@@ -188,7 +228,32 @@ class AppLocalizationsFr extends AppLocalizations {
   String get faceId => 'Face ID';
 
   @override
+  String get unlock => 'Déverrouillage';
+
+  @override
+  String get pinCode => 'Code PIN';
+
+  @override
+  String get createPin => 'Créer votre code PIN';
+
+  @override
+  String get confirmPin => 'Confirmer votre code PIN';
+
+  @override
+  String get enterPin => 'Entrez votre code PIN';
+
+  @override
+  String get pinMismatch => 'Les codes PIN ne correspondent pas';
+
+  @override
+  String get wrongPin => 'Code PIN incorrect';
+
+  @override
   String get fingerprint => 'Empreinte digitale';
+
+  @override
+  String get fingerprintUnavailable =>
+      'Aucune empreinte enregistrée sur cet appareil';
 
   @override
   String get autoLock => 'Verrouillage auto';
@@ -387,6 +452,25 @@ class AppLocalizationsFr extends AppLocalizations {
       'Aucune configuration. Ajoutez-en une pour activer le WOL.';
 
   @override
+  String get configRequired => 'Configuration requise';
+
+  @override
+  String get wolDescription =>
+      'Le Wake-on-LAN permet d\'allumer votre PC depuis l\'app.';
+
+  @override
+  String get turnOnCableRequired => 'Allumer : câble Ethernet requis';
+
+  @override
+  String get turnOffWifiOrCable => 'Éteindre : WiFi ou câble';
+
+  @override
+  String get fullGuide => 'Guide complet';
+
+  @override
+  String get linkCopied => 'Lien copié';
+
+  @override
   String terminalTab(Object number) {
     return 'Terminal $number';
   }
@@ -402,4 +486,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get privateKeyNotFound => 'Clé privée introuvable';
+
+  @override
+  String get uploadingImage => 'Envoi de l\'image...';
+
+  @override
+  String get uploadFailed => 'Échec de l\'envoi de l\'image';
 }

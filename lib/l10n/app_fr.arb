@@ -1,12 +1,20 @@
 {
   "@@locale": "fr",
-  "appName": "VibeTerm",
+  "appName": "ChillShell",
 
   "settings": "Paramètres",
   "connection": "Connexion",
+  "access": "Accès",
   "general": "Général",
   "security": "Sécurité",
   "wol": "WOL",
+
+  "remoteAccess": "Accès distant",
+  "tailscaleDescription": "Connectez-vous à votre PC de n'importe où dans le monde",
+  "playStore": "Play Store",
+  "appStore": "App Store",
+  "website": "Site web",
+  "noSshKeys": "Aucune clé SSH. Créez-en une pour vous connecter.",
 
   "theme": "Thème",
   "language": "Langue",
@@ -49,6 +57,11 @@
 
   "sshKeys": "Clés SSH",
   "generateKey": "Générer une clé",
+  "createSshKey": "Créer une clé SSH",
+  "importKey": "Importer une clé",
+  "importKeySubtitle": "Fichier .pem ou clé privée",
+  "selectFile": "Sélectionner un fichier",
+  "orPasteKey": "Ou collez la clé :",
   "keyName": "Nom de la clé",
   "keyType": "Type de clé",
   "publicKey": "Clé publique",
@@ -59,6 +72,7 @@
   "deleteKeyConfirm": "Supprimer cette clé SSH ?",
 
   "savedConnections": "Connexions sauvegardées",
+  "autoConnection": "Connexion automatique",
   "host": "Hôte",
   "port": "Port",
   "username": "Utilisateur",
@@ -68,7 +82,15 @@
 
   "biometricUnlock": "Déverrouillage biométrique",
   "faceId": "Face ID",
+  "unlock": "Déverrouillage",
+  "pinCode": "Code PIN",
+  "createPin": "Créer votre code PIN",
+  "confirmPin": "Confirmer votre code PIN",
+  "enterPin": "Entrez votre code PIN",
+  "pinMismatch": "Les codes PIN ne correspondent pas",
+  "wrongPin": "Code PIN incorrect",
   "fingerprint": "Empreinte digitale",
+  "fingerprintUnavailable": "Aucune empreinte enregistrée sur cet appareil",
   "autoLock": "Verrouillage auto",
   "autoLockTime": "Temps de verrouillage",
   "minutes": "minutes",
@@ -136,9 +158,19 @@
 
   "noWolConfig": "Aucune configuration. Ajoutez-en une pour activer le WOL.",
 
+  "configRequired": "Configuration requise",
+  "wolDescription": "Le Wake-on-LAN permet d'allumer votre PC depuis l'app.",
+  "turnOnCableRequired": "Allumer : câble Ethernet requis",
+  "turnOffWifiOrCable": "Éteindre : WiFi ou câble",
+  "fullGuide": "Guide complet",
+  "linkCopied": "Lien copié",
+
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "Allumer un PC",
   "connectionLostSnack": "Connexion perdue",
   "unableToCreateTab": "Impossible de créer un nouvel onglet",
-  "privateKeyNotFound": "Clé privée introuvable"
+  "privateKeyNotFound": "Clé privée introuvable",
+
+  "uploadingImage": "Envoi de l'image...",
+  "uploadFailed": "Échec de l'envoi de l'image"
 }
