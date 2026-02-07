@@ -549,6 +549,10 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
 
     final text = terminal.buffer.getText(selection);
     await Clipboard.setData(ClipboardData(text: text));
+    // Sécurité: nettoyer le clipboard après 30 secondes
+    Future.delayed(const Duration(seconds: 30), () {
+      Clipboard.setData(const ClipboardData(text: ''));
+    });
     terminalController.clearSelection();
     // Pas de notification - le mobile en affiche déjà une native
   }
@@ -598,6 +602,10 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
           if (selection != null) {
             final text = terminal.buffer.getText(selection);
             await Clipboard.setData(ClipboardData(text: text));
+            // Sécurité: nettoyer le clipboard après 30 secondes
+            Future.delayed(const Duration(seconds: 30), () {
+              Clipboard.setData(const ClipboardData(text: ''));
+            });
             terminalController.clearSelection();
           }
           break;

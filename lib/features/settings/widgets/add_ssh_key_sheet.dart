@@ -121,6 +121,10 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                 GestureDetector(
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: _generatedPublicKey!));
+                    // Sécurité: nettoyer le clipboard après 30 secondes
+                    Future.delayed(const Duration(seconds: 30), () {
+                      Clipboard.setData(const ClipboardData(text: ''));
+                    });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(l10n.keyCopied)),
                     );

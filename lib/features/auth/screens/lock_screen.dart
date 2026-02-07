@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' show pow;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +31,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   String _pin = '';
   String? _errorMessage;
   bool _isAuthenticating = false;
+  int _failedAttempts = 0;
+  DateTime? _lockoutUntil;
+  Timer? _lockoutTimer;
 
   @override
   void initState() {
@@ -36,6 +42,12 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     if (widget.fingerprintEnabled) {
       _authenticateFingerprint();
     }
+  }
+
+  @override
+  void dispose() {
+    _lockoutTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _authenticateFingerprint() async {
@@ -78,14 +90,46 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   Future<void> _verifyPin() async {
-    final verified = await PinService.verifyPin(_pin);
-    if (verified) {
-      widget.onUnlocked();
-    } else {
+    // Vérifier le lockout
+    if (_lockoutUntil != null && DateTime.now().isBefore(_lockoutUntil!)) {
+      final remaining = _lockoutUntil!.difference(DateTime.now()).inSeconds;
       HapticFeedback.heavyImpact();
       setState(() {
         _pin = '';
-        _errorMessage = context.l10n.wrongPin;
+        _errorMessage = 'Réessayez dans $remaining s';
+      });
+      return;
+    }
+
+    final verified = await PinService.verifyPin(_pin);
+    if (verified) {
+      _failedAttempts = 0;
+      _lockoutTimer?.cancel();
+      widget.onUnlocked();
+    } else {
+      _failedAttempts++;
+      HapticFeedback.heavyImpact();
+
+      if (_failedAttempts >= 5) {
+        final delaySeconds = 30 * pow(2, _failedAttempts - 5).toInt();
+        _lockoutUntil = DateTime.now().add(Duration(seconds: delaySeconds));
+        _lockoutTimer?.cancel();
+        _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+          if (_lockoutUntil != null && DateTime.now().isAfter(_lockoutUntil!)) {
+            _lockoutTimer?.cancel();
+            if (mounted) setState(() => _errorMessage = null);
+          } else if (mounted) {
+            final remaining = _lockoutUntil!.difference(DateTime.now()).inSeconds;
+            setState(() => _errorMessage = 'Réessayez dans $remaining s');
+          }
+        });
+      }
+
+      setState(() {
+        _pin = '';
+        _errorMessage = _failedAttempts >= 5
+            ? 'Trop de tentatives. Réessayez dans ${30 * pow(2, _failedAttempts - 5).toInt()} s'
+            : context.l10n.wrongPin;
       });
     }
   }

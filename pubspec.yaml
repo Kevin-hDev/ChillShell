@@ -32,8 +32,7 @@ dependencies:
   # === Storage & Security ===
   flutter_secure_storage: ^10.0.0   # Stockage sécurisé clés SSH
   local_auth: ^3.0.0                # Auth biométrique
-  shared_preferences: ^2.2.2        # Préférences utilisateur
-  
+
   # === Utils ===
   uuid: ^4.2.1                      # IDs uniques
   path_provider: ^2.1.1             # Dossiers système
