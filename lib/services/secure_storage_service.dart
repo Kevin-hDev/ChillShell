@@ -46,6 +46,21 @@ class SecureStorageService {
     await saveKeyMetadata(updatedKeys);
   }
 
+  /// Sauvegarde le fingerprint d'un hôte SSH (TOFU)
+  static Future<void> saveHostFingerprint(String host, int port, String fingerprint) async {
+    await _storage.write(key: 'hostkey_${host}_$port', value: fingerprint);
+  }
+
+  /// Récupère le fingerprint stocké d'un hôte SSH
+  static Future<String?> getHostFingerprint(String host, int port) async {
+    return await _storage.read(key: 'hostkey_${host}_$port');
+  }
+
+  /// Supprime le fingerprint d'un hôte (utile si la clé change légitimement)
+  static Future<void> deleteHostFingerprint(String host, int port) async {
+    await _storage.delete(key: 'hostkey_${host}_$port');
+  }
+
   /// Efface toutes les données
   static Future<void> clearAll() async {
     await _storage.deleteAll();

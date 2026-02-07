@@ -20,6 +20,10 @@ import '../providers/providers.dart';
 import '../widgets/widgets.dart';
 import '../widgets/wol_start_screen.dart';
 
+/// Hauteur fixe de la zone overlay (boutons ESC/newline + GhostTextInput)
+/// ESC row: ~37px, GhostTextInput: ~103px = 140px sans SafeArea
+const double _kInputOverlayHeight = 140;
+
 class TerminalScreen extends ConsumerStatefulWidget {
   final VoidCallback? onSettingsTap;
 
@@ -214,6 +218,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final sshState = ref.watch(sshProvider);
     final sessions = ref.watch(sessionsProvider);
     final theme = ref.watch(vibeTermThemeProvider);
+    final isConnected = sshState.connectionState == SSHConnectionState.connected;
+    final isEditorMode = isConnected ? ref.watch(isEditorModeProvider) : false;
 
     // Écouter les changements d'onglet UI
     ref.listen<int>(activeSessionIndexProvider, (previous, next) {
@@ -231,6 +237,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     });
 
     return Scaffold(
+      // Ne PAS redimensionner le body quand le clavier s'ouvre.
+      // Empêche xterm.dart de supprimer des lignes du buffer lors du resize,
+      // ce qui causait la perte de texte sur Windows SSH.
+      resizeToAvoidBottomInset: false,
       backgroundColor: theme.bg,
       body: Column(
         children: [
@@ -250,69 +260,71 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           Expanded(
             child: Stack(
               children: [
-                _buildContent(sshState, sessions, theme),
-                // Mode édition : boutons overlay à droite (CTRL, D-pad, Enter)
-                if (sshState.connectionState == SSHConnectionState.connected)
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final isEditorMode = ref.watch(isEditorModeProvider);
-                      if (isEditorMode) {
-                        return Positioned(
-                          right: 16,
-                          bottom: 16,
-                          child: EditorModeButtons(
-                            onEnter: () => ref.read(sshProvider.notifier).write('\r'),
-                            onCtrlKey: (ctrlCode) {
-                              // Envoyer le code de contrôle correspondant
-                              ref.read(sshProvider.notifier).write(String.fromCharCode(ctrlCode));
-                            },
-                            onArrow: (direction) {
-                              final isAppMode = terminalViewKey.currentState?.isApplicationCursorMode ?? false;
-                              final prefix = isAppMode ? '\x1bO' : '\x1b[';
-                              ref.read(sshProvider.notifier).write('$prefix$direction');
-                            },
-                            theme: theme,
+                // Contenu terminal : réserver l'espace en bas pour la zone de saisie
+                // (uniquement en mode normal, pas en mode éditeur vim/nano)
+                if (isConnected && !isEditorMode)
+                  Positioned.fill(
+                    bottom: _kInputOverlayHeight + MediaQuery.of(context).padding.bottom,
+                    child: _buildContent(sshState, sessions, theme),
+                  )
+                else
+                  _buildContent(sshState, sessions, theme),
+                // Mode éditeur (vim/nano) : boutons overlay à droite
+                if (isConnected && isEditorMode)
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: EditorModeButtons(
+                      onEnter: () => ref.read(sshProvider.notifier).write('\r'),
+                      onCtrlKey: (ctrlCode) {
+                        ref.read(sshProvider.notifier).write(String.fromCharCode(ctrlCode));
+                      },
+                      onArrow: (direction) {
+                        final isAppMode = terminalViewKey.currentState?.isApplicationCursorMode ?? false;
+                        final prefix = isAppMode ? '\x1bO' : '\x1b[';
+                        ref.read(sshProvider.notifier).write('$prefix$direction');
+                      },
+                      theme: theme,
+                    ),
+                  ),
+                // Mode normal : GhostTextInput + boutons ESC/saut de ligne
+                // Positionnés au-dessus du clavier virtuel (flottant)
+                if (isConnected && !isEditorMode)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Boutons ESC et saut de ligne
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _DiscreteOverlayButton(
+                                text: 'ESC',
+                                onTap: () => ref.read(sshProvider.notifier).write('\x1b'),
+                                theme: theme,
+                              ),
+                              _DiscreteOverlayButton(
+                                icon: Icons.subdirectory_arrow_left,
+                                onTap: () {
+                                  _ghostTextInputKey.currentState?.insertNewLine();
+                                },
+                                theme: theme,
+                              ),
+                            ],
                           ),
-                        );
-                      }
-                      // Mode normal : boutons ESC et Saut de ligne
-                      return Positioned(
-                        left: 4,
-                        right: 4,
-                        bottom: 4,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _DiscreteOverlayButton(
-                              text: 'ESC',
-                              onTap: () => ref.read(sshProvider.notifier).write('\x1b'),
-                              theme: theme,
-                            ),
-                            _DiscreteOverlayButton(
-                              icon: Icons.subdirectory_arrow_left,
-                              onTap: () {
-                                _ghostTextInputKey.currentState?.insertNewLine();
-                              },
-                              theme: theme,
-                            ),
-                          ],
                         ),
-                      );
-                    },
+                        // Champ de saisie
+                        GhostTextInput(key: _ghostTextInputKey),
+                      ],
+                    ),
                   ),
               ],
             ),
-          ),
-          // Masquer GhostTextInput en mode édition
-          Consumer(
-            builder: (context, ref, _) {
-              final isEditorMode = ref.watch(isEditorModeProvider);
-              if (isEditorMode) return const SizedBox.shrink();
-              if (sshState.connectionState != SSHConnectionState.connected) {
-                return const SizedBox.shrink();
-              }
-              return GhostTextInput(key: _ghostTextInputKey);
-            },
           ),
         ],
       ),

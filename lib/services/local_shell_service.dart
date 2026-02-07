@@ -15,14 +15,14 @@ class LocalShellService {
   /// Démarre un shell local
   Future<void> startShell({int width = 80, int height = 24}) async {
     if (_pty != null) {
-      debugPrint('LocalShell: Shell already running');
+      if (kDebugMode) debugPrint('LocalShell: Shell already running');
       return;
     }
 
     // Déterminer le shell à utiliser
     final shell = Platform.isAndroid ? 'sh' : Platform.environment['SHELL'] ?? '/bin/sh';
 
-    debugPrint('LocalShell: Starting shell: $shell');
+    if (kDebugMode) debugPrint('LocalShell: Starting shell: $shell');
 
     _pty = Pty.start(
       shell,
@@ -36,26 +36,26 @@ class LocalShellService {
         _outputController.add(data);
       },
       onError: (error) {
-        debugPrint('LocalShell: Error: $error');
+        if (kDebugMode) debugPrint('LocalShell: Error: $error');
         _outputController.addError(error);
       },
       onDone: () {
-        debugPrint('LocalShell: Shell exited');
+        if (kDebugMode) debugPrint('LocalShell: Shell exited');
         _pty = null;
       },
     );
 
-    debugPrint('LocalShell: Shell started successfully');
+    if (kDebugMode) debugPrint('LocalShell: Shell started successfully');
   }
 
   /// Écrit des données dans le shell
   void write(String data) {
-    debugPrint('DEBUG LocalShellService.write: data="${data.replaceAll('\n', '\\n')}", pty=${_pty != null ? "EXISTS" : "NULL"}');
+    if (kDebugMode) debugPrint('DEBUG LocalShellService.write: data="${data.replaceAll('\n', '\\n')}", pty=${_pty != null ? "EXISTS" : "NULL"}');
     if (_pty != null) {
       _pty!.write(utf8.encode(data));
-      debugPrint('DEBUG LocalShellService.write: Data sent to PTY');
+      if (kDebugMode) debugPrint('DEBUG LocalShellService.write: Data sent to PTY');
     } else {
-      debugPrint('DEBUG LocalShellService.write: PTY is NULL, data not sent!');
+      if (kDebugMode) debugPrint('DEBUG LocalShellService.write: PTY is NULL, data not sent!');
     }
   }
 
@@ -74,7 +74,7 @@ class LocalShellService {
       _pty!.kill();
       _pty = null;
     }
-    debugPrint('LocalShell: Closed');
+    if (kDebugMode) debugPrint('LocalShell: Closed');
   }
 
   /// Libère les ressources

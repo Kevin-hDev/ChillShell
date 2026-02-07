@@ -3,7 +3,7 @@ import 'package:vibeterm/models/ssh_key.dart';
 
 void main() {
   group('SSHKey', () {
-    test('toJson/fromJson round-trip preserves all fields', () {
+    test('toJson/fromJson round-trip preserves metadata (not privateKey)', () {
       final now = DateTime(2026, 2, 6, 10, 0);
       final lastUsed = DateTime(2026, 2, 6, 12, 0);
       final original = SSHKey(
@@ -23,9 +23,25 @@ void main() {
       expect(restored.name, original.name);
       expect(restored.host, original.host);
       expect(restored.type, original.type);
-      expect(restored.privateKey, original.privateKey);
+      // Sécurité: privateKey ne doit PAS être sérialisé dans toJson()
+      expect(json.containsKey('privateKey'), isFalse);
+      expect(restored.privateKey, '');
       expect(restored.createdAt, original.createdAt);
       expect(restored.lastUsed, original.lastUsed);
+    });
+
+    test('fromJson handles legacy data with privateKey field', () {
+      final json = {
+        'id': 'key-1',
+        'name': 'Legacy Key',
+        'host': '192.168.1.100',
+        'type': 'ed25519',
+        'privateKey': 'old-private-key-data',
+        'createdAt': '2026-02-06T10:00:00.000',
+      };
+      final restored = SSHKey.fromJson(json);
+      // Rétrocompatibilité: accepte l'ancien format sans crasher
+      expect(restored.privateKey, 'old-private-key-data');
     });
 
     test('fromJson handles null lastUsed', () {

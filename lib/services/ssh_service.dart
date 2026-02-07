@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
+import 'secure_storage_service.dart';
 
 enum SSHError {
   connectionFailed,
@@ -58,23 +59,51 @@ class SSHService {
       // Connexion TCP (async, ne bloque pas)
       final socket = await SSHSocket.connect(host, port);
 
-      // Handshake SSH + authentification
+      // Handshake SSH + authentification (avec vérification TOFU de la clé d'hôte)
       _client = SSHClient(
         socket,
         username: username,
         identities: keys,
         keepAliveInterval: keepAliveInterval,
+        onVerifyHostKey: (type, fingerprint) async {
+          try {
+            final hexFingerprint = fingerprint
+                .map((e) => e.toRadixString(16).padLeft(2, '0'))
+                .join(':');
+
+            final stored = await SecureStorageService.getHostFingerprint(host, port);
+
+            if (stored == null) {
+              // TOFU: Premier contact → sauvegarder et accepter
+              await SecureStorageService.saveHostFingerprint(host, port, hexFingerprint);
+              if (kDebugMode) debugPrint('SSH TOFU: Accepted new host key for $host:$port ($type)');
+              return true;
+            }
+
+            // Contact suivant → vérifier
+            final match = stored == hexFingerprint;
+            if (kDebugMode) {
+              debugPrint('SSH TOFU: Host key ${match ? 'OK' : 'MISMATCH'} for $host:$port');
+            }
+            return match;
+          } catch (e) {
+            // En cas d'erreur de stockage, accepter la connexion
+            // plutôt que bloquer l'utilisateur
+            if (kDebugMode) debugPrint('SSH TOFU: Storage error, accepting: $e');
+            return true;
+          }
+        },
       );
       await _client!.authenticated;
       _isConnectionAlive = true;
 
       // Écouter la fermeture de connexion
       _client!.done.then((_) {
-        debugPrint('SSHService: Connection closed normally');
+        if (kDebugMode) debugPrint('SSHService: Connection closed normally');
         _isConnectionAlive = false;
         onDisconnected?.call();
       }).onError((error, stackTrace) {
-        debugPrint('SSHService: Connection error: $error');
+        if (kDebugMode) debugPrint('SSHService: Connection error: $error');
         _isConnectionAlive = false;
         onDisconnected?.call();
       });
@@ -105,10 +134,10 @@ class SSHService {
   /// Redimensionne le PTY distant pour correspondre à la taille du terminal
   void resizeTerminal(int width, int height) {
     if (_session != null) {
-      debugPrint('SSH RESIZE: Sending SIGWINCH ${width}x$height to remote PTY');
+      if (kDebugMode) debugPrint('SSH RESIZE: Sending SIGWINCH ${width}x$height to remote PTY');
       _session!.resizeTerminal(width, height);
     } else {
-      debugPrint('SSH RESIZE: No session available!');
+      if (kDebugMode) debugPrint('SSH RESIZE: No session available!');
     }
   }
 
@@ -136,7 +165,7 @@ class SSHService {
       final result = await _client!.run(command);
       return String.fromCharCodes(result);
     } catch (e) {
-      debugPrint('SSHService: executeCommandSilently error: $e');
+      if (kDebugMode) debugPrint('SSHService: executeCommandSilently error: $e');
       return null;
     }
   }
@@ -152,7 +181,7 @@ class SSHService {
       final result = await _client!.run('uname -s');
       final output = String.fromCharCodes(result).trim().toLowerCase();
 
-      debugPrint('SSHService: uname -s result: $output');
+      if (kDebugMode) debugPrint('SSHService: uname -s result: $output');
 
       if (output.contains('linux')) {
         return 'linux';
@@ -163,7 +192,7 @@ class SSHService {
         return 'windows';
       }
     } catch (e) {
-      debugPrint('SSHService: Error detecting OS: $e');
+      if (kDebugMode) debugPrint('SSHService: Error detecting OS: $e');
       // En cas d'erreur (probablement Windows où uname n'existe pas)
       return 'windows';
     }
@@ -193,10 +222,10 @@ class SSHService {
       await remoteFile.writeBytes(localFile);
       await remoteFile.close();
 
-      debugPrint('SSHService: File uploaded to $remotePath');
+      if (kDebugMode) debugPrint('SSHService: File uploaded to $remotePath');
       return remotePath;
     } catch (e) {
-      debugPrint('SSHService: SFTP upload error: $e');
+      if (kDebugMode) debugPrint('SSHService: SFTP upload error: $e');
       return null;
     }
   }
@@ -213,10 +242,10 @@ class SSHService {
           ? 'sudo shutdown -h now\n'
           : 'shutdown /s /t 0\n';
 
-      debugPrint('SSHService: Sending shutdown command for $os: $command');
+      if (kDebugMode) debugPrint('SSHService: Sending shutdown command for $os: $command');
       _session!.stdin.add(Uint8List.fromList(command.codeUnits));
     } catch (e) {
-      debugPrint('SSHService: Error sending shutdown command: $e');
+      if (kDebugMode) debugPrint('SSHService: Error sending shutdown command: $e');
       rethrow;
     }
   }

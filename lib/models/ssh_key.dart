@@ -47,7 +47,6 @@ class SSHKey {
     'name': name,
     'host': host,
     'type': type.name,
-    'privateKey': privateKey,
     'createdAt': createdAt.toIso8601String(),
     'lastUsed': lastUsed?.toIso8601String(),
   };
@@ -57,7 +56,7 @@ class SSHKey {
     name: json['name'] as String,
     host: json['host'] as String,
     type: SSHKeyType.values.byName(json['type'] as String),
-    privateKey: json['privateKey'] as String,
+    privateKey: (json['privateKey'] as String?) ?? '',
     createdAt: DateTime.parse(json['createdAt'] as String),
     lastUsed: json['lastUsed'] != null
         ? DateTime.parse(json['lastUsed'] as String)
@@ -73,4 +72,7 @@ class SSHKey {
     if (diff.inDays == 1) return 'Hier';
     return 'Il y a ${diff.inDays} jours';
   }
+
+  @override
+  String toString() => 'SSHKey(id=$id, name=$name, type=${type.name})';
 }
