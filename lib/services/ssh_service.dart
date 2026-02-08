@@ -227,15 +227,15 @@ class SSHService {
     }
   }
 
-  /// Taille maximale autorisée pour un upload SFTP (100 MB)
-  static const maxUploadSizeBytes = 100 * 1024 * 1024;
+  /// Taille maximale autorisée pour un upload SFTP (30 MB)
+  static const maxUploadSizeBytes = 30 * 1024 * 1024;
 
   /// Taille d'un chunk pour le streaming upload (64 KB)
   static const _uploadChunkSize = 64 * 1024;
 
   /// Transfère un fichier local vers le serveur via SFTP (streaming par chunks).
   /// Retourne le chemin distant si succès, null si échec.
-  /// Lève une [Exception] si le fichier dépasse 100 MB.
+  /// Lève une [Exception] si le fichier dépasse 30 MB.
   Future<String?> uploadFile({
     required String localPath,
     required String remotePath,
@@ -245,11 +245,11 @@ class SSHService {
     try {
       final localFile = File(localPath);
 
-      // Sécurité: vérifier la taille avant de lire (limite 100 MB)
+      // Sécurité: vérifier la taille avant de lire (limite 30 MB)
       final fileSize = await localFile.length();
       if (fileSize > maxUploadSizeBytes) {
         if (kDebugMode) debugPrint('SSHService: File too large for upload ($fileSize bytes)');
-        throw Exception('File too large (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB). Maximum: 100 MB.');
+        throw Exception('File too large (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB). Maximum: 30 MB.');
       }
 
       final sftp = await _client!.sftp();

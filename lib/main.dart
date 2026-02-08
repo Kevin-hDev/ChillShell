@@ -219,7 +219,10 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
             actions: [
               TextButton(
                 onPressed: () => setState(() => _rootWarningDismissed = true),
-                child: const Text('OK', style: TextStyle(color: Colors.white)),
+                child: Text(
+                  MaterialLocalizations.of(context).okButtonLabel,
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

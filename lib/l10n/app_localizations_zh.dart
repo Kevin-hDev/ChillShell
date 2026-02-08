@@ -563,4 +563,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get rootedDeviceWarning => '警告：此设备似乎已获取Root权限。SSH密钥安全性可能受到影响。';
+
+  @override
+  String tooManyAttempts(int seconds) {
+    return '尝试次数过多。请在 $seconds 秒后重试';
+  }
+
+  @override
+  String tryAgainIn(int seconds) {
+    return '请在 $seconds 秒后重试';
+  }
 }

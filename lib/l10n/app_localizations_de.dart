@@ -576,4 +576,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get rootedDeviceWarning =>
       'Warnung: Dieses Gerät scheint gerootet zu sein. Die Sicherheit der SSH-Schlüssel kann beeinträchtigt sein.';
+
+  @override
+  String tooManyAttempts(int seconds) {
+    return 'Zu viele Versuche. Erneut versuchen in $seconds s';
+  }
+
+  @override
+  String tryAgainIn(int seconds) {
+    return 'Erneut versuchen in $seconds s';
+  }
 }

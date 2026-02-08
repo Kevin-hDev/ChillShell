@@ -256,5 +256,21 @@
       }
     }
   },
-  "rootedDeviceWarning": "Warning: This device appears to be rooted. SSH key security may be compromised."
+  "rootedDeviceWarning": "Warning: This device appears to be rooted. SSH key security may be compromised.",
+  "tooManyAttempts": "Too many attempts. Try again in {seconds} s",
+  "tryAgainIn": "Try again in {seconds} s",
+  "@tooManyAttempts": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "@tryAgainIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }

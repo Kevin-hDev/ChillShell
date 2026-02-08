@@ -101,7 +101,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       HapticFeedback.heavyImpact();
       setState(() {
         _pin = '';
-        _errorMessage = 'Réessayez dans $remaining s';
+        _errorMessage = context.l10n.tryAgainIn(remaining);
       });
       return;
     }
@@ -125,7 +125,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             if (mounted) setState(() => _errorMessage = null);
           } else if (mounted) {
             final remaining = _lockoutUntil!.difference(DateTime.now()).inSeconds;
-            setState(() => _errorMessage = 'Réessayez dans $remaining s');
+            setState(() => _errorMessage = context.l10n.tryAgainIn(remaining));
           }
         });
       }
@@ -133,7 +133,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       setState(() {
         _pin = '';
         _errorMessage = _failedAttempts >= 5
-            ? 'Trop de tentatives. Réessayez dans ${30 * pow(2, _failedAttempts - 5).toInt()} s'
+            ? context.l10n.tooManyAttempts(30 * pow(2, _failedAttempts - 5).toInt())
             : context.l10n.wrongPin;
       });
     }

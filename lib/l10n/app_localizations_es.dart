@@ -574,4 +574,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get rootedDeviceWarning =>
       'Advertencia: Este dispositivo parece estar rooteado. La seguridad de las claves SSH puede estar comprometida.';
+
+  @override
+  String tooManyAttempts(int seconds) {
+    return 'Demasiados intentos. Inténtelo de nuevo en $seconds s';
+  }
+
+  @override
+  String tryAgainIn(int seconds) {
+    return 'Inténtelo de nuevo en $seconds s';
+  }
 }
