@@ -1,21 +1,18 @@
 {
   "@@locale": "de",
   "appName": "ChillShell",
-
   "settings": "Einstellungen",
   "connection": "Verbindung",
   "access": "Zugang",
   "general": "Allgemein",
   "security": "Sicherheit",
   "wol": "WOL",
-
   "remoteAccess": "Fernzugriff",
   "tailscaleDescription": "Verbinden Sie sich von überall auf der Welt mit Ihrem PC",
   "playStore": "Play Store",
   "appStore": "App Store",
   "website": "Webseite",
   "noSshKeys": "Keine SSH-Schlüssel. Erstellen Sie einen, um sich zu verbinden.",
-
   "theme": "Thema",
   "language": "Sprache",
   "fontSize": "Schriftgröße",
@@ -24,7 +21,6 @@
   "fontSizeM": "M (17px)",
   "fontSizeL": "L (20px)",
   "fontSizeXL": "XL (24px)",
-
   "disconnect": "Trennen",
   "disconnectConfirmTitle": "Trennen",
   "disconnectConfirmMessage": "Möchten Sie alle SSH-Verbindungen schließen?",
@@ -34,7 +30,6 @@
   "delete": "Löschen",
   "add": "Hinzufügen",
   "retry": "Wiederholen",
-
   "noConnection": "Keine Verbindung",
   "connectToServer": "Mit SSH-Server verbinden",
   "newConnection": "Neue Verbindung",
@@ -42,16 +37,13 @@
   "reconnecting": "Wiederverbinden...",
   "connectionError": "Verbindungsfehler",
   "reconnect": "Wiederverbinden",
-
   "terminal": "Terminal",
   "runCommands": "Befehle ausführen",
   "localShell": "Lokale Shell",
   "localShellNotAvailable": "Nicht verfügbar auf iOS",
   "localShellIOSMessage": "iOS erlaubt keinen lokalen Shell-Zugriff. SSH-Verbindungen funktionieren normal.",
-
   "copy": "Kopieren",
   "paste": "Einfügen",
-
   "sshKeys": "SSH-Schlüssel",
   "createSshKey": "SSH-Schlüssel erstellen",
   "importKey": "Schlüssel importieren",
@@ -63,7 +55,6 @@
   "privateKey": "Privater Schlüssel",
   "keyCopied": "Schlüssel in Zwischenablage kopiert",
   "deleteKey": "Schlüssel löschen",
-
   "savedConnections": "Gespeicherte Verbindungen",
   "autoConnection": "Automatische Verbindung",
   "host": "Host",
@@ -72,7 +63,6 @@
   "selectKey": "Schlüssel auswählen",
   "saveConnection": "Verbindung speichern",
   "deleteConnection": "Verbindung löschen",
-
   "unlock": "Entsperrung",
   "pinCode": "PIN-Code",
   "createPin": "PIN erstellen",
@@ -88,22 +78,18 @@
   "clearHistory": "Verlauf löschen",
   "clearHistoryConfirm": "Gesamten Befehlsverlauf löschen?",
   "historyCleared": "Verlauf gelöscht",
-
   "wolEnabled": "Wake-on-LAN aktiviert",
   "wolConfigs": "WOL-Konfigurationen",
   "addWolConfig": "WOL-Konfiguration hinzufügen",
   "macAddress": "MAC-Adresse",
   "broadcastAddress": "Broadcast-Adresse",
   "wolStart": "WOL START",
-
   "pressKeyForCtrl": "Taste drücken...",
-
   "wolWakingUp": "{name} wird aufgeweckt...",
   "wolAttempt": "Versuch {attempt}/{maxAttempts}",
   "wolConnected": "Verbunden!",
   "wolPcAwake": "{name} ist wach",
   "wolSshEstablished": "SSH-Verbindung hergestellt",
-
   "back": "Zurück",
   "addPc": "PC hinzufügen",
   "pcName": "PC-Name",
@@ -119,7 +105,6 @@
   "findMacAddress": "MAC-Adresse finden",
   "macAddressFormat": "MAC-Adresse sieht so aus: AA:BB:CC:DD:EE:FF",
   "understood": "Verstanden",
-
   "quickConnections": "SCHNELLVERBINDUNGEN",
   "autoConnectOnStart": "Automatisch beim Start verbinden",
   "autoConnectOnStartDesc": "Automatisch mit der letzten Verbindung verbinden",
@@ -129,25 +114,20 @@
   "disconnectNotificationDesc": "Benachrichtigung bei Trennung anzeigen",
   "deleteConnectionConfirm": "Verbindung löschen?",
   "deleteConnectionConfirmMessage": "Möchten Sie \"{name}\" aus Ihren gespeicherten Verbindungen löschen?",
-
   "noWolConfig": "Keine Konfiguration. Fügen Sie eine hinzu, um WOL zu aktivieren.",
-
   "configRequired": "Konfiguration erforderlich",
   "wolDescription": "Wake-on-LAN ermöglicht das Einschalten Ihres PCs über die App.",
   "turnOnCableRequired": "Einschalten: Ethernet-Kabel erforderlich",
   "turnOffWifiOrCable": "Ausschalten: WiFi oder Kabel",
   "fullGuide": "Vollständige Anleitung",
   "linkCopied": "Link kopiert",
-
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "PC aufwecken",
   "connectionLostSnack": "Verbindung verloren",
   "unableToCreateTab": "Tab konnte nicht erstellt werden",
   "privateKeyNotFound": "Privater Schlüssel nicht gefunden",
-
   "uploadingImage": "Bild wird hochgeladen...",
   "uploadFailed": "Bild-Upload fehlgeschlagen",
-
   "ok": "OK",
   "errorMessage": "Fehler: {error}",
   "invalidKeyFormat": "Ungültiges Schlüsselformat",
@@ -166,7 +146,6 @@
   "shutdownAction": "Herunterfahren",
   "searchPlaceholder": "Suchen...",
   "autoDetect": "Automatisch",
-
   "wolBiosTitle": "1. BIOS",
   "wolBiosEnablePcie": "\"Power On By PCI-E\" aktivieren",
   "wolBiosDisableErp": "\"ErP Ready\" deaktivieren",
@@ -183,10 +162,8 @@
   "wolMacStep1": "1. Apple-Menü → Systemeinstellungen",
   "wolMacStep2": "2. Energie sparen",
   "wolMacStep3": "3. \"Für Netzwerkzugriff reaktivieren\" aktivieren",
-
   "sshKeySecurityTitle": "Ihre Schlüssel schützen",
   "sshKeySecurityDesc": "Ihre SSH-Schlüssel funktionieren wie Passwörter, die Zugang zu Ihren Servern gewähren. Der private Schlüssel darf NIEMALS geteilt werden — nicht per E-Mail, Messenger oder Cloud-Speicher. Teilen Sie nur den öffentlichen Schlüssel mit den Servern, mit denen Sie sich verbinden möchten. ChillShell speichert Ihre Schlüssel sicher und ausschließlich auf Ihrem Gerät. Wenn Sie vermuten, dass ein Schlüssel kompromittiert wurde, löschen Sie ihn sofort und erstellen Sie einen neuen.",
-
   "sshHostKeyTitle": "Neuer Server",
   "sshHostKeyMessage": "Sie verbinden sich zum ersten Mal mit {host}.\nÜberprüfen Sie den Server-Fingerabdruck vor dem Fortfahren:",
   "sshHostKeyType": "Typ: {type}",
@@ -194,5 +171,6 @@
   "sshHostKeyAccept": "Vertrauen und verbinden",
   "sshHostKeyReject": "Ablehnen",
   "sshHostKeyMismatchTitle": "Warnung — Schlüssel geändert!",
-  "sshHostKeyMismatchMessage": "Der Serverschlüssel für {host} hat sich geändert!\n\nDies könnte auf einen Man-in-the-Middle-Angriff hindeuten. Wenn Sie die Serverkonfiguration nicht geändert haben, lehnen Sie diese Verbindung ab."
+  "sshHostKeyMismatchMessage": "Der Serverschlüssel für {host} hat sich geändert!\n\nDies könnte auf einen Man-in-the-Middle-Angriff hindeuten. Wenn Sie die Serverkonfiguration nicht geändert haben, lehnen Sie diese Verbindung ab.",
+  "rootedDeviceWarning": "Warnung: Dieses Gerät scheint gerootet zu sein. Die Sicherheit der SSH-Schlüssel kann beeinträchtigt sein."
 }

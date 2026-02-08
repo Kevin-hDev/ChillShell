@@ -1,21 +1,18 @@
 {
   "@@locale": "zh",
   "appName": "ChillShell",
-
   "settings": "设置",
   "connection": "连接",
   "access": "访问",
   "general": "通用",
   "security": "安全",
   "wol": "WOL",
-
   "remoteAccess": "远程访问",
   "tailscaleDescription": "从世界任何地方连接到您的电脑",
   "playStore": "Play Store",
   "appStore": "App Store",
   "website": "网站",
   "noSshKeys": "没有SSH密钥。创建一个以连接。",
-
   "theme": "主题",
   "language": "语言",
   "fontSize": "字体大小",
@@ -24,7 +21,6 @@
   "fontSizeM": "M (17px)",
   "fontSizeL": "L (20px)",
   "fontSizeXL": "XL (24px)",
-
   "disconnect": "断开",
   "disconnectConfirmTitle": "断开连接",
   "disconnectConfirmMessage": "是否关闭所有SSH连接？",
@@ -34,7 +30,6 @@
   "delete": "删除",
   "add": "添加",
   "retry": "重试",
-
   "noConnection": "无连接",
   "connectToServer": "连接到SSH服务器",
   "newConnection": "新建连接",
@@ -42,16 +37,13 @@
   "reconnecting": "正在重连...",
   "connectionError": "连接错误",
   "reconnect": "重新连接",
-
   "terminal": "终端",
   "runCommands": "运行命令",
   "localShell": "本地Shell",
   "localShellNotAvailable": "iOS不可用",
   "localShellIOSMessage": "iOS不允许访问本地Shell。SSH连接正常工作。",
-
   "copy": "复制",
   "paste": "粘贴",
-
   "sshKeys": "SSH密钥",
   "createSshKey": "创建SSH密钥",
   "importKey": "导入密钥",
@@ -63,7 +55,6 @@
   "privateKey": "私钥",
   "keyCopied": "密钥已复制到剪贴板",
   "deleteKey": "删除密钥",
-
   "savedConnections": "已保存的连接",
   "autoConnection": "自动连接",
   "host": "主机",
@@ -72,7 +63,6 @@
   "selectKey": "选择密钥",
   "saveConnection": "保存连接",
   "deleteConnection": "删除连接",
-
   "unlock": "解锁",
   "pinCode": "PIN码",
   "createPin": "创建PIN码",
@@ -88,22 +78,18 @@
   "clearHistory": "清除历史",
   "clearHistoryConfirm": "删除所有命令历史？",
   "historyCleared": "历史已清除",
-
   "wolEnabled": "启用网络唤醒",
   "wolConfigs": "WOL配置",
   "addWolConfig": "添加WOL配置",
   "macAddress": "MAC地址",
   "broadcastAddress": "广播地址",
   "wolStart": "WOL启动",
-
   "pressKeyForCtrl": "按下一个键...",
-
   "wolWakingUp": "正在唤醒 {name}...",
   "wolAttempt": "尝试 {attempt}/{maxAttempts}",
   "wolConnected": "已连接！",
   "wolPcAwake": "{name} 已唤醒",
   "wolSshEstablished": "SSH连接已建立",
-
   "back": "返回",
   "addPc": "添加电脑",
   "pcName": "电脑名称",
@@ -119,7 +105,6 @@
   "findMacAddress": "查找MAC地址",
   "macAddressFormat": "MAC地址格式：AA:BB:CC:DD:EE:FF",
   "understood": "明白了",
-
   "quickConnections": "快速连接",
   "autoConnectOnStart": "启动时自动连接",
   "autoConnectOnStartDesc": "自动连接到上次的连接",
@@ -129,25 +114,20 @@
   "disconnectNotificationDesc": "断开时显示通知",
   "deleteConnectionConfirm": "删除连接？",
   "deleteConnectionConfirmMessage": "是否从已保存的连接中删除 \"{name}\"？",
-
   "noWolConfig": "暂无配置。添加一个以启用WOL。",
-
   "configRequired": "需要配置",
   "wolDescription": "Wake-on-LAN允许您从应用程序启动电脑。",
   "turnOnCableRequired": "开机：需要以太网电缆",
   "turnOffWifiOrCable": "关机：WiFi或电缆",
   "fullGuide": "完整指南",
   "linkCopied": "链接已复制",
-
   "terminalTab": "终端 {number}",
   "wakeUpPc": "唤醒电脑",
   "connectionLostSnack": "连接丢失",
   "unableToCreateTab": "无法创建新标签页",
   "privateKeyNotFound": "未找到私钥",
-
   "uploadingImage": "正在上传图片...",
   "uploadFailed": "图片上传失败",
-
   "ok": "确定",
   "errorMessage": "错误：{error}",
   "invalidKeyFormat": "密钥格式无效",
@@ -166,7 +146,6 @@
   "shutdownAction": "关闭",
   "searchPlaceholder": "搜索...",
   "autoDetect": "自动",
-
   "wolBiosTitle": "1. BIOS",
   "wolBiosEnablePcie": "启用 \"Power On By PCI-E\"",
   "wolBiosDisableErp": "禁用 \"ErP Ready\"",
@@ -183,10 +162,8 @@
   "wolMacStep1": "1. Apple菜单 → 系统偏好设置",
   "wolMacStep2": "2. 节能",
   "wolMacStep3": "3. 勾选\"唤醒以进行网络访问\"",
-
   "sshKeySecurityTitle": "保护您的密钥",
   "sshKeySecurityDesc": "您的SSH密钥就像密码，可以授予您服务器的访问权限。私钥绝对不能分享——不能通过邮件、即时通讯或云存储。只将公钥分享给您要连接的服务器。ChillShell仅在您的设备上安全存储密钥。如果您怀疑密钥已被泄露，请立即删除并创建新的密钥。",
-
   "sshHostKeyTitle": "新服务器",
   "sshHostKeyMessage": "您是第一次连接到 {host}。\n连接前请验证服务器指纹：",
   "sshHostKeyType": "类型：{type}",
@@ -194,5 +171,6 @@
   "sshHostKeyAccept": "信任并连接",
   "sshHostKeyReject": "拒绝",
   "sshHostKeyMismatchTitle": "警告 — 密钥已更改！",
-  "sshHostKeyMismatchMessage": "服务器 {host} 的密钥已更改！\n\n这可能表示中间人攻击。如果您没有更改服务器配置，请拒绝此连接。"
+  "sshHostKeyMismatchMessage": "服务器 {host} 的密钥已更改！\n\n这可能表示中间人攻击。如果您没有更改服务器配置，请拒绝此连接。",
+  "rootedDeviceWarning": "警告：此设备似乎已获取Root权限。SSH密钥安全性可能受到影响。"
 }

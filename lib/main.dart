@@ -10,6 +10,7 @@ import 'features/auth/screens/lock_screen.dart';
 import 'features/settings/providers/settings_provider.dart';
 import 'features/terminal/providers/providers.dart';
 import 'services/biometric_service.dart';
+import 'services/device_security_service.dart';
 import 'services/foreground_ssh_service.dart';
 import 'services/pin_service.dart';
 
@@ -65,6 +66,8 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
   bool _checkingLock = false;
   bool _pinEnabled = false;
   bool _fingerprintEnabled = false;
+  bool _deviceRooted = false;
+  bool _rootWarningDismissed = false;
   Timer? _autoLockTimer;
   DateTime? _backgroundTime;
 
@@ -72,6 +75,14 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkDeviceSecurity();
+  }
+
+  Future<void> _checkDeviceSecurity() async {
+    final status = await DeviceSecurityService.checkDeviceSecurity();
+    if (mounted && status == DeviceSecurityStatus.rooted) {
+      setState(() => _deviceRooted = true);
+    }
   }
 
   @override
@@ -192,6 +203,28 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
         onUnlocked: _unlock,
         pinEnabled: _pinEnabled,
         fingerprintEnabled: _fingerprintEnabled,
+      );
+    }
+
+    if (_deviceRooted && !_rootWarningDismissed) {
+      return Column(
+        children: [
+          MaterialBanner(
+            backgroundColor: const Color(0xFFB91C1C),
+            content: Text(
+              context.l10n.rootedDeviceWarning,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+            ),
+            leading: const Icon(Icons.warning_amber_rounded, color: Colors.white),
+            actions: [
+              TextButton(
+                onPressed: () => setState(() => _rootWarningDismissed = true),
+                child: const Text('OK', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+          const Expanded(child: HomeScreen()),
+        ],
       );
     }
 

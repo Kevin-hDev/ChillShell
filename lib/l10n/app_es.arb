@@ -1,21 +1,18 @@
 {
   "@@locale": "es",
   "appName": "ChillShell",
-
   "settings": "Ajustes",
   "connection": "Conexión",
   "access": "Acceso",
   "general": "General",
   "security": "Seguridad",
   "wol": "WOL",
-
   "remoteAccess": "Acceso remoto",
   "tailscaleDescription": "Conéctate a tu PC desde cualquier parte del mundo",
   "playStore": "Play Store",
   "appStore": "App Store",
   "website": "Sitio web",
   "noSshKeys": "Sin claves SSH. Crea una para conectarte.",
-
   "theme": "Tema",
   "language": "Idioma",
   "fontSize": "Tamaño de fuente",
@@ -24,7 +21,6 @@
   "fontSizeM": "M (17px)",
   "fontSizeL": "L (20px)",
   "fontSizeXL": "XL (24px)",
-
   "disconnect": "Desconectar",
   "disconnectConfirmTitle": "Desconexión",
   "disconnectConfirmMessage": "¿Desea cerrar todas las conexiones SSH?",
@@ -34,7 +30,6 @@
   "delete": "Eliminar",
   "add": "Añadir",
   "retry": "Reintentar",
-
   "noConnection": "Sin conexión",
   "connectToServer": "Conéctese a un servidor SSH",
   "newConnection": "Nueva conexión",
@@ -42,16 +37,13 @@
   "reconnecting": "Reconectando...",
   "connectionError": "Error de conexión",
   "reconnect": "Reconectar",
-
   "terminal": "Terminal",
   "runCommands": "Ejecutar comandos",
   "localShell": "Shell local",
   "localShellNotAvailable": "No disponible en iOS",
   "localShellIOSMessage": "iOS no permite el acceso al shell local. Las conexiones SSH funcionan normalmente.",
-
   "copy": "Copiar",
   "paste": "Pegar",
-
   "sshKeys": "Claves SSH",
   "createSshKey": "Crear clave SSH",
   "importKey": "Importar clave",
@@ -63,7 +55,6 @@
   "privateKey": "Clave privada",
   "keyCopied": "Clave copiada al portapapeles",
   "deleteKey": "Eliminar clave",
-
   "savedConnections": "Conexiones guardadas",
   "autoConnection": "Conexión automática",
   "host": "Host",
@@ -72,7 +63,6 @@
   "selectKey": "Seleccionar clave",
   "saveConnection": "Guardar conexión",
   "deleteConnection": "Eliminar conexión",
-
   "unlock": "Desbloqueo",
   "pinCode": "Código PIN",
   "createPin": "Crear su PIN",
@@ -88,22 +78,18 @@
   "clearHistory": "Borrar historial",
   "clearHistoryConfirm": "¿Eliminar todo el historial de comandos?",
   "historyCleared": "Historial borrado",
-
   "wolEnabled": "Wake-on-LAN activado",
   "wolConfigs": "Configuraciones WOL",
   "addWolConfig": "Añadir configuración WOL",
   "macAddress": "Dirección MAC",
   "broadcastAddress": "Dirección de difusión",
   "wolStart": "WOL START",
-
   "pressKeyForCtrl": "Pulse una tecla...",
-
   "wolWakingUp": "Despertando {name}...",
   "wolAttempt": "Intento {attempt}/{maxAttempts}",
   "wolConnected": "¡Conectado!",
   "wolPcAwake": "{name} encendido",
   "wolSshEstablished": "Conexión SSH establecida",
-
   "back": "Volver",
   "addPc": "Añadir un PC",
   "pcName": "Nombre del PC",
@@ -119,7 +105,6 @@
   "findMacAddress": "Encontrar dirección MAC",
   "macAddressFormat": "La dirección MAC se parece a: AA:BB:CC:DD:EE:FF",
   "understood": "Entendido",
-
   "quickConnections": "CONEXIONES RÁPIDAS",
   "autoConnectOnStart": "Conectar automáticamente al iniciar",
   "autoConnectOnStartDesc": "Conectar automáticamente a la última conexión",
@@ -129,25 +114,20 @@
   "disconnectNotificationDesc": "Mostrar notificación al desconectar",
   "deleteConnectionConfirm": "¿Eliminar conexión?",
   "deleteConnectionConfirmMessage": "¿Desea eliminar \"{name}\" de sus conexiones guardadas?",
-
   "noWolConfig": "Sin configuración. Añada una para activar WOL.",
-
   "configRequired": "Configuración requerida",
   "wolDescription": "Wake-on-LAN te permite encender tu PC desde la app.",
   "turnOnCableRequired": "Encender: cable Ethernet requerido",
   "turnOffWifiOrCable": "Apagar: WiFi o cable",
   "fullGuide": "Guía completa",
   "linkCopied": "Enlace copiado",
-
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "Encender un PC",
   "connectionLostSnack": "Conexión perdida",
   "unableToCreateTab": "No se pudo crear una nueva pestaña",
   "privateKeyNotFound": "Clave privada no encontrada",
-
   "uploadingImage": "Subiendo imagen...",
   "uploadFailed": "Error al subir la imagen",
-
   "ok": "OK",
   "errorMessage": "Error: {error}",
   "invalidKeyFormat": "Formato de clave inválido",
@@ -166,7 +146,6 @@
   "shutdownAction": "Apagar",
   "searchPlaceholder": "Buscar...",
   "autoDetect": "Automático",
-
   "wolBiosTitle": "1. BIOS",
   "wolBiosEnablePcie": "Activar \"Power On By PCI-E\"",
   "wolBiosDisableErp": "Desactivar \"ErP Ready\"",
@@ -183,10 +162,8 @@
   "wolMacStep1": "1. Menú Apple → Preferencias del Sistema",
   "wolMacStep2": "2. Economizador de energía",
   "wolMacStep3": "3. Marcar \"Reactivar para acceso de red\"",
-
   "sshKeySecurityTitle": "Proteger sus claves",
   "sshKeySecurityDesc": "Sus claves SSH funcionan como contraseñas que dan acceso a sus servidores. La clave privada NUNCA debe compartirse — ni por correo, mensajería, ni almacenarse en la nube. Comparta solo la clave pública con los servidores a los que desee conectarse. ChillShell almacena sus claves de forma segura únicamente en su dispositivo. Si sospecha que una clave ha sido comprometida, elimínela inmediatamente y cree una nueva.",
-
   "sshHostKeyTitle": "Nuevo servidor",
   "sshHostKeyMessage": "Se está conectando a {host} por primera vez.\nVerifique la huella del servidor antes de continuar:",
   "sshHostKeyType": "Tipo: {type}",
@@ -194,5 +171,6 @@
   "sshHostKeyAccept": "Confiar y conectar",
   "sshHostKeyReject": "Rechazar",
   "sshHostKeyMismatchTitle": "Advertencia — ¡Clave cambiada!",
-  "sshHostKeyMismatchMessage": "¡La clave del servidor {host} ha cambiado!\n\nEsto podría indicar un ataque man-in-the-middle. Si no cambió la configuración del servidor, rechace esta conexión."
+  "sshHostKeyMismatchMessage": "¡La clave del servidor {host} ha cambiado!\n\nEsto podría indicar un ataque man-in-the-middle. Si no cambió la configuración del servidor, rechace esta conexión.",
+  "rootedDeviceWarning": "Advertencia: Este dispositivo parece estar rooteado. La seguridad de las claves SSH puede estar comprometida."
 }
