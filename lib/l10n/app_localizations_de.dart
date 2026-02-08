@@ -572,4 +572,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String sshHostKeyMismatchMessage(String host) {
     return 'Der Serverschlüssel für $host hat sich geändert!\n\nDies könnte auf einen Man-in-the-Middle-Angriff hindeuten. Wenn Sie die Serverkonfiguration nicht geändert haben, lehnen Sie diese Verbindung ab.';
   }
+
+  @override
+  String get rootedDeviceWarning =>
+      'Warnung: Dieses Gerät scheint gerootet zu sein. Die Sicherheit der SSH-Schlüssel kann beeinträchtigt sein.';
 }

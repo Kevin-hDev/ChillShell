@@ -572,4 +572,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String sshHostKeyMismatchMessage(String host) {
     return 'La clé du serveur $host a changé !\n\nCela pourrait indiquer une attaque de type man-in-the-middle. Si vous n\'avez pas modifié la configuration du serveur, refusez cette connexion.';
   }
+
+  @override
+  String get rootedDeviceWarning =>
+      'Attention : Cet appareil semble rooté. La sécurité des clés SSH peut être compromise.';
 }

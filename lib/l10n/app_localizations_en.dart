@@ -567,4 +567,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String sshHostKeyMismatchMessage(String host) {
     return 'The server key for $host has changed!\n\nThis could indicate a man-in-the-middle attack. If you did not change the server configuration, reject this connection.';
   }
+
+  @override
+  String get rootedDeviceWarning =>
+      'Warning: This device appears to be rooted. SSH key security may be compromised.';
 }

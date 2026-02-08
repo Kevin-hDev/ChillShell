@@ -1,21 +1,18 @@
 {
   "@@locale": "en",
   "appName": "ChillShell",
-
   "settings": "Settings",
   "connection": "Connection",
   "access": "Access",
   "general": "General",
   "security": "Security",
   "wol": "WOL",
-
   "remoteAccess": "Remote Access",
   "tailscaleDescription": "Connect to your PC from anywhere in the world",
   "playStore": "Play Store",
   "appStore": "App Store",
   "website": "Website",
   "noSshKeys": "No SSH keys. Create one to connect.",
-
   "theme": "Theme",
   "language": "Language",
   "fontSize": "Font size",
@@ -24,7 +21,6 @@
   "fontSizeM": "M (17px)",
   "fontSizeL": "L (20px)",
   "fontSizeXL": "XL (24px)",
-
   "disconnect": "Disconnect",
   "disconnectConfirmTitle": "Disconnect",
   "disconnectConfirmMessage": "Do you want to close all SSH connections?",
@@ -34,7 +30,6 @@
   "delete": "Delete",
   "add": "Add",
   "retry": "Retry",
-
   "noConnection": "No connection",
   "connectToServer": "Connect to an SSH server",
   "newConnection": "New connection",
@@ -42,16 +37,13 @@
   "reconnecting": "Reconnecting...",
   "connectionError": "Connection error",
   "reconnect": "Reconnect",
-
   "terminal": "Terminal",
   "runCommands": "Run commands",
   "localShell": "Local Shell",
   "localShellNotAvailable": "Not available on iOS",
   "localShellIOSMessage": "iOS does not allow local shell access. SSH connections work normally.",
-
   "copy": "Copy",
   "paste": "Paste",
-
   "sshKeys": "SSH Keys",
   "createSshKey": "Create SSH Key",
   "importKey": "Import Key",
@@ -63,7 +55,6 @@
   "privateKey": "Private key",
   "keyCopied": "Key copied to clipboard",
   "deleteKey": "Delete key",
-
   "savedConnections": "Saved connections",
   "autoConnection": "Auto connection",
   "host": "Host",
@@ -72,7 +63,6 @@
   "selectKey": "Select key",
   "saveConnection": "Save connection",
   "deleteConnection": "Delete connection",
-
   "unlock": "Unlock",
   "pinCode": "PIN Code",
   "createPin": "Create your PIN",
@@ -88,22 +78,18 @@
   "clearHistory": "Clear command history",
   "clearHistoryConfirm": "Delete all command history?",
   "historyCleared": "History cleared",
-
   "wolEnabled": "Wake-on-LAN enabled",
   "wolConfigs": "WOL configurations",
   "addWolConfig": "Add WOL configuration",
   "macAddress": "MAC address",
   "broadcastAddress": "Broadcast address",
   "wolStart": "WOL START",
-
   "pressKeyForCtrl": "Press a key...",
-
   "wolWakingUp": "Waking up {name}...",
   "wolAttempt": "Attempt {attempt}/{maxAttempts}",
   "wolConnected": "Connected!",
   "wolPcAwake": "{name} is awake",
   "wolSshEstablished": "SSH connection established",
-
   "back": "Back",
   "addPc": "Add a PC",
   "pcName": "PC name",
@@ -119,7 +105,6 @@
   "findMacAddress": "Find MAC address",
   "macAddressFormat": "MAC address looks like: AA:BB:CC:DD:EE:FF",
   "understood": "Understood",
-
   "quickConnections": "QUICK CONNECTIONS",
   "autoConnectOnStart": "Auto-connect on startup",
   "autoConnectOnStartDesc": "Automatically connect to the last connection",
@@ -129,53 +114,101 @@
   "disconnectNotificationDesc": "Show notification on disconnection",
   "deleteConnectionConfirm": "Delete connection?",
   "deleteConnectionConfirmMessage": "Do you want to delete \"{name}\" from your saved connections?",
-
   "noWolConfig": "No configuration. Add one to enable WOL.",
-
   "configRequired": "Configuration required",
   "wolDescription": "Wake-on-LAN lets you turn on your PC from the app.",
   "turnOnCableRequired": "Turn on: Ethernet cable required",
   "turnOffWifiOrCable": "Turn off: WiFi or cable",
   "fullGuide": "Full guide",
   "linkCopied": "Link copied",
-
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "Wake up a PC",
   "connectionLostSnack": "Connection lost",
   "unableToCreateTab": "Unable to create a new tab",
   "privateKeyNotFound": "Private key not found",
-
   "uploadingImage": "Uploading image...",
   "uploadFailed": "Image upload failed",
-
   "ok": "OK",
   "errorMessage": "Error: {error}",
-  "@errorMessage": { "placeholders": { "error": { "type": "String" } } },
+  "@errorMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "invalidKeyFormat": "Invalid key format",
   "keyFileTooLarge": "File too large (max 16 KB). SSH keys should be small files.",
   "keyImported": "Key \"{name}\" imported",
-  "@keyImported": { "placeholders": { "name": { "type": "String" } } },
+  "@keyImported": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "deleteKeyConfirmTitle": "Delete key?",
   "actionIrreversible": "This action is irreversible.",
   "deleteKeysConfirm": "Delete {count} key(s)?",
-  "@deleteKeysConfirm": { "placeholders": { "count": { "type": "int" } } },
+  "@deleteKeysConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "deleteConnectionsConfirm": "Delete {count} connection(s)?",
-  "@deleteConnectionsConfirm": { "placeholders": { "count": { "type": "int" } } },
+  "@deleteConnectionsConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "deleteWolConfigsConfirm": "Delete {count} config(s)?",
-  "@deleteWolConfigsConfirm": { "placeholders": { "count": { "type": "int" } } },
+  "@deleteWolConfigsConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sshKeyTypeLabel": "Type: {type}",
-  "@sshKeyTypeLabel": { "placeholders": { "type": { "type": "String" } } },
+  "@sshKeyTypeLabel": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "sshKeyHostLabel": "Host: {host}",
-  "@sshKeyHostLabel": { "placeholders": { "host": { "type": "String" } } },
+  "@sshKeyHostLabel": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
   "sshKeyLastUsedLabel": "Last used: {date}",
-  "@sshKeyLastUsedLabel": { "placeholders": { "date": { "type": "String" } } },
+  "@sshKeyLastUsedLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "shutdownPcTitle": "Shutdown PC",
   "shutdownPcMessage": "Do you really want to shutdown {name}?\n\nSSH connection will be closed.",
-  "@shutdownPcMessage": { "placeholders": { "name": { "type": "String" } } },
+  "@shutdownPcMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "shutdownAction": "Shutdown",
   "searchPlaceholder": "Search...",
   "autoDetect": "Auto",
-
   "wolBiosTitle": "1. BIOS",
   "wolBiosEnablePcie": "Enable \"Power On By PCI-E\"",
   "wolBiosDisableErp": "Disable \"ErP Ready\"",
@@ -192,19 +225,36 @@
   "wolMacStep1": "1. Apple Menu → System Preferences",
   "wolMacStep2": "2. Energy Saver",
   "wolMacStep3": "3. Check \"Wake for network access\"",
-
   "sshKeySecurityTitle": "Protect your keys",
   "sshKeySecurityDesc": "Your SSH keys work like passwords that give access to your servers. The private key must NEVER be shared — not by email, messaging, or cloud storage. Only share the public key with servers you want to connect to. ChillShell stores your keys securely on your device only. If you suspect a key has been compromised, delete it immediately and create a new one.",
-
   "sshHostKeyTitle": "New server",
   "sshHostKeyMessage": "You are connecting to {host} for the first time.\nVerify the server fingerprint before connecting:",
-  "@sshHostKeyMessage": { "placeholders": { "host": { "type": "String" } } },
+  "@sshHostKeyMessage": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
   "sshHostKeyType": "Type: {type}",
-  "@sshHostKeyType": { "placeholders": { "type": { "type": "String" } } },
+  "@sshHostKeyType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
   "sshHostKeyFingerprint": "Fingerprint:",
   "sshHostKeyAccept": "Trust and connect",
   "sshHostKeyReject": "Reject",
   "sshHostKeyMismatchTitle": "Warning — Key changed!",
   "sshHostKeyMismatchMessage": "The server key for {host} has changed!\n\nThis could indicate a man-in-the-middle attack. If you did not change the server configuration, reject this connection.",
-  "@sshHostKeyMismatchMessage": { "placeholders": { "host": { "type": "String" } } }
+  "@sshHostKeyMismatchMessage": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "rootedDeviceWarning": "Warning: This device appears to be rooted. SSH key security may be compromised."
 }

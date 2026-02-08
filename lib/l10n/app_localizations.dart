@@ -1135,6 +1135,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The server key for {host} has changed!\n\nThis could indicate a man-in-the-middle attack. If you did not change the server configuration, reject this connection.'**
   String sshHostKeyMismatchMessage(String host);
+
+  /// No description provided for @rootedDeviceWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: This device appears to be rooted. SSH key security may be compromised.'**
+  String get rootedDeviceWarning;
 }
 
 class _AppLocalizationsDelegate

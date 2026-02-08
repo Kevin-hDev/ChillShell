@@ -8,6 +8,7 @@ import '../../../services/local_shell_service.dart';
 import '../../../services/foreground_ssh_service.dart';
 import '../../../services/audit_log_service.dart';
 import '../../../models/audit_entry.dart';
+import '../../../core/security/secure_buffer.dart';
 
 enum SSHConnectionState { disconnected, connecting, connected, error, reconnecting }
 
@@ -329,34 +330,37 @@ class SSHNotifier extends Notifier<SSHState> {
 
     final tabId = _generateTabId();
 
-    try {
-      if (kDebugMode) debugPrint('Creating new SSH connection for tab $tabId');
+    if (kDebugMode) debugPrint('Creating new SSH connection for tab $tabId');
 
-      // FEEDBACK IMMÉDIAT: Ajouter l'onglet en état "connecting"
-      final newTabIds = [...state.tabIds, tabId];
+    // FEEDBACK IMMÉDIAT: Ajouter l'onglet en état "connecting"
+    final newTabIds = [...state.tabIds, tabId];
+    state = state.copyWith(
+      currentTabId: tabId,
+      tabIds: newTabIds,
+    );
+
+    // Récupérer la clé privée depuis le stockage sécurisé
+    final privateKeyRaw = await SecureStorageService.getPrivateKey(info.keyId);
+    if (privateKeyRaw == null || privateKeyRaw.isEmpty) {
+      if (kDebugMode) debugPrint('Failed to retrieve private key for tab creation');
+      _isCreatingTab = false;
+      // Rollback: retirer l'onglet ajouté
+      final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
       state = state.copyWith(
-        currentTabId: tabId,
-        tabIds: newTabIds,
+        tabIds: rollbackTabIds,
+        currentTabId: rollbackTabIds.isNotEmpty ? rollbackTabIds.last : null,
       );
+      return null;
+    }
 
-      // Récupérer la clé privée depuis le stockage sécurisé
-      final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
-      if (privateKey == null || privateKey.isEmpty) {
-        if (kDebugMode) debugPrint('Failed to retrieve private key for tab creation');
-        // Rollback: retirer l'onglet ajouté
-        final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
-        state = state.copyWith(
-          tabIds: rollbackTabIds,
-          currentTabId: rollbackTabIds.isNotEmpty ? rollbackTabIds.last : null,
-        );
-        return null;
-      }
-
+    // Sécurité : effacer la copie de la clé après utilisation
+    final keyBuffer = SecureBuffer.fromString(privateKeyRaw);
+    try {
       final newService = SSHService();
       final success = await newService.connect(
         host: info.host,
         username: info.username,
-        privateKey: privateKey,
+        privateKey: keyBuffer.toUtf8String(),
         port: info.port,
       );
 
@@ -383,6 +387,7 @@ class SSHNotifier extends Notifier<SSHState> {
       );
       return null;
     } finally {
+      keyBuffer.dispose();
       _isCreatingTab = false;
     }
   }
@@ -518,6 +523,7 @@ class SSHNotifier extends Notifier<SSHState> {
       // Vérifier que le notifier n'est pas disposed avant toute opération
       if (_isDisposed) return;
 
+      SecureBuffer? keyBuffer;
       try {
         // Récupérer la clé privée depuis le stockage sécurisé
         final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
@@ -534,6 +540,8 @@ class SSHNotifier extends Notifier<SSHState> {
           return;
         }
 
+        keyBuffer = SecureBuffer.fromString(privateKey);
+
         for (final service in _tabServices.values) {
           await service.disconnect();
         }
@@ -547,7 +555,7 @@ class SSHNotifier extends Notifier<SSHState> {
         final success = await newService.connect(
           host: info.host,
           username: info.username,
-          privateKey: privateKey,
+          privateKey: keyBuffer.toUtf8String(),
           port: info.port,
         );
 
@@ -586,6 +594,8 @@ class SSHNotifier extends Notifier<SSHState> {
         if (!_isDisposed) {
           _handleDisconnection();
         }
+      } finally {
+        keyBuffer?.dispose();
       }
     });
   }
@@ -665,11 +675,14 @@ class SSHNotifier extends Notifier<SSHState> {
     final info = state.lastConnectionInfo;
     if (info == null) return false;
 
+    SecureBuffer? keyBuffer;
     try {
       if (kDebugMode) debugPrint('_reconnectTab: Reconnecting tab $tabId...');
 
       final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
       if (privateKey == null || privateKey.isEmpty) return false;
+
+      keyBuffer = SecureBuffer.fromString(privateKey);
 
       final service = _tabServices[tabId];
       if (service == null) return false;
@@ -682,7 +695,7 @@ class SSHNotifier extends Notifier<SSHState> {
       final success = await newService.connect(
         host: info.host,
         username: info.username,
-        privateKey: privateKey,
+        privateKey: keyBuffer.toUtf8String(),
         port: info.port,
       );
 
@@ -694,6 +707,8 @@ class SSHNotifier extends Notifier<SSHState> {
       }
     } catch (e) {
       if (kDebugMode) debugPrint('_reconnectTab: Failed to reconnect tab $tabId: $e');
+    } finally {
+      keyBuffer?.dispose();
     }
     return false;
   }

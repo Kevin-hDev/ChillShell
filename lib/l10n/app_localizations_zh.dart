@@ -560,4 +560,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String sshHostKeyMismatchMessage(String host) {
     return '服务器 $host 的密钥已更改！\n\n这可能表示中间人攻击。如果您没有更改服务器配置，请拒绝此连接。';
   }
+
+  @override
+  String get rootedDeviceWarning => '警告：此设备似乎已获取Root权限。SSH密钥安全性可能受到影响。';
 }
