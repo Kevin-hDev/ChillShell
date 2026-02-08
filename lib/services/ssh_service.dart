@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/foundation.dart';
 import 'secure_storage_service.dart';
+import 'audit_log_service.dart';
+import '../models/audit_entry.dart';
 
 enum SSHError {
   connectionFailed,
@@ -109,6 +111,7 @@ class SSHService {
 
             // MISMATCH: clé changée → avertir l'utilisateur
             if (kDebugMode) debugPrint('SSH TOFU: Host key MISMATCH for $host:$port');
+            AuditLogService.log(AuditEventType.hostKeyMismatch, success: false, details: {'host': host, 'port': '$port'});
             if (onHostKeyMismatch != null) {
               return await onHostKeyMismatch(host, port, type, hexFingerprint);
             }
@@ -224,8 +227,15 @@ class SSHService {
     }
   }
 
-  /// Transfère un fichier local vers le serveur via SFTP.
+  /// Taille maximale autorisée pour un upload SFTP (100 MB)
+  static const maxUploadSizeBytes = 100 * 1024 * 1024;
+
+  /// Taille d'un chunk pour le streaming upload (64 KB)
+  static const _uploadChunkSize = 64 * 1024;
+
+  /// Transfère un fichier local vers le serveur via SFTP (streaming par chunks).
   /// Retourne le chemin distant si succès, null si échec.
+  /// Lève une [Exception] si le fichier dépasse 100 MB.
   Future<String?> uploadFile({
     required String localPath,
     required String remotePath,
@@ -233,8 +243,16 @@ class SSHService {
     if (_client == null) return null;
 
     try {
+      final localFile = File(localPath);
+
+      // Sécurité: vérifier la taille avant de lire (limite 100 MB)
+      final fileSize = await localFile.length();
+      if (fileSize > maxUploadSizeBytes) {
+        if (kDebugMode) debugPrint('SSHService: File too large for upload ($fileSize bytes)');
+        throw Exception('File too large (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB). Maximum: 100 MB.');
+      }
+
       final sftp = await _client!.sftp();
-      final localFile = await File(localPath).readAsBytes();
 
       // Ouvrir/créer le fichier distant en écriture
       final remoteFile = await sftp.open(
@@ -244,11 +262,22 @@ class SSHService {
             SftpFileOpenMode.truncate,
       );
 
-      // Écrire les données
-      await remoteFile.writeBytes(localFile);
+      // Streaming upload par chunks de 64 KB (au lieu de readAsBytes qui charge tout en RAM)
+      final stream = localFile.openRead();
+      var offset = 0;
+      await for (final chunk in stream) {
+        // Écrire par chunks pour limiter la consommation mémoire
+        for (var i = 0; i < chunk.length; i += _uploadChunkSize) {
+          final end = (i + _uploadChunkSize < chunk.length) ? i + _uploadChunkSize : chunk.length;
+          final data = Uint8List.fromList(chunk.sublist(i, end));
+          await remoteFile.write(Stream.value(data), offset: offset);
+          offset += end - i;
+        }
+      }
+
       await remoteFile.close();
 
-      if (kDebugMode) debugPrint('SSHService: File uploaded to $remotePath');
+      if (kDebugMode) debugPrint('SSHService: File uploaded to $remotePath ($offset bytes)');
       return remotePath;
     } catch (e) {
       if (kDebugMode) debugPrint('SSHService: SFTP upload error: $e');

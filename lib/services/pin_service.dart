@@ -64,7 +64,7 @@ class PinService {
     return base64Encode(hash.bytes);
   }
 
-  /// Sauvegarde le PIN (6 chiffres) hashé avec un salt aléatoire
+  /// Sauvegarde le PIN (8 chiffres min) hashé avec un salt aléatoire
   static Future<void> savePin(String pin) async {
     final salt = _generateSalt();
     final hash = await _hashPin(pin, salt);

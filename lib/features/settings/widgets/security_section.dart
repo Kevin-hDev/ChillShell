@@ -7,6 +7,8 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../services/biometric_service.dart';
 import '../../../services/pin_service.dart';
+import '../../../services/audit_log_service.dart';
+import '../../../models/audit_entry.dart';
 import '../../terminal/providers/terminal_provider.dart';
 import '../providers/settings_provider.dart';
 import 'section_header.dart';
@@ -45,6 +47,7 @@ class SecuritySection extends ConsumerWidget {
                     final pin = await _showCreatePinDialog(context, theme, l10n);
                     if (pin != null) {
                       await PinService.savePin(pin);
+                      AuditLogService.log(AuditEventType.pinCreated);
                       ref.read(settingsProvider.notifier).togglePinLock(true);
                     }
                   } else {
@@ -52,6 +55,7 @@ class SecuritySection extends ConsumerWidget {
                     final verified = await _showVerifyPinDialog(context, theme, l10n);
                     if (verified) {
                       await PinService.deletePin();
+                      AuditLogService.log(AuditEventType.pinDeleted);
                       ref.read(settingsProvider.notifier).togglePinLock(false);
                     }
                   }
@@ -269,18 +273,21 @@ class _CreatePinDialog extends StatefulWidget {
 }
 
 class _CreatePinDialogState extends State<_CreatePinDialog> {
+  /// Nouveau PIN : 8 chiffres minimum
+  static const _requiredPinLength = 8;
+
   String _pin = '';
   String _firstPin = '';
   bool _isConfirming = false;
   String? _error;
 
   void _addDigit(String digit) {
-    if (_pin.length >= 6) return;
+    if (_pin.length >= _requiredPinLength) return;
     setState(() {
       _pin += digit;
       _error = null;
     });
-    if (_pin.length == 6) {
+    if (_pin.length == _requiredPinLength) {
       _onPinComplete();
     }
   }
@@ -330,8 +337,8 @@ class _CreatePinDialogState extends State<_CreatePinDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: VibeTermSpacing.md),
-          // 6 cercles indicateurs
-          _PinDots(length: _pin.length, theme: theme),
+          // 8 cercles indicateurs
+          _PinDots(length: _pin.length, total: _requiredPinLength, theme: theme),
           if (_error != null) ...[
             const SizedBox(height: VibeTermSpacing.sm),
             Text(
@@ -370,16 +377,20 @@ class _VerifyPinDialog extends StatefulWidget {
 }
 
 class _VerifyPinDialogState extends State<_VerifyPinDialog> {
+  /// Rétrocompatibilité : accepte 6 (ancien) et 8 (nouveau) chiffres
+  static const _maxPinLength = 8;
+  static const _legacyPinLength = 6;
+
   String _pin = '';
   String? _error;
 
   void _addDigit(String digit) {
-    if (_pin.length >= 6) return;
+    if (_pin.length >= _maxPinLength) return;
     setState(() {
       _pin += digit;
       _error = null;
     });
-    if (_pin.length == 6) {
+    if (_pin.length == _maxPinLength || _pin.length == _legacyPinLength) {
       _onPinComplete();
     }
   }
@@ -420,7 +431,7 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: VibeTermSpacing.md),
-          _PinDots(length: _pin.length, theme: theme),
+          _PinDots(length: _pin.length, total: _maxPinLength, theme: theme),
           if (_error != null) ...[
             const SizedBox(height: VibeTermSpacing.sm),
             Text(
@@ -446,18 +457,19 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
   }
 }
 
-/// 6 cercles indicateurs de PIN
+/// Cercles indicateurs de PIN (nombre configurable)
 class _PinDots extends StatelessWidget {
   final int length;
+  final int total;
   final VibeTermThemeData theme;
 
-  const _PinDots({required this.length, required this.theme});
+  const _PinDots({required this.length, this.total = 8, required this.theme});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(6, (index) {
+      children: List.generate(total, (index) {
         final isFilled = index < length;
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 8),

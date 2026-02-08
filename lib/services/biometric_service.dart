@@ -30,7 +30,7 @@ class BiometricService {
       return await _auth.authenticate(
         localizedReason: 'Déverrouillez ChillShell pour accéder à vos sessions SSH',
         biometricOnly: true,
-        persistAcrossBackgrounding: true,
+        persistAcrossBackgrounding: false,
       );
     } on PlatformException catch (e) {
       // Gérer les erreurs spécifiques

@@ -70,13 +70,18 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     }
   }
 
+  /// Longueur maximale du PIN (8 chiffres, rétrocompat 6)
+  static const _maxPinLength = 8;
+  static const _legacyPinLength = 6;
+
   void _addDigit(String digit) {
-    if (_pin.length >= 6) return;
+    if (_pin.length >= _maxPinLength) return;
     setState(() {
       _pin += digit;
       _errorMessage = null;
     });
-    if (_pin.length == 6) {
+    // Auto-vérification à 8 chiffres (nouveau) ou 6 chiffres (ancien PIN)
+    if (_pin.length == _maxPinLength || _pin.length == _legacyPinLength) {
       _verifyPin();
     }
   }
@@ -180,8 +185,8 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
                 // PIN entry (si PIN activé)
                 if (widget.pinEnabled) ...[
-                  // 6 cercles
-                  _PinDots(length: _pin.length, theme: theme),
+                  // 8 cercles (rétrocompat 6)
+                  _PinDots(length: _pin.length, total: _maxPinLength, theme: theme),
 
                   // Erreur
                   if (_errorMessage != null) ...[
@@ -251,18 +256,19 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 }
 
-/// 6 cercles indicateurs de PIN
+/// Cercles indicateurs de PIN (nombre configurable)
 class _PinDots extends StatelessWidget {
   final int length;
+  final int total;
   final VibeTermThemeData theme;
 
-  const _PinDots({required this.length, required this.theme});
+  const _PinDots({required this.length, this.total = 8, required this.theme});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(6, (index) {
+      children: List.generate(total, (index) {
         final isFilled = index < length;
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 8),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/models.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/secure_storage_service.dart';
+import '../../../services/audit_log_service.dart';
 
 class SettingsState {
   final List<SSHKey> sshKeys;
@@ -84,14 +85,17 @@ class SettingsNotifier extends Notifier<SettingsState> {
     state = state.copyWith(sshKeys: newKeys);
     // Utiliser SecureStorageService pour la cohérence
     await SecureStorageService.saveKeyMetadata(newKeys);
+    AuditLogService.log(AuditEventType.keyImport, details: {'name': key.name, 'type': key.type.name});
     if (kDebugMode) debugPrint('SSH key added');
   }
 
   Future<void> removeSSHKey(String id) async {
+    final removedKey = state.sshKeys.where((k) => k.id == id).firstOrNull;
     final newKeys = state.sshKeys.where((k) => k.id != id).toList();
     state = state.copyWith(sshKeys: newKeys);
     // Supprimer la clé privée et mettre à jour les métadonnées
     await SecureStorageService.deleteKey(id, state.sshKeys);
+    AuditLogService.log(AuditEventType.keyDelete, details: {'name': removedKey?.name ?? id});
     if (kDebugMode) debugPrint('SSH key removed');
   }
 
