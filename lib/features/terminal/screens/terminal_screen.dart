@@ -73,6 +73,174 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     };
   }
 
+  /// Affiche un dialogue pour confirmer une nouvelle clé d'hôte SSH (TOFU)
+  Future<bool> _showHostKeyDialog(
+    String host, int port, String keyType, String fingerprint,
+  ) async {
+    if (!mounted) return false;
+    final l10n = context.l10n;
+    final theme = ref.read(vibeTermThemeProvider);
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.border),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.shield_outlined, color: theme.accent, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                l10n.sshHostKeyTitle,
+                style: TextStyle(color: theme.text, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.sshHostKeyMessage(host),
+              style: TextStyle(color: theme.textMuted, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.sshHostKeyType(keyType),
+              style: TextStyle(color: theme.textMuted, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.sshHostKeyFingerprint,
+              style: TextStyle(color: theme.textMuted, fontSize: 12),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.bg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.border),
+              ),
+              child: SelectableText(
+                fingerprint,
+                style: VibeTermTypography.command.copyWith(
+                  color: theme.accent,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              l10n.sshHostKeyReject,
+              style: TextStyle(color: theme.danger),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: theme.accent),
+            child: Text(
+              l10n.sshHostKeyAccept,
+              style: TextStyle(color: theme.bg),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
+  }
+
+  /// Affiche un dialogue d'alerte quand la clé d'hôte SSH a changé (MITM potentiel)
+  Future<bool> _showHostKeyMismatchDialog(
+    String host, int port, String keyType, String fingerprint,
+  ) async {
+    if (!mounted) return false;
+    final l10n = context.l10n;
+    final theme = ref.read(vibeTermThemeProvider);
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: theme.danger),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: theme.danger, size: 28),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                l10n.sshHostKeyMismatchTitle,
+                style: TextStyle(color: theme.danger, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.sshHostKeyMismatchMessage(host),
+              style: TextStyle(color: theme.text, fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.bg,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: theme.danger.withValues(alpha: 0.5)),
+              ),
+              child: SelectableText(
+                fingerprint,
+                style: VibeTermTypography.command.copyWith(
+                  color: theme.danger,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            style: FilledButton.styleFrom(backgroundColor: theme.danger),
+            child: Text(
+              l10n.sshHostKeyReject,
+              style: TextStyle(color: theme.bg),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              l10n.sshHostKeyAccept,
+              style: TextStyle(color: theme.textMuted),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return result ?? false;
+  }
+
   void _showDisconnectNotification() {
     final l10n = context.l10n;
     final theme = ref.read(vibeTermThemeProvider);
@@ -192,6 +360,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       keyId: connection.keyId,
       sessionId: sessionId,
       port: connection.port,
+      onFirstHostKey: _showHostKeyDialog,
+      onHostKeyMismatch: _showHostKeyMismatchDialog,
     );
 
     if (success) {
@@ -637,6 +807,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       keyId: connection.keyId,
       sessionId: sessionId,
       port: connection.port,
+      onFirstHostKey: _showHostKeyDialog,
+      onHostKeyMismatch: _showHostKeyMismatchDialog,
     );
 
     if (success) {
@@ -907,6 +1079,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       keyId: info.keyId,
       sessionId: sessionId,
       port: info.port,
+      onFirstHostKey: _showHostKeyDialog,
+      onHostKeyMismatch: _showHostKeyMismatchDialog,
     );
 
     if (success) {

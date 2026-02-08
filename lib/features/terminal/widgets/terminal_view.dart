@@ -207,7 +207,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       // Cela aide si l'app distante scroll mais n'envoie pas de refresh
       terminal.notifyListeners();
 
-      debugPrint('ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} sent + redraw');
+      if (kDebugMode) debugPrint('ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} sent');
 
       _altBufferScrollAccumulator = 0.0;
     }
@@ -231,7 +231,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         // On utilise _isInAltBuffer (notre tracking) plutôt que terminal.isUsingAltBuffer
         // car notre détection est mise à jour dès réception des séquences ANSI
         if (_isInAltBuffer) {
-          debugPrint('RESIZE: Skipped (alternate screen active - our tracking)');
+          if (kDebugMode) debugPrint('RESIZE: Skipped (alternate screen active)');
           return;
         }
         ref.read(sshProvider.notifier).resizeTerminalForTab(tabId, width, height);
@@ -275,7 +275,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
           } catch (e) {
             // Ignorer silencieusement les erreurs de buffer xterm.dart
             // Cela arrive quand resize et write sont concurrents
-            debugPrint('XTERM: Buffer error (ignored): ${e.runtimeType}');
+            if (kDebugMode) debugPrint('XTERM: Buffer error (ignored): ${e.runtimeType}');
           }
           // Envoyer la sortie au provider pour détecter les erreurs de commande
           ref.read(terminalProvider.notifier).onTerminalOutput(decoded);
@@ -283,32 +283,32 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
           _detectAlternateScreenMode(decoded);
         },
         onError: (error, stackTrace) {
-          debugPrint('SSH stream error for tab $tabId');
+          if (kDebugMode) debugPrint('SSH stream error for tab $tabId');
           _cleanupTab(tabId);
         },
         onDone: () {
-          debugPrint('SSH stream closed for tab $tabId');
+          if (kDebugMode) debugPrint('SSH stream closed for tab $tabId');
           // Marquer l'onglet comme mort pour permettre la reconnexion
           ref.read(sshProvider.notifier).markTabAsDead(tabId);
           // Ne pas cleanup automatiquement - laisser l'utilisateur voir l'état final
         },
         cancelOnError: false, // Continuer même après erreur pour voir les messages
       );
-      debugPrint('Connected to SSH stream for tab $tabId');
+      if (kDebugMode) debugPrint('Connected to SSH stream for tab $tabId');
       // Forcer un rebuild pour afficher le contenu
       if (mounted) setState(() {});
     } else {
       // Le stream n'est pas encore disponible (connexion en cours)
       // Réessayer après un court délai (max 10 tentatives = 2 secondes)
       if (retryCount < 10) {
-        debugPrint('No output stream for tab $tabId, retrying in 200ms (attempt ${retryCount + 1}/10)');
+        if (kDebugMode) debugPrint('No output stream for tab $tabId, retrying (attempt ${retryCount + 1}/10)');
         Future.delayed(const Duration(milliseconds: 200), () {
           if (mounted && _subscriptions[tabId] == null) {
             _connectToSSH(tabId, retryCount: retryCount + 1);
           }
         });
       } else {
-        debugPrint('Failed to connect to SSH stream for tab $tabId after 10 attempts');
+        if (kDebugMode) debugPrint('Failed to connect to SSH stream for tab $tabId after 10 attempts');
       }
     }
   }
@@ -334,7 +334,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     _subscriptions[tabId]?.cancel();
     _subscriptions.remove(tabId);
     _terminals.remove(tabId);
-    debugPrint('Cleaned up resources for tab $tabId');
+    if (kDebugMode) debugPrint('Cleaned up resources for tab $tabId');
   }
 
   /// Détecte les séquences d'entrée/sortie de l'alternate screen mode
@@ -346,7 +346,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       if (!_isInAltBuffer) {
         _isInAltBuffer = true;
         if (mounted) setState(() {});
-        debugPrint('ALT_BUFFER: Entered alternate screen');
+        if (kDebugMode) debugPrint('ALT_BUFFER: Entered alternate screen');
       }
 
       // Vérifier si la commande en cours est un vrai éditeur
@@ -362,10 +362,10 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         final currentMode = ref.read(isEditorModeProvider);
         if (!currentMode) {
           ref.read(isEditorModeProvider.notifier).set(true);
-          debugPrint('EDITOR MODE: Entered for true editor "$commandName"');
+          if (kDebugMode) debugPrint('EDITOR MODE: Entered for "$commandName"');
         }
       } else {
-        debugPrint('EDITOR MODE: Skipped for CLI app "${commandName ?? "unknown"}" (alternate screen but not a true editor)');
+        if (kDebugMode) debugPrint('EDITOR MODE: Skipped for "${commandName ?? "unknown"}"');
       }
     }
     // Sortie du mode alternate screen
@@ -374,14 +374,14 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       if (_isInAltBuffer) {
         _isInAltBuffer = false;
         if (mounted) setState(() {});
-        debugPrint('ALT_BUFFER: Exited alternate screen');
+        if (kDebugMode) debugPrint('ALT_BUFFER: Exited alternate screen');
       }
 
       // Désactiver le mode éditeur si actif
       final currentMode = ref.read(isEditorModeProvider);
       if (currentMode) {
         ref.read(isEditorModeProvider.notifier).set(false);
-        debugPrint('EDITOR MODE: Exited alternate screen');
+        if (kDebugMode) debugPrint('EDITOR MODE: Exited alternate screen');
       }
     }
   }

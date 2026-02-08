@@ -68,9 +68,9 @@ class SettingsNotifier extends Notifier<SettingsState> {
         savedConnections: savedConnections,
         isLoading: false,
       );
-      debugPrint('Settings loaded');
+      if (kDebugMode) debugPrint('Settings loaded');
     } catch (e) {
-      debugPrint('Error loading settings: $e');
+      if (kDebugMode) debugPrint('Error loading settings: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -84,7 +84,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
     state = state.copyWith(sshKeys: newKeys);
     // Utiliser SecureStorageService pour la cohérence
     await SecureStorageService.saveKeyMetadata(newKeys);
-    debugPrint('SSH key added');
+    if (kDebugMode) debugPrint('SSH key added');
   }
 
   Future<void> removeSSHKey(String id) async {
@@ -92,7 +92,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
     state = state.copyWith(sshKeys: newKeys);
     // Supprimer la clé privée et mettre à jour les métadonnées
     await SecureStorageService.deleteKey(id, state.sshKeys);
-    debugPrint('SSH key removed');
+    if (kDebugMode) debugPrint('SSH key removed');
   }
 
   void updateTheme(AppTheme theme) {

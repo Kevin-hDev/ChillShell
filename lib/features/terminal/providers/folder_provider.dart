@@ -114,9 +114,9 @@ class FolderNotifier extends Notifier<FolderState> {
         error: null,
       );
 
-      debugPrint('FolderProvider: path=$currentPath, displayName=$displayName, folders=${folders.length}');
+      if (kDebugMode) debugPrint('FolderProvider: path=$currentPath, folders=${folders.length}');
     } catch (e) {
-      debugPrint('FolderProvider: Error: $e');
+      if (kDebugMode) debugPrint('FolderProvider: Error: $e');
       state = state.copyWith(isLoading: false, error: 'Erreur: $e');
     }
   }
@@ -146,7 +146,7 @@ class FolderNotifier extends Notifier<FolderState> {
       // Charger les dossiers du nouveau chemin
       await loadFolders(execute, basePath: targetPath);
     } catch (e) {
-      debugPrint('FolderProvider: Navigate error: $e');
+      if (kDebugMode) debugPrint('FolderProvider: Navigate error: $e');
       state = state.copyWith(isLoading: false, error: 'Erreur: $e');
     }
   }

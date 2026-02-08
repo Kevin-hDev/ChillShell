@@ -184,5 +184,14 @@
   "wolMacStep3": "3. Cocher \"Réactiver pour l'accès au réseau\"",
 
   "sshKeySecurityTitle": "Protéger vos clés",
-  "sshKeySecurityDesc": "Vos clés SSH fonctionnent comme des mots de passe qui donnent accès à vos serveurs. La clé privée ne doit JAMAIS être partagée — ni par email, messagerie, ni stockée dans le cloud. Partagez uniquement la clé publique avec les serveurs auxquels vous souhaitez vous connecter. ChillShell stocke vos clés de manière sécurisée uniquement sur votre appareil. Si vous suspectez qu'une clé a été compromise, supprimez-la immédiatement et créez-en une nouvelle."
+  "sshKeySecurityDesc": "Vos clés SSH fonctionnent comme des mots de passe qui donnent accès à vos serveurs. La clé privée ne doit JAMAIS être partagée — ni par email, messagerie, ni stockée dans le cloud. Partagez uniquement la clé publique avec les serveurs auxquels vous souhaitez vous connecter. ChillShell stocke vos clés de manière sécurisée uniquement sur votre appareil. Si vous suspectez qu'une clé a été compromise, supprimez-la immédiatement et créez-en une nouvelle.",
+
+  "sshHostKeyTitle": "Nouveau serveur",
+  "sshHostKeyMessage": "Vous vous connectez à {host} pour la première fois.\nVérifiez l'empreinte du serveur avant de continuer :",
+  "sshHostKeyType": "Type : {type}",
+  "sshHostKeyFingerprint": "Empreinte :",
+  "sshHostKeyAccept": "Faire confiance",
+  "sshHostKeyReject": "Refuser",
+  "sshHostKeyMismatchTitle": "Attention — Clé modifiée !",
+  "sshHostKeyMismatchMessage": "La clé du serveur {host} a changé !\n\nCela pourrait indiquer une attaque de type man-in-the-middle. Si vous n'avez pas modifié la configuration du serveur, refusez cette connexion."
 }
