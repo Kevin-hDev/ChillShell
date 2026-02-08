@@ -125,7 +125,7 @@
   "wakeUpPc": "唤醒电脑",
   "connectionLostSnack": "连接丢失",
   "unableToCreateTab": "无法创建新标签页",
-  "privateKeyNotFound": "未找到私钥",
+  "privateKeyNotFound": "找不到私钥",
   "uploadingImage": "正在上传图片...",
   "uploadFailed": "图片上传失败",
   "ok": "确定",
@@ -174,5 +174,28 @@
   "sshHostKeyMismatchMessage": "服务器 {host} 的密钥已更改！\n\n这可能表示中间人攻击。如果您没有更改服务器配置，请拒绝此连接。",
   "rootedDeviceWarning": "警告：此设备似乎已获取Root权限。SSH密钥安全性可能受到影响。",
   "tooManyAttempts": "尝试次数过多。请在 {seconds} 秒后重试",
-  "tryAgainIn": "请在 {seconds} 秒后重试"
+  "tryAgainIn": "请在 {seconds} 秒后重试",
+  "sshConnectionFailed": "无法连接。请检查服务器地址。",
+  "sshAuthFailed": "认证失败。请检查您的SSH密钥。",
+  "sshKeyNotConfigured": "未为此主机配置SSH密钥。",
+  "sshTimeout": "连接超时。",
+  "sshHostUnreachable": "服务器不可达。请检查Tailscale。",
+  "connectionLost": "连接已断开",
+  "biometricReason": "解锁ChillShell以访问您的SSH会话",
+  "biometricFingerprint": "指纹",
+  "biometricIris": "虹膜",
+  "biometricGeneric": "生物识别",
+  "localShellError": "本地Shell错误",
+  "reconnectingAttempt": "重新连接中...（第{current}/{max}次）",
+  "@reconnectingAttempt": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "unexpectedError": "意外错误"
 }

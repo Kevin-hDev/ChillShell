@@ -396,7 +396,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unableToCreateTab => '无法创建新标签页';
 
   @override
-  String get privateKeyNotFound => '未找到私钥';
+  String get privateKeyNotFound => '找不到私钥';
 
   @override
   String get uploadingImage => '正在上传图片...';
@@ -573,4 +573,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String tryAgainIn(int seconds) {
     return '请在 $seconds 秒后重试';
   }
+
+  @override
+  String get sshConnectionFailed => '无法连接。请检查服务器地址。';
+
+  @override
+  String get sshAuthFailed => '认证失败。请检查您的SSH密钥。';
+
+  @override
+  String get sshKeyNotConfigured => '未为此主机配置SSH密钥。';
+
+  @override
+  String get sshTimeout => '连接超时。';
+
+  @override
+  String get sshHostUnreachable => '服务器不可达。请检查Tailscale。';
+
+  @override
+  String get connectionLost => '连接已断开';
+
+  @override
+  String get biometricReason => '解锁ChillShell以访问您的SSH会话';
+
+  @override
+  String get biometricFingerprint => '指纹';
+
+  @override
+  String get biometricIris => '虹膜';
+
+  @override
+  String get biometricGeneric => '生物识别';
+
+  @override
+  String get localShellError => '本地Shell错误';
+
+  @override
+  String reconnectingAttempt(String current, String max) {
+    return '重新连接中...（第$current/$max次）';
+  }
+
+  @override
+  String get unexpectedError => '意外错误';
 }

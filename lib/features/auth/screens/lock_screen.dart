@@ -38,9 +38,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   @override
   void initState() {
     super.initState();
-    // Lancer l'empreinte automatiquement si activée
+    // Lancer l'empreinte automatiquement si activée (post-frame pour accès context.l10n)
     if (widget.fingerprintEnabled) {
-      _authenticateFingerprint();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _authenticateFingerprint();
+      });
     }
   }
 
@@ -58,7 +60,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     });
 
     try {
-      final success = await BiometricService.authenticate();
+      final success = await BiometricService.authenticate(
+        localizedReason: context.l10n.biometricReason,
+      );
       if (success) {
         widget.onUnlocked();
         return;

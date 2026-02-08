@@ -174,5 +174,28 @@
   "sshHostKeyMismatchMessage": "¡La clave del servidor {host} ha cambiado!\n\nEsto podría indicar un ataque man-in-the-middle. Si no cambió la configuración del servidor, rechace esta conexión.",
   "rootedDeviceWarning": "Advertencia: Este dispositivo parece estar rooteado. La seguridad de las claves SSH puede estar comprometida.",
   "tooManyAttempts": "Demasiados intentos. Inténtelo de nuevo en {seconds} s",
-  "tryAgainIn": "Inténtelo de nuevo en {seconds} s"
+  "tryAgainIn": "Inténtelo de nuevo en {seconds} s",
+  "sshConnectionFailed": "No se pudo conectar. Verifique la dirección del servidor.",
+  "sshAuthFailed": "Autenticación fallida. Verifique su clave SSH.",
+  "sshKeyNotConfigured": "No hay clave SSH configurada para este host.",
+  "sshTimeout": "Tiempo de conexión agotado.",
+  "sshHostUnreachable": "Servidor inaccesible. Verifique Tailscale.",
+  "connectionLost": "Conexión perdida",
+  "biometricReason": "Desbloquee ChillShell para acceder a sus sesiones SSH",
+  "biometricFingerprint": "Huella dactilar",
+  "biometricIris": "Iris",
+  "biometricGeneric": "Biometría",
+  "localShellError": "Error del shell local",
+  "reconnectingAttempt": "Reconectando... (intento {current}/{max})",
+  "@reconnectingAttempt": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "unexpectedError": "Error inesperado"
 }

@@ -19,20 +19,9 @@ class SSHException implements Exception {
 
   SSHException(this.error, this.message);
 
-  String get userMessage {
-    switch (error) {
-      case SSHError.connectionFailed:
-        return 'Connexion impossible. Vérifiez l\'adresse du serveur.';
-      case SSHError.authenticationFailed:
-        return 'Authentification échouée. Vérifiez votre clé SSH.';
-      case SSHError.keyNotFound:
-        return 'Aucune clé SSH configurée pour cet hôte.';
-      case SSHError.timeout:
-        return 'Délai d\'attente dépassé.';
-      case SSHError.hostUnreachable:
-        return 'Serveur injoignable. Vérifiez Tailscale.';
-    }
-  }
+  @override
+  String toString() => 'SSHException($error, $message)';
+
 }
 
 /// Parse les clés SSH dans un isolate séparé pour ne pas bloquer le thread UI.

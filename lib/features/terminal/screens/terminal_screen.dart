@@ -522,7 +522,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             ),
             const SizedBox(height: VibeTermSpacing.lg),
             Text(
-              sshState.errorMessage ?? (isReconnecting ? l10n.reconnecting : l10n.connectionInProgress),
+              sshState.errorMessage != null
+                  ? translateSshError(l10n, sshState.errorMessage)
+                  : (isReconnecting ? l10n.reconnecting : l10n.connectionInProgress),
               style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
               textAlign: TextAlign.center,
             ),
@@ -542,7 +544,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               Icon(Icons.error_outline, size: 64, color: theme.danger),
               const SizedBox(height: VibeTermSpacing.md),
               Text(
-                sshState.errorMessage ?? l10n.connectionError,
+                translateSshError(l10n, sshState.errorMessage),
                 style: VibeTermTypography.caption.copyWith(color: theme.danger),
                 textAlign: TextAlign.center,
               ),

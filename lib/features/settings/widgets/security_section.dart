@@ -84,7 +84,9 @@ class SecuritySection extends ConsumerWidget {
                       return;
                     }
                     // Test d'authentification pour confirmer
-                    final success = await BiometricService.authenticate();
+                    final success = await BiometricService.authenticate(
+                      localizedReason: l10n.biometricReason,
+                    );
                     if (success) {
                       ref.read(settingsProvider.notifier).toggleFingerprint(true);
                     }
