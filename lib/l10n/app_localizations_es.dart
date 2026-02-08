@@ -536,4 +536,34 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get sshKeySecurityDesc =>
       'Sus claves SSH funcionan como contraseñas que dan acceso a sus servidores. La clave privada NUNCA debe compartirse — ni por correo, mensajería, ni almacenarse en la nube. Comparta solo la clave pública con los servidores a los que desee conectarse. ChillShell almacena sus claves de forma segura únicamente en su dispositivo. Si sospecha que una clave ha sido comprometida, elimínela inmediatamente y cree una nueva.';
+
+  @override
+  String get sshHostKeyTitle => 'Nuevo servidor';
+
+  @override
+  String sshHostKeyMessage(String host) {
+    return 'Se está conectando a $host por primera vez.\nVerifique la huella del servidor antes de continuar:';
+  }
+
+  @override
+  String sshHostKeyType(String type) {
+    return 'Tipo: $type';
+  }
+
+  @override
+  String get sshHostKeyFingerprint => 'Huella:';
+
+  @override
+  String get sshHostKeyAccept => 'Confiar y conectar';
+
+  @override
+  String get sshHostKeyReject => 'Rechazar';
+
+  @override
+  String get sshHostKeyMismatchTitle => 'Advertencia — ¡Clave cambiada!';
+
+  @override
+  String sshHostKeyMismatchMessage(String host) {
+    return '¡La clave del servidor $host ha cambiado!\n\nEsto podría indicar un ataque man-in-the-middle. Si no cambió la configuración del servidor, rechace esta conexión.';
+  }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,14 +55,10 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
   void _onSubmit() {
     final input = _controller.text.trim();
     final sshNotifier = ref.read(sshProvider.notifier);
-    final sshState = ref.read(sshProvider);
-
-    debugPrint('DEBUG _onSubmit: input="$input", currentTabId=${sshState.currentTabId}');
 
     // Si champ vide, envoyer juste Enter (pour confirmer sélections dans apps interactives)
     // Note: \r (Carriage Return) est la touche Enter dans un terminal, pas \n (Line Feed)
     if (input.isEmpty) {
-      debugPrint('DEBUG _onSubmit: Sending Enter (\\r) to tab ${sshState.currentTabId}');
       sshNotifier.write('\r');
       // Garder le clavier ouvert
       _focusNode.requestFocus();
@@ -132,7 +129,7 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
       final ctrlCode = upperLetter.codeUnitAt(0) - 64; // A=1, B=2, etc.
       final ctrlChar = String.fromCharCode(ctrlCode);
       ref.read(sshProvider.notifier).write(ctrlChar);
-      debugPrint('DEBUG: Sent CTRL+$upperLetter (code: $ctrlCode)');
+      if (kDebugMode) debugPrint('Sent CTRL+$upperLetter');
     }
 
     // Désarmer le bouton

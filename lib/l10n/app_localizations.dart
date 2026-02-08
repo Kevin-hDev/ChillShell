@@ -1081,6 +1081,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your SSH keys work like passwords that give access to your servers. The private key must NEVER be shared — not by email, messaging, or cloud storage. Only share the public key with servers you want to connect to. ChillShell stores your keys securely on your device only. If you suspect a key has been compromised, delete it immediately and create a new one.'**
   String get sshKeySecurityDesc;
+
+  /// No description provided for @sshHostKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New server'**
+  String get sshHostKeyTitle;
+
+  /// No description provided for @sshHostKeyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You are connecting to {host} for the first time.\nVerify the server fingerprint before connecting:'**
+  String sshHostKeyMessage(String host);
+
+  /// No description provided for @sshHostKeyType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type: {type}'**
+  String sshHostKeyType(String type);
+
+  /// No description provided for @sshHostKeyFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint:'**
+  String get sshHostKeyFingerprint;
+
+  /// No description provided for @sshHostKeyAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Trust and connect'**
+  String get sshHostKeyAccept;
+
+  /// No description provided for @sshHostKeyReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get sshHostKeyReject;
+
+  /// No description provided for @sshHostKeyMismatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning — Key changed!'**
+  String get sshHostKeyMismatchTitle;
+
+  /// No description provided for @sshHostKeyMismatchMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The server key for {host} has changed!\n\nThis could indicate a man-in-the-middle attack. If you did not change the server configuration, reject this connection.'**
+  String sshHostKeyMismatchMessage(String host);
 }
 
 class _AppLocalizationsDelegate

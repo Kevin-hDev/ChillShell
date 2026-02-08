@@ -50,12 +50,10 @@ class LocalShellService {
 
   /// Écrit des données dans le shell
   void write(String data) {
-    if (kDebugMode) debugPrint('DEBUG LocalShellService.write: data="${data.replaceAll('\n', '\\n')}", pty=${_pty != null ? "EXISTS" : "NULL"}');
     if (_pty != null) {
       _pty!.write(utf8.encode(data));
-      if (kDebugMode) debugPrint('DEBUG LocalShellService.write: Data sent to PTY');
     } else {
-      if (kDebugMode) debugPrint('DEBUG LocalShellService.write: PTY is NULL, data not sent!');
+      if (kDebugMode) debugPrint('LocalShell: PTY is NULL, data not sent');
     }
   }
 

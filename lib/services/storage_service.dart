@@ -33,7 +33,7 @@ class StorageService {
       final list = jsonDecode(data) as List;
       return list.map((json) => SSHKey.fromJson(json as Map<String, dynamic>)).toList();
     } catch (e) {
-      debugPrint('Error decoding SSH keys, returning empty list');
+      if (kDebugMode) debugPrint('Error decoding SSH keys, returning empty list');
       return [];
     }
   }
@@ -74,7 +74,7 @@ class StorageService {
     try {
       return AppSettings.fromJson(jsonDecode(data) as Map<String, dynamic>);
     } catch (e) {
-      debugPrint('Error decoding settings, returning defaults');
+      if (kDebugMode) debugPrint('Error decoding settings, returning defaults');
       return const AppSettings();
     }
   }
@@ -103,7 +103,7 @@ class StorageService {
       final list = jsonDecode(data) as List;
       return list.map((json) => SavedConnection.fromJson(json as Map<String, dynamic>)).toList();
     } catch (e) {
-      debugPrint('Error decoding saved connections, returning empty list');
+      if (kDebugMode) debugPrint('Error decoding saved connections, returning empty list');
       return [];
     }
   }
@@ -146,7 +146,7 @@ class StorageService {
       final list = jsonDecode(data) as List;
       return list.map((e) => e.toString()).toList();
     } catch (e) {
-      debugPrint('Error decoding command history, returning empty list');
+      if (kDebugMode) debugPrint('Error decoding command history, returning empty list');
       return [];
     }
   }

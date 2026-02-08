@@ -194,6 +194,8 @@ class SSHNotifier extends Notifier<SSHState> {
     required String keyId,
     required String sessionId,
     int port = 22,
+    HostKeyVerifyCallback? onFirstHostKey,
+    HostKeyVerifyCallback? onHostKeyMismatch,
   }) async {
     state = state.copyWith(
       connectionState: SSHConnectionState.connecting,
@@ -223,6 +225,8 @@ class SSHNotifier extends Notifier<SSHState> {
         username: username,
         privateKey: privateKey,
         port: port,
+        onFirstHostKey: onFirstHostKey,
+        onHostKeyMismatch: onHostKeyMismatch,
       );
 
       if (success) {
@@ -294,7 +298,7 @@ class SSHNotifier extends Notifier<SSHState> {
       await ForegroundSSHService.start(
         connectionInfo: 'Shell local actif',
       );
-      debugPrint('Local shell connected: $tabId');
+      if (kDebugMode) debugPrint('Local shell connected: $tabId');
     } catch (e) {
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
@@ -308,7 +312,7 @@ class SSHNotifier extends Notifier<SSHState> {
   Future<String?> createNewTab() async {
     // Guard contre les créations simultanées
     if (_isCreatingTab) {
-      debugPrint('Tab creation already in progress, ignoring');
+      if (kDebugMode) debugPrint('Tab creation already in progress, ignoring');
       return null;
     }
 
@@ -320,7 +324,7 @@ class SSHNotifier extends Notifier<SSHState> {
     final tabId = _generateTabId();
 
     try {
-      debugPrint('Creating new SSH connection for tab $tabId');
+      if (kDebugMode) debugPrint('Creating new SSH connection for tab $tabId');
 
       // FEEDBACK IMMÉDIAT: Ajouter l'onglet en état "connecting"
       final newTabIds = [...state.tabIds, tabId];
@@ -332,7 +336,7 @@ class SSHNotifier extends Notifier<SSHState> {
       // Récupérer la clé privée depuis le stockage sécurisé
       final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
       if (privateKey == null || privateKey.isEmpty) {
-        debugPrint('Failed to retrieve private key for tab creation');
+        if (kDebugMode) debugPrint('Failed to retrieve private key for tab creation');
         // Rollback: retirer l'onglet ajouté
         final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
         state = state.copyWith(
@@ -364,7 +368,7 @@ class SSHNotifier extends Notifier<SSHState> {
         return null;
       }
     } catch (e) {
-      debugPrint('Failed to create new tab: $e');
+      if (kDebugMode) debugPrint('Failed to create new tab: $e');
       // Rollback
       final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
       state = state.copyWith(
@@ -449,7 +453,7 @@ class SSHNotifier extends Notifier<SSHState> {
       if (_isDisposed) return;
       final anyConnected = _tabServices.values.any((s) => s.isConnected);
       if (!anyConnected && state.connectionState == SSHConnectionState.connected) {
-        debugPrint('All SSH connections lost');
+        if (kDebugMode) debugPrint('All SSH connections lost');
         _handleDisconnection();
       }
     });
@@ -495,7 +499,7 @@ class SSHNotifier extends Notifier<SSHState> {
     if (info == null) return;
 
     final attempts = state.reconnectAttempts + 1;
-    debugPrint('Reconnect attempt $attempts/$_maxReconnectAttempts');
+    if (kDebugMode) debugPrint('Reconnect attempt $attempts/$_maxReconnectAttempts');
 
     state = state.copyWith(
       connectionState: SSHConnectionState.reconnecting,
@@ -516,7 +520,7 @@ class SSHNotifier extends Notifier<SSHState> {
         if (_isDisposed) return;
 
         if (privateKey == null) {
-          debugPrint('Failed to retrieve private key for reconnection');
+          if (kDebugMode) debugPrint('Failed to retrieve private key for reconnection');
           state = state.copyWith(
             connectionState: SSHConnectionState.error,
             errorMessage: 'Clé privée introuvable',
@@ -566,12 +570,12 @@ class SSHNotifier extends Notifier<SSHState> {
             tabIds: [tabId],
           );
           _startConnectionMonitor();
-          debugPrint('Reconnection successful');
+          if (kDebugMode) debugPrint('Reconnection successful');
         } else {
           _handleDisconnection();
         }
       } catch (e) {
-        debugPrint('Reconnection failed');
+        if (kDebugMode) debugPrint('Reconnection failed');
         if (!_isDisposed) {
           _handleDisconnection();
         }
@@ -609,7 +613,7 @@ class SSHNotifier extends Notifier<SSHState> {
 
   /// Marque un onglet comme ayant une connexion morte (stream fermé)
   void markTabAsDead(String tabId) {
-    debugPrint('markTabAsDead: Tab $tabId marked as dead');
+    if (kDebugMode) debugPrint('markTabAsDead: Tab $tabId marked as dead');
     state = state.copyWith(
       deadTabIds: {...state.deadTabIds, tabId},
     );
@@ -618,8 +622,8 @@ class SSHNotifier extends Notifier<SSHState> {
   /// Vérifie et reconnecte les onglets SSH si la connexion est perdue
   /// Appelé quand l'app revient au premier plan
   Future<void> checkAndReconnectIfNeeded() async {
-    debugPrint('checkAndReconnectIfNeeded: Checking SSH connections...');
-    debugPrint('checkAndReconnectIfNeeded: Dead tabs: ${state.deadTabIds}');
+    if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Checking SSH connections...');
+    if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Dead tabs: ${state.deadTabIds}');
 
     // Pour chaque onglet SSH (pas local)
     for (final tabId in state.tabIds) {
@@ -627,10 +631,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Vérifier si l'onglet est marqué comme mort
       final isDead = state.deadTabIds.contains(tabId);
-      debugPrint('checkAndReconnectIfNeeded: Tab $tabId - isDead: $isDead');
+      if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Tab $tabId - isDead: $isDead');
 
       if (isDead && state.lastConnectionInfo != null) {
-        debugPrint('checkAndReconnectIfNeeded: Tab $tabId needs reconnection');
+        if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Tab $tabId needs reconnection');
         // Tenter une reconnexion
         final success = await _reconnectTab(tabId);
         if (success) {
@@ -649,7 +653,7 @@ class SSHNotifier extends Notifier<SSHState> {
     if (info == null) return false;
 
     try {
-      debugPrint('_reconnectTab: Reconnecting tab $tabId...');
+      if (kDebugMode) debugPrint('_reconnectTab: Reconnecting tab $tabId...');
 
       final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
       if (privateKey == null || privateKey.isEmpty) return false;
@@ -672,22 +676,22 @@ class SSHNotifier extends Notifier<SSHState> {
       if (success) {
         await newService.startShell();
         _tabServices[tabId] = newService;
-        debugPrint('_reconnectTab: Tab $tabId reconnected successfully');
+        if (kDebugMode) debugPrint('_reconnectTab: Tab $tabId reconnected successfully');
         return true;
       }
     } catch (e) {
-      debugPrint('_reconnectTab: Failed to reconnect tab $tabId: $e');
+      if (kDebugMode) debugPrint('_reconnectTab: Failed to reconnect tab $tabId: $e');
     }
     return false;
   }
 
   void write(String data) {
     final currentTabId = state.currentTabId;
-    debugPrint('DEBUG write: data="${data.replaceAll('\n', '\\n')}", currentTabId=$currentTabId');
+    if (kDebugMode) debugPrint('SSH write: tabId=$currentTabId');
     if (currentTabId != null) {
       writeToTab(currentTabId, data);
     } else {
-      debugPrint('DEBUG write: currentTabId is NULL, data not sent!');
+      if (kDebugMode) debugPrint('SSH write: currentTabId is NULL, data not sent!');
     }
   }
 
@@ -707,22 +711,16 @@ class SSHNotifier extends Notifier<SSHState> {
 
   /// Écrit vers un onglet spécifique par ID
   void writeToTab(String tabId, String data) {
-    debugPrint('DEBUG writeToTab: tabId=$tabId, isLocal=${state.localTabIds.contains(tabId)}');
     if (state.localTabIds.contains(tabId)) {
-      final localService = _localTabServices[tabId];
-      debugPrint('DEBUG writeToTab: localService=${localService != null ? "EXISTS" : "NULL"}');
-      localService?.write(data);
+      _localTabServices[tabId]?.write(data);
       return;
     }
     // SSH path
     final sshService = _tabServices[tabId];
-    debugPrint('DEBUG writeToTab SSH: sshService=${sshService != null ? "EXISTS" : "NULL"}');
     if (sshService != null) {
       final session = sshService.session;
-      debugPrint('DEBUG writeToTab SSH: session=${session != null ? "EXISTS" : "NULL"}');
       if (session != null) {
         session.stdin.add(Uint8List.fromList(utf8.encode(data)));
-        debugPrint('DEBUG writeToTab SSH: Data sent to stdin');
       }
     }
   }
@@ -782,7 +780,7 @@ class SSHNotifier extends Notifier<SSHState> {
         continue; // Pas de changement
       }
 
-      debugPrint('PTY RESIZE SEND: tab=$tabId, ${width}x$height');
+      if (kDebugMode) debugPrint('PTY RESIZE SEND: tab=$tabId, ${width}x$height');
       _lastSentSizes[tabId] = (width, height);
 
       if (state.localTabIds.contains(tabId)) {

@@ -37,6 +37,13 @@ class SSHException implements Exception {
 /// Fonction top-level requise par compute().
 List<SSHKeyPair> _parseSSHKeys(String pem) => SSHKeyPair.fromPem(pem);
 
+/// Callback pour demander à l'utilisateur de confirmer une clé d'hôte SSH
+/// Paramètres: host, port, keyType, fingerprint (hex)
+/// Retourne true si l'utilisateur accepte, false sinon
+typedef HostKeyVerifyCallback = Future<bool> Function(
+  String host, int port, String keyType, String fingerprint,
+);
+
 class SSHService {
   SSHClient? _client;
   SSHSession? _session;
@@ -51,6 +58,8 @@ class SSHService {
     required String privateKey,
     int port = 22,
     Duration keepAliveInterval = const Duration(seconds: 30),
+    HostKeyVerifyCallback? onFirstHostKey,
+    HostKeyVerifyCallback? onHostKeyMismatch,
   }) async {
     try {
       // Parsing de la clé dans un ISOLATE SÉPARÉ (ne bloque pas le thread UI)
@@ -74,23 +83,40 @@ class SSHService {
             final stored = await SecureStorageService.getHostFingerprint(host, port);
 
             if (stored == null) {
-              // TOFU: Premier contact → sauvegarder et accepter
+              // TOFU: Premier contact → demander confirmation à l'utilisateur
+              if (onFirstHostKey != null) {
+                final accepted = await onFirstHostKey(host, port, type, hexFingerprint);
+                if (accepted) {
+                  await SecureStorageService.saveHostFingerprint(host, port, hexFingerprint);
+                  if (kDebugMode) debugPrint('SSH TOFU: User accepted host key for $host:$port');
+                } else {
+                  if (kDebugMode) debugPrint('SSH TOFU: User rejected host key for $host:$port');
+                }
+                return accepted;
+              }
+              // Pas de callback → accepter silencieusement (reconnexion, nouvel onglet)
               await SecureStorageService.saveHostFingerprint(host, port, hexFingerprint);
-              if (kDebugMode) debugPrint('SSH TOFU: Accepted new host key for $host:$port ($type)');
+              if (kDebugMode) debugPrint('SSH TOFU: Auto-accepted host key for $host:$port ($type)');
               return true;
             }
 
             // Contact suivant → vérifier
             final match = stored == hexFingerprint;
-            if (kDebugMode) {
-              debugPrint('SSH TOFU: Host key ${match ? 'OK' : 'MISMATCH'} for $host:$port');
+            if (match) {
+              if (kDebugMode) debugPrint('SSH TOFU: Host key OK for $host:$port');
+              return true;
             }
-            return match;
+
+            // MISMATCH: clé changée → avertir l'utilisateur
+            if (kDebugMode) debugPrint('SSH TOFU: Host key MISMATCH for $host:$port');
+            if (onHostKeyMismatch != null) {
+              return await onHostKeyMismatch(host, port, type, hexFingerprint);
+            }
+            return false;
           } catch (e) {
-            // En cas d'erreur de stockage, accepter la connexion
-            // plutôt que bloquer l'utilisateur
-            if (kDebugMode) debugPrint('SSH TOFU: Storage error, accepting: $e');
-            return true;
+            // En cas d'erreur de stockage, rejeter par défaut (sécurité)
+            if (kDebugMode) debugPrint('SSH TOFU: Storage error, rejecting: $e');
+            return false;
           }
         },
       );

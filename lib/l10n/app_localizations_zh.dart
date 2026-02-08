@@ -527,4 +527,34 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get sshKeySecurityDesc =>
       '您的SSH密钥就像密码，可以授予您服务器的访问权限。私钥绝对不能分享——不能通过邮件、即时通讯或云存储。只将公钥分享给您要连接的服务器。ChillShell仅在您的设备上安全存储密钥。如果您怀疑密钥已被泄露，请立即删除并创建新的密钥。';
+
+  @override
+  String get sshHostKeyTitle => '新服务器';
+
+  @override
+  String sshHostKeyMessage(String host) {
+    return '您是第一次连接到 $host。\n连接前请验证服务器指纹：';
+  }
+
+  @override
+  String sshHostKeyType(String type) {
+    return '类型：$type';
+  }
+
+  @override
+  String get sshHostKeyFingerprint => '指纹：';
+
+  @override
+  String get sshHostKeyAccept => '信任并连接';
+
+  @override
+  String get sshHostKeyReject => '拒绝';
+
+  @override
+  String get sshHostKeyMismatchTitle => '警告 — 密钥已更改！';
+
+  @override
+  String sshHostKeyMismatchMessage(String host) {
+    return '服务器 $host 的密钥已更改！\n\n这可能表示中间人攻击。如果您没有更改服务器配置，请拒绝此连接。';
+  }
 }

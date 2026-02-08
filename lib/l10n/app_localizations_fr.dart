@@ -538,4 +538,34 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get sshKeySecurityDesc =>
       'Vos clés SSH fonctionnent comme des mots de passe qui donnent accès à vos serveurs. La clé privée ne doit JAMAIS être partagée — ni par email, messagerie, ni stockée dans le cloud. Partagez uniquement la clé publique avec les serveurs auxquels vous souhaitez vous connecter. ChillShell stocke vos clés de manière sécurisée uniquement sur votre appareil. Si vous suspectez qu\'une clé a été compromise, supprimez-la immédiatement et créez-en une nouvelle.';
+
+  @override
+  String get sshHostKeyTitle => 'Nouveau serveur';
+
+  @override
+  String sshHostKeyMessage(String host) {
+    return 'Vous vous connectez à $host pour la première fois.\nVérifiez l\'empreinte du serveur avant de continuer :';
+  }
+
+  @override
+  String sshHostKeyType(String type) {
+    return 'Type : $type';
+  }
+
+  @override
+  String get sshHostKeyFingerprint => 'Empreinte :';
+
+  @override
+  String get sshHostKeyAccept => 'Faire confiance';
+
+  @override
+  String get sshHostKeyReject => 'Refuser';
+
+  @override
+  String get sshHostKeyMismatchTitle => 'Attention — Clé modifiée !';
+
+  @override
+  String sshHostKeyMismatchMessage(String host) {
+    return 'La clé du serveur $host a changé !\n\nCela pourrait indiquer une attaque de type man-in-the-middle. Si vous n\'avez pas modifié la configuration du serveur, refusez cette connexion.';
+  }
 }

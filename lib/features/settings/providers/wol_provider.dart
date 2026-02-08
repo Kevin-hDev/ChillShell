@@ -61,9 +61,9 @@ class WolNotifier extends Notifier<WolState> {
           .toList();
 
       state = state.copyWith(configs: configs, isLoading: false);
-      debugPrint('WOL configs loaded: ${configs.length} configurations');
+      if (kDebugMode) debugPrint('WOL configs loaded: ${configs.length} configurations');
     } catch (e) {
-      debugPrint('Error loading WOL configs: $e');
+      if (kDebugMode) debugPrint('Error loading WOL configs: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -73,9 +73,9 @@ class WolNotifier extends Notifier<WolState> {
     try {
       final jsonList = state.configs.map((c) => c.toJson()).toList();
       await _storage.write(key: _wolConfigsKey, value: jsonEncode(jsonList));
-      debugPrint('WOL configs saved');
+      if (kDebugMode) debugPrint('WOL configs saved');
     } catch (e) {
-      debugPrint('Error saving WOL configs: $e');
+      if (kDebugMode) debugPrint('Error saving WOL configs: $e');
     }
   }
 
@@ -84,7 +84,7 @@ class WolNotifier extends Notifier<WolState> {
     final newConfigs = [...state.configs, config];
     state = state.copyWith(configs: newConfigs);
     await _saveConfigs();
-    debugPrint('WOL config added: ${config.name}');
+    if (kDebugMode) debugPrint('WOL config added: ${config.name}');
   }
 
   /// Met à jour une configuration existante par son ID.
@@ -94,7 +94,7 @@ class WolNotifier extends Notifier<WolState> {
     }).toList();
     state = state.copyWith(configs: newConfigs);
     await _saveConfigs();
-    debugPrint('WOL config updated: ${config.name}');
+    if (kDebugMode) debugPrint('WOL config updated: ${config.name}');
   }
 
   /// Supprime une configuration par son ID.
@@ -102,7 +102,7 @@ class WolNotifier extends Notifier<WolState> {
     final newConfigs = state.configs.where((c) => c.id != configId).toList();
     state = state.copyWith(configs: newConfigs);
     await _saveConfigs();
-    debugPrint('WOL config deleted: $configId');
+    if (kDebugMode) debugPrint('WOL config deleted: $configId');
   }
 
   /// Récupère la configuration associée à une connexion SSH.

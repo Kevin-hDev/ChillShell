@@ -533,4 +533,34 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sshKeySecurityDesc =>
       'Your SSH keys work like passwords that give access to your servers. The private key must NEVER be shared — not by email, messaging, or cloud storage. Only share the public key with servers you want to connect to. ChillShell stores your keys securely on your device only. If you suspect a key has been compromised, delete it immediately and create a new one.';
+
+  @override
+  String get sshHostKeyTitle => 'New server';
+
+  @override
+  String sshHostKeyMessage(String host) {
+    return 'You are connecting to $host for the first time.\nVerify the server fingerprint before connecting:';
+  }
+
+  @override
+  String sshHostKeyType(String type) {
+    return 'Type: $type';
+  }
+
+  @override
+  String get sshHostKeyFingerprint => 'Fingerprint:';
+
+  @override
+  String get sshHostKeyAccept => 'Trust and connect';
+
+  @override
+  String get sshHostKeyReject => 'Reject';
+
+  @override
+  String get sshHostKeyMismatchTitle => 'Warning — Key changed!';
+
+  @override
+  String sshHostKeyMismatchMessage(String host) {
+    return 'The server key for $host has changed!\n\nThis could indicate a man-in-the-middle attack. If you did not change the server configuration, reject this connection.';
+  }
 }
