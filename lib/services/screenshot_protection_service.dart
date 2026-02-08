@@ -14,4 +14,14 @@ class ScreenshotProtectionService {
       // Ignorer silencieusement si la plateforme ne supporte pas
     }
   }
+
+  /// Vide le clipboard silencieusement via l'API native Android (clearPrimaryClip).
+  /// Contrairement à Clipboard.setData(), ne déclenche PAS la notification "Copié" sur Android 13+.
+  static Future<void> clearClipboard() async {
+    try {
+      await _channel.invokeMethod('clearClipboard');
+    } on PlatformException {
+      // Ignorer silencieusement si la plateforme ne supporte pas
+    }
+  }
 }
