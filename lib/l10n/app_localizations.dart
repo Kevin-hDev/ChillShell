@@ -890,6 +890,12 @@ abstract class AppLocalizations {
   /// **'Invalid key format'**
   String get invalidKeyFormat;
 
+  /// No description provided for @keyFileTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'File too large (max 16 KB). SSH keys should be small files.'**
+  String get keyFileTooLarge;
+
   /// No description provided for @keyImported.
   ///
   /// In en, this message translates to:

@@ -422,6 +422,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get invalidKeyFormat => 'Invalid key format';
 
   @override
+  String get keyFileTooLarge =>
+      'File too large (max 16 KB). SSH keys should be small files.';
+
+  @override
   String keyImported(String name) {
     return 'Key \"$name\" imported';
   }
