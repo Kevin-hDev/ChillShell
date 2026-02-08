@@ -586,4 +586,50 @@ class AppLocalizationsDe extends AppLocalizations {
   String tryAgainIn(int seconds) {
     return 'Erneut versuchen in $seconds s';
   }
+
+  @override
+  String get sshConnectionFailed =>
+      'Verbindung fehlgeschlagen. Überprüfen Sie die Serveradresse.';
+
+  @override
+  String get sshAuthFailed =>
+      'Authentifizierung fehlgeschlagen. Überprüfen Sie Ihren SSH-Schlüssel.';
+
+  @override
+  String get sshKeyNotConfigured =>
+      'Kein SSH-Schlüssel für diesen Host konfiguriert.';
+
+  @override
+  String get sshTimeout => 'Zeitüberschreitung der Verbindung.';
+
+  @override
+  String get sshHostUnreachable =>
+      'Server nicht erreichbar. Überprüfen Sie Tailscale.';
+
+  @override
+  String get connectionLost => 'Verbindung verloren';
+
+  @override
+  String get biometricReason =>
+      'Entsperren Sie ChillShell, um auf Ihre SSH-Sitzungen zuzugreifen';
+
+  @override
+  String get biometricFingerprint => 'Fingerabdruck';
+
+  @override
+  String get biometricIris => 'Iris';
+
+  @override
+  String get biometricGeneric => 'Biometrie';
+
+  @override
+  String get localShellError => 'Lokaler Shell-Fehler';
+
+  @override
+  String reconnectingAttempt(String current, String max) {
+    return 'Wiederverbindung... (Versuch $current/$max)';
+  }
+
+  @override
+  String get unexpectedError => 'Unerwarteter Fehler';
 }

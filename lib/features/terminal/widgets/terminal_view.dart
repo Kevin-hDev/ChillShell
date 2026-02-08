@@ -462,7 +462,9 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
             Text(
               connectionState == SSHConnectionState.connecting
                   ? l10n.connectionInProgress
-                  : errorMessage ?? l10n.noConnection,
+                  : errorMessage != null
+                      ? translateSshError(l10n, errorMessage)
+                      : l10n.noConnection,
               style: TextStyle(color: theme.textMuted),
             ),
           ],

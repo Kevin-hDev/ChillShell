@@ -257,7 +257,7 @@ class SSHNotifier extends Notifier<SSHState> {
         AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
         state = state.copyWith(
           connectionState: SSHConnectionState.error,
-          errorMessage: 'Connexion échouée',
+          errorMessage: 'ssh:connectionFailed',
         );
         return false;
       }
@@ -265,14 +265,14 @@ class SSHNotifier extends Notifier<SSHState> {
       AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port', 'error': e.error.name});
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
-        errorMessage: e.userMessage,
+        errorMessage: 'ssh:${e.error.name}',
       );
       return false;
     } catch (e) {
       AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
-        errorMessage: 'Erreur inattendue: $e',
+        errorMessage: 'ssh:connectionFailed',
       );
       return false;
     }
@@ -309,7 +309,7 @@ class SSHNotifier extends Notifier<SSHState> {
     } catch (e) {
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
-        errorMessage: 'Erreur shell local: $e',
+        errorMessage: 'ssh:localShellError',
       );
     }
   }
@@ -500,7 +500,7 @@ class SSHNotifier extends Notifier<SSHState> {
     } else {
       state = state.copyWith(
         connectionState: SSHConnectionState.disconnected,
-        errorMessage: 'Connexion perdue',
+        errorMessage: 'ssh:connectionLost',
       );
     }
   }
@@ -514,7 +514,7 @@ class SSHNotifier extends Notifier<SSHState> {
 
     state = state.copyWith(
       connectionState: SSHConnectionState.reconnecting,
-      errorMessage: 'Reconnexion... (tentative $attempts/$_maxReconnectAttempts)',
+      errorMessage: 'ssh:reconnecting:$attempts/$_maxReconnectAttempts',
       reconnectAttempts: attempts,
     );
 
@@ -535,7 +535,7 @@ class SSHNotifier extends Notifier<SSHState> {
           if (kDebugMode) debugPrint('Failed to retrieve private key for reconnection');
           state = state.copyWith(
             connectionState: SSHConnectionState.error,
-            errorMessage: 'Clé privée introuvable',
+            errorMessage: 'ssh:privateKeyNotFound',
           );
           return;
         }

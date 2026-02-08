@@ -24,11 +24,12 @@ class BiometricService {
     }
   }
 
-  /// Authentifie l'utilisateur
-  static Future<bool> authenticate() async {
+  /// Authentifie l'utilisateur.
+  /// [localizedReason] est affiché dans le dialogue système (traduit par l'appelant).
+  static Future<bool> authenticate({required String localizedReason}) async {
     try {
       return await _auth.authenticate(
-        localizedReason: 'Déverrouillez ChillShell pour accéder à vos sessions SSH',
+        localizedReason: localizedReason,
         biometricOnly: true,
         persistAcrossBackgrounding: false,
       );
@@ -41,15 +42,21 @@ class BiometricService {
     }
   }
 
-  /// Retourne un label pour le type de biométrie
-  static String getBiometricLabel(List<BiometricType> types) {
+  /// Retourne un label traduit pour le type de biométrie.
+  /// [fingerprintLabel], [irisLabel], [genericLabel] sont fournis par l'appelant via i18n.
+  static String getBiometricLabel(
+    List<BiometricType> types, {
+    required String fingerprintLabel,
+    required String irisLabel,
+    required String genericLabel,
+  }) {
     if (types.contains(BiometricType.face)) {
       return 'Face ID';
     } else if (types.contains(BiometricType.fingerprint)) {
-      return 'Empreinte digitale';
+      return fingerprintLabel;
     } else if (types.contains(BiometricType.iris)) {
-      return 'Iris';
+      return irisLabel;
     }
-    return 'Biométrie';
+    return genericLabel;
   }
 }

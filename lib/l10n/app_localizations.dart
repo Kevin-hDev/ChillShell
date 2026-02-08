@@ -1153,6 +1153,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try again in {seconds} s'**
   String tryAgainIn(int seconds);
+
+  /// No description provided for @sshConnectionFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not connect. Check the server address.'**
+  String get sshConnectionFailed;
+
+  /// No description provided for @sshAuthFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed. Check your SSH key.'**
+  String get sshAuthFailed;
+
+  /// No description provided for @sshKeyNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No SSH key configured for this host.'**
+  String get sshKeyNotConfigured;
+
+  /// No description provided for @sshTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection timed out.'**
+  String get sshTimeout;
+
+  /// No description provided for @sshHostUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Server unreachable. Check Tailscale.'**
+  String get sshHostUnreachable;
+
+  /// No description provided for @connectionLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection lost'**
+  String get connectionLost;
+
+  /// No description provided for @biometricReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock ChillShell to access your SSH sessions'**
+  String get biometricReason;
+
+  /// No description provided for @biometricFingerprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fingerprint'**
+  String get biometricFingerprint;
+
+  /// No description provided for @biometricIris.
+  ///
+  /// In en, this message translates to:
+  /// **'Iris'**
+  String get biometricIris;
+
+  /// No description provided for @biometricGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometrics'**
+  String get biometricGeneric;
+
+  /// No description provided for @localShellError.
+  ///
+  /// In en, this message translates to:
+  /// **'Local shell error'**
+  String get localShellError;
+
+  /// No description provided for @reconnectingAttempt.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting... (attempt {current}/{max})'**
+  String reconnectingAttempt(String current, String max);
+
+  /// No description provided for @unexpectedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Unexpected error'**
+  String get unexpectedError;
 }
 
 class _AppLocalizationsDelegate

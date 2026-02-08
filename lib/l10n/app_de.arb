@@ -174,5 +174,28 @@
   "sshHostKeyMismatchMessage": "Der Serverschlüssel für {host} hat sich geändert!\n\nDies könnte auf einen Man-in-the-Middle-Angriff hindeuten. Wenn Sie die Serverkonfiguration nicht geändert haben, lehnen Sie diese Verbindung ab.",
   "rootedDeviceWarning": "Warnung: Dieses Gerät scheint gerootet zu sein. Die Sicherheit der SSH-Schlüssel kann beeinträchtigt sein.",
   "tooManyAttempts": "Zu viele Versuche. Erneut versuchen in {seconds} s",
-  "tryAgainIn": "Erneut versuchen in {seconds} s"
+  "tryAgainIn": "Erneut versuchen in {seconds} s",
+  "sshConnectionFailed": "Verbindung fehlgeschlagen. Überprüfen Sie die Serveradresse.",
+  "sshAuthFailed": "Authentifizierung fehlgeschlagen. Überprüfen Sie Ihren SSH-Schlüssel.",
+  "sshKeyNotConfigured": "Kein SSH-Schlüssel für diesen Host konfiguriert.",
+  "sshTimeout": "Zeitüberschreitung der Verbindung.",
+  "sshHostUnreachable": "Server nicht erreichbar. Überprüfen Sie Tailscale.",
+  "connectionLost": "Verbindung verloren",
+  "biometricReason": "Entsperren Sie ChillShell, um auf Ihre SSH-Sitzungen zuzugreifen",
+  "biometricFingerprint": "Fingerabdruck",
+  "biometricIris": "Iris",
+  "biometricGeneric": "Biometrie",
+  "localShellError": "Lokaler Shell-Fehler",
+  "reconnectingAttempt": "Wiederverbindung... (Versuch {current}/{max})",
+  "@reconnectingAttempt": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "unexpectedError": "Unerwarteter Fehler"
 }

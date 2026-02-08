@@ -272,5 +272,28 @@
         "type": "int"
       }
     }
-  }
+  },
+  "sshConnectionFailed": "Could not connect. Check the server address.",
+  "sshAuthFailed": "Authentication failed. Check your SSH key.",
+  "sshKeyNotConfigured": "No SSH key configured for this host.",
+  "sshTimeout": "Connection timed out.",
+  "sshHostUnreachable": "Server unreachable. Check Tailscale.",
+  "connectionLost": "Connection lost",
+  "biometricReason": "Unlock ChillShell to access your SSH sessions",
+  "biometricFingerprint": "Fingerprint",
+  "biometricIris": "Iris",
+  "biometricGeneric": "Biometrics",
+  "localShellError": "Local shell error",
+  "reconnectingAttempt": "Reconnecting... (attempt {current}/{max})",
+  "@reconnectingAttempt": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "unexpectedError": "Unexpected error"
 }
