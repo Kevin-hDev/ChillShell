@@ -1141,6 +1141,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Warning: This device appears to be rooted. SSH key security may be compromised.'**
   String get rootedDeviceWarning;
+
+  /// No description provided for @tooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {seconds} s'**
+  String tooManyAttempts(int seconds);
+
+  /// No description provided for @tryAgainIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {seconds} s'**
+  String tryAgainIn(int seconds);
 }
 
 class _AppLocalizationsDelegate

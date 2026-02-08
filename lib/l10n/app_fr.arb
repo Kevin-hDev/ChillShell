@@ -172,5 +172,7 @@
   "sshHostKeyReject": "Refuser",
   "sshHostKeyMismatchTitle": "Attention — Clé modifiée !",
   "sshHostKeyMismatchMessage": "La clé du serveur {host} a changé !\n\nCela pourrait indiquer une attaque de type man-in-the-middle. Si vous n'avez pas modifié la configuration du serveur, refusez cette connexion.",
-  "rootedDeviceWarning": "Attention : Cet appareil semble rooté. La sécurité des clés SSH peut être compromise."
+  "rootedDeviceWarning": "Attention : Cet appareil semble rooté. La sécurité des clés SSH peut être compromise.",
+  "tooManyAttempts": "Trop de tentatives. Réessayez dans {seconds} s",
+  "tryAgainIn": "Réessayez dans {seconds} s"
 }
