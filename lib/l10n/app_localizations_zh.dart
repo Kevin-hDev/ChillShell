@@ -416,6 +416,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get invalidKeyFormat => '密钥格式无效';
 
   @override
+  String get keyFileTooLarge => '文件过大（最大 16 KB）。SSH 密钥应该是小文件。';
+
+  @override
   String keyImported(String name) {
     return '密钥 \"$name\" 已导入';
   }

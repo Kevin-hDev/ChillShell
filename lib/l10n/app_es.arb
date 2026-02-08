@@ -151,6 +151,7 @@
   "ok": "OK",
   "errorMessage": "Error: {error}",
   "invalidKeyFormat": "Formato de clave inválido",
+  "keyFileTooLarge": "Archivo demasiado grande (máx. 16 KB). Las claves SSH son archivos pequeños.",
   "keyImported": "Clave \"{name}\" importada",
   "deleteKeyConfirmTitle": "¿Eliminar clave?",
   "actionIrreversible": "Esta acción es irreversible.",

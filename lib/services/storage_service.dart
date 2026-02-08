@@ -131,20 +131,46 @@ class StorageService {
     }
   }
 
-  // Command History
+  // Command History (V2: with timestamps for TTL expiration)
   Future<void> saveCommandHistory(List<String> history) async {
-    await _storage.write(
-      key: 'command_history',
-      value: jsonEncode(history),
-    );
+    // Delegate to V2 format with current timestamp for all entries
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final entries = history.map((c) => {'c': c, 't': now}).toList();
+    await saveCommandHistoryV2(entries);
   }
 
   Future<List<String>> getCommandHistory() async {
+    // Delegate to V2 and extract just the command strings
+    final entries = await getCommandHistoryV2();
+    return entries.map((e) => e['c'] as String).toList();
+  }
+
+  /// Saves command history with per-entry timestamps (V2 format).
+  /// Each entry: {"c": "command", "t": timestamp_ms}
+  Future<void> saveCommandHistoryV2(List<Map<String, dynamic>> entries) async {
+    await _storage.write(
+      key: 'command_history',
+      value: jsonEncode(entries),
+    );
+  }
+
+  /// Loads command history with timestamps (V2 format).
+  /// Handles migration from V1 (plain strings) to V2 automatically.
+  Future<List<Map<String, dynamic>>> getCommandHistoryV2() async {
     final data = await _storage.read(key: 'command_history');
     if (data == null) return [];
     try {
       final list = jsonDecode(data) as List;
-      return list.map((e) => e.toString()).toList();
+      if (list.isEmpty) return [];
+
+      // V1 migration: plain strings → add current timestamp
+      if (list.first is String) {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        return list.map((e) => <String, dynamic>{'c': e.toString(), 't': now}).toList();
+      }
+
+      // V2 format: objects with 'c' and 't'
+      return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (e) {
       if (kDebugMode) debugPrint('Error decoding command history, returning empty list');
       return [];

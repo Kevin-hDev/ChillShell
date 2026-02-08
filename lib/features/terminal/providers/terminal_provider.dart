@@ -59,11 +59,32 @@ class TerminalNotifier extends Notifier<TerminalState> {
   final _uuid = const Uuid();
   final _storage = StorageService();
 
-  /// Charge l'historique depuis le stockage persistant
+  /// Timestamps parallèles à commandHistory (pour le TTL à la sauvegarde)
+  List<int> _historyTimestamps = [];
+
+  /// Charge l'historique depuis le stockage persistant (avec filtre TTL 90 jours)
   Future<void> _loadHistory() async {
-    final history = await _storage.getCommandHistory();
-    if (history.isNotEmpty) {
-      state = state.copyWith(commandHistory: history);
+    final entries = await _storage.getCommandHistoryV2();
+    if (entries.isEmpty) return;
+
+    // Filtrer les entrées expirées (TTL 90 jours)
+    final cutoff = DateTime.now()
+        .subtract(Duration(days: _historyTtlDays))
+        .millisecondsSinceEpoch;
+
+    final validEntries = entries.where((e) {
+      final t = e['t'] as int? ?? 0;
+      return t >= cutoff;
+    }).toList();
+
+    final commands = validEntries.map((e) => e['c'] as String).toList();
+    _historyTimestamps = validEntries.map((e) => e['t'] as int).toList();
+
+    state = state.copyWith(commandHistory: commands);
+
+    // Si des entrées ont expiré, re-sauvegarder sans elles
+    if (validEntries.length < entries.length) {
+      _saveHistoryV2(commands, _historyTimestamps);
     }
   }
 
@@ -85,51 +106,69 @@ class TerminalNotifier extends Notifier<TerminalState> {
     }
   }
 
-  /// Patterns de commandes sensibles à ne JAMAIS enregistrer
-  static const _sensitivePatterns = [
-    // Mots de passe et authentification
-    'password',
-    'passwd',
-    'secret',
-    'token',
-    'api_key',
-    'apikey',
-    'api-key',
-    'auth',
-    'credential',
-    'private',
-    // Commandes d'export de variables sensibles
-    'export ',
-    // SSH avec mot de passe inline
-    'sshpass',
-    // MySQL/PostgreSQL avec mot de passe
-    '-p=',
-    '--password=',
-    'PGPASSWORD=',
-    'MYSQL_PWD=',
-    // AWS/Cloud credentials
-    'AWS_SECRET',
-    'AZURE_',
-    'GCP_',
-    'GOOGLE_APPLICATION_CREDENTIALS',
-    // Autres
-    '.env',
-    'id_rsa',
-    'id_ed25519',
+  /// TTL de l'historique des commandes (90 jours)
+  static const _historyTtlDays = 90;
+
+  /// Regex de détection de secrets dans les commandes.
+  /// Contrairement aux simples contains(), ces regex évitent les faux positifs
+  /// (ex: "auth" ne matche plus "author") et détectent les vrais tokens inline.
+  static final _sensitiveRegexes = [
+    // Assignation inline de variables sensibles: SECRET=value, TOKEN=xyz, etc.
+    RegExp(r'\b(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|APIKEY|API[-_]KEY|PRIVATE_KEY|CREDENTIAL)\s*=\S+', caseSensitive: false),
+
+    // Export de variables contenant des mots-clés sensibles (GITHUB_TOKEN, DB_PASSWORD, etc.)
+    RegExp(r'\bexport\s+\w*(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|APIKEY|PRIVATE_KEY|CREDENTIAL)\w*\s*=', caseSensitive: false),
+
+    // Export de variables cloud/DB spécifiques
+    RegExp(r'\bexport\s+(AWS_SECRET\w*|AZURE_\w+|GCP_\w+|GOOGLE_APPLICATION_CREDENTIALS|PGPASSWORD|MYSQL_PWD)\s*=', caseSensitive: false),
+
+    // sshpass (outil qui passe un mot de passe en clair)
+    RegExp(r'\bsshpass\b'),
+
+    // Mots de passe base de données inline
+    RegExp(r'PGPASSWORD=\S+'),
+    RegExp(r'MYSQL_PWD=\S+'),
+    RegExp(r'--password=\S+'),
+
+    // Tokens GitHub (PAT classique, OAuth, fine-grained)
+    RegExp(r'ghp_[a-zA-Z0-9]{36}'),
+    RegExp(r'gho_[a-zA-Z0-9]{36}'),
+    RegExp(r'github_pat_[a-zA-Z0-9_]{22,}'),
+
+    // OpenAI API key
+    RegExp(r'\bsk-[a-zA-Z0-9]{20,}'),
+
+    // AWS Access Key ID
+    RegExp(r'AKIA[A-Z0-9]{16}'),
+
+    // Stripe keys
+    RegExp(r'(sk_live|pk_live|sk_test|pk_test)_[a-zA-Z0-9]+'),
+
+    // Slack tokens
+    RegExp(r'xox[bpsar]-[a-zA-Z0-9-]+'),
+
+    // JWT tokens (3 segments base64url séparés par des points)
+    RegExp(r'eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]+'),
+
+    // Clés API dans les headers HTTP (curl -H "api_key: xxx")
+    RegExp(r'\b(api[_-]?key|apikey)\s*[:=]\s*\S+', caseSensitive: false),
+
+    // Lecture de fichiers sensibles (clés, .env, .pem)
+    RegExp(r'\b(cat|less|more|head|tail|bat)\s+\S*\.(env|pem|key)\b'),
+    RegExp(r'\b(cat|less|more|head|tail|bat)\s+\S*id_(rsa|ed25519|ecdsa|dsa)\b'),
   ];
 
-  /// Vérifie si une commande contient des données sensibles
+  /// Vérifie si une commande contient des données sensibles (regex)
   bool _isSensitiveCommand(String command) {
-    final lower = command.toLowerCase();
-    for (final pattern in _sensitivePatterns) {
-      if (lower.contains(pattern.toLowerCase())) {
+    for (final regex in _sensitiveRegexes) {
+      if (regex.hasMatch(command)) {
         return true;
       }
     }
     return false;
   }
 
-  /// Ajoute une commande à l'historique et sauvegarde
+  /// Ajoute une commande à l'historique et sauvegarde (avec timestamp pour TTL)
   /// Note: Utiliser addToHistoryIfSuccess() pour vérifier le code retour avant
   void addToHistory(String command) {
     if (command.trim().isEmpty) return;
@@ -147,21 +186,38 @@ class TerminalNotifier extends Notifier<TerminalState> {
     }
 
     final newHistory = [...state.commandHistory, command];
+    final newTimestamps = [..._historyTimestamps, DateTime.now().millisecondsSinceEpoch];
+
     // Limiter l'historique à 200 commandes
     if (newHistory.length > 200) {
       newHistory.removeAt(0);
+      newTimestamps.removeAt(0);
     }
 
+    _historyTimestamps = newTimestamps;
     state = state.copyWith(commandHistory: newHistory);
 
-    // Sauvegarder l'historique de manière persistante
-    _storage.saveCommandHistory(newHistory);
+    // Sauvegarder l'historique avec timestamps (format V2)
+    _saveHistoryV2(newHistory, newTimestamps);
+  }
+
+  /// Sauvegarde l'historique au format V2 (avec timestamps)
+  void _saveHistoryV2(List<String> commands, List<int> timestamps) {
+    final entries = <Map<String, dynamic>>[];
+    for (var i = 0; i < commands.length; i++) {
+      entries.add({
+        'c': commands[i],
+        't': i < timestamps.length ? timestamps[i] : DateTime.now().millisecondsSinceEpoch,
+      });
+    }
+    _storage.saveCommandHistoryV2(entries);
   }
 
   /// Efface complètement l'historique des commandes (utile pour reset après pollution)
   Future<void> clearCommandHistory() async {
+    _historyTimestamps = [];
     state = state.copyWith(commandHistory: []);
-    await _storage.saveCommandHistory([]);
+    await _storage.saveCommandHistoryV2([]);
     if (kDebugMode) debugPrint('Command history cleared');
   }
 

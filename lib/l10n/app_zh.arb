@@ -151,6 +151,7 @@
   "ok": "确定",
   "errorMessage": "错误：{error}",
   "invalidKeyFormat": "密钥格式无效",
+  "keyFileTooLarge": "文件过大（最大 16 KB）。SSH 密钥应该是小文件。",
   "keyImported": "密钥 \"{name}\" 已导入",
   "deleteKeyConfirmTitle": "删除密钥？",
   "actionIrreversible": "此操作不可撤销。",

@@ -152,6 +152,7 @@
   "errorMessage": "Error: {error}",
   "@errorMessage": { "placeholders": { "error": { "type": "String" } } },
   "invalidKeyFormat": "Invalid key format",
+  "keyFileTooLarge": "File too large (max 16 KB). SSH keys should be small files.",
   "keyImported": "Key \"{name}\" imported",
   "@keyImported": { "placeholders": { "name": { "type": "String" } } },
   "deleteKeyConfirmTitle": "Delete key?",

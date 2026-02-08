@@ -20,6 +20,9 @@ class AddSSHKeySheet extends ConsumerStatefulWidget {
 }
 
 class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
+  /// Taille max d'un fichier de clé SSH (16 KB — une clé Ed25519 fait ~400 octets)
+  static const _maxKeyFileSizeBytes = 16 * 1024;
+
   bool _showGenerateForm = false;
   bool _showImportForm = false;
   bool _isGenerating = false;
@@ -31,6 +34,8 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
 
   @override
   void dispose() {
+    // Sécurité: effacer le contenu des contrôleurs avant de les libérer
+    _privateKeyController.clear();
     _nameController.dispose();
     _importNameController.dispose();
     _privateKeyController.dispose();
@@ -350,16 +355,36 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
 
+        // Sécurité: vérifier la taille du fichier (max 16 KB)
+        final fileSize = file.size;
+        if (fileSize > _maxKeyFileSizeBytes) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.keyFileTooLarge)),
+            );
+          }
+          return;
+        }
+
         // Lire le contenu du fichier
         String? content;
         if (file.bytes != null) {
           content = String.fromCharCodes(file.bytes!);
         } else if (file.path != null) {
-          final fileContent = await _readFileContent(file.path!);
-          content = fileContent;
+          content = await _readFileContent(file.path!);
         }
 
         if (content != null && content.isNotEmpty) {
+          // Sécurité: vérification supplémentaire de la taille du contenu
+          if (content.length > _maxKeyFileSizeBytes) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(context.l10n.keyFileTooLarge)),
+              );
+            }
+            return;
+          }
+
           setState(() {
             _privateKeyController.text = content!;
             // Utiliser le nom du fichier comme nom de clé si vide
@@ -380,7 +405,11 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
 
   Future<String?> _readFileContent(String path) async {
     try {
-      final content = await File(path).readAsString();
+      final file = File(path);
+      // Sécurité: vérifier la taille avant de lire
+      final stat = await file.stat();
+      if (stat.size > _maxKeyFileSizeBytes) return null;
+      final content = await file.readAsString();
       return content;
     } catch (e) {
       return null;
@@ -403,6 +432,16 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
       return;
     }
 
+    // Sécurité: vérifier la taille du contenu collé
+    if (privateKey.length > _maxKeyFileSizeBytes) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.keyFileTooLarge)),
+        );
+      }
+      return;
+    }
+
     setState(() => _isImporting = true);
 
     try {
@@ -414,6 +453,8 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           : SSHKeyType.rsa;
 
       await SecureStorageService.savePrivateKey(keyId, privateKey);
+
+      // Sécurité: nettoyer le contrôleur immédiatement après sauvegarde sécurisée
       _privateKeyController.clear();
 
       final newKey = SSHKey(
@@ -434,6 +475,8 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
         );
       }
     } catch (e) {
+      // Sécurité: nettoyer le contrôleur même en cas d'erreur
+      _privateKeyController.clear();
       setState(() => _isImporting = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
