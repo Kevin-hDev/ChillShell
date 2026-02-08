@@ -6,6 +6,8 @@ import '../../../services/ssh_service.dart';
 import '../../../services/secure_storage_service.dart';
 import '../../../services/local_shell_service.dart';
 import '../../../services/foreground_ssh_service.dart';
+import '../../../services/audit_log_service.dart';
+import '../../../models/audit_entry.dart';
 
 enum SSHConnectionState { disconnected, connecting, connected, error, reconnecting }
 
@@ -248,8 +250,10 @@ class SSHNotifier extends Notifier<SSHState> {
         await ForegroundSSHService.start(
           connectionInfo: 'Connecté à $host',
         );
+        AuditLogService.log(AuditEventType.sshConnect, details: {'host': host, 'port': '$port'});
         return true;
       } else {
+        AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
         state = state.copyWith(
           connectionState: SSHConnectionState.error,
           errorMessage: 'Connexion échouée',
@@ -257,12 +261,14 @@ class SSHNotifier extends Notifier<SSHState> {
         return false;
       }
     } on SSHException catch (e) {
+      AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port', 'error': e.error.name});
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
         errorMessage: e.userMessage,
       );
       return false;
     } catch (e) {
+      AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
         errorMessage: 'Erreur inattendue: $e',
@@ -570,6 +576,7 @@ class SSHNotifier extends Notifier<SSHState> {
             tabIds: [tabId],
           );
           _startConnectionMonitor();
+          AuditLogService.log(AuditEventType.sshReconnect, details: {'host': info.host, 'port': '${info.port}'});
           if (kDebugMode) debugPrint('Reconnection successful');
         } else {
           _handleDisconnection();
@@ -593,6 +600,8 @@ class SSHNotifier extends Notifier<SSHState> {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
 
+    final info = state.lastConnectionInfo;
+
     // Fermer les services SSH
     for (final service in _tabServices.values) {
       await service.disconnect();
@@ -607,6 +616,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
     // Arrêter le foreground service
     await ForegroundSSHService.stop();
+
+    if (info != null) {
+      AuditLogService.log(AuditEventType.sshDisconnect, details: {'host': info.host, 'port': '${info.port}'});
+    }
 
     state = const SSHState();
   }
