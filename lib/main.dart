@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
@@ -105,8 +104,8 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
       // App en arrière-plan - enregistrer le moment
       _backgroundTime = DateTime.now();
 
-      // Nettoyer le clipboard pour éviter les fuites de données sensibles
-      Clipboard.setData(const ClipboardData(text: ''));
+      // Nettoyer le clipboard silencieusement (via API native pour éviter le toast "Copié")
+      ScreenshotProtectionService.clearClipboard();
 
       // Pause le timer de vérification SSH (économie batterie)
       ref.read(sshProvider.notifier).pauseConnectionMonitor();
