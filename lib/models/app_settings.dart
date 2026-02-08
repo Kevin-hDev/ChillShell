@@ -40,6 +40,7 @@ class AppSettings {
   final bool fingerprintEnabled;
   final int autoLockMinutes;  // 5, 10, 15 ou 30
   final bool wolEnabled;  // Wake-on-LAN
+  final bool allowScreenshots;  // Autoriser les captures d'écran (désactivé par défaut)
   // Multi-langues et taille de police
   final String? languageCode;  // null = auto-détection
   final TerminalFontSize terminalFontSize;
@@ -55,6 +56,7 @@ class AppSettings {
     this.fingerprintEnabled = false,
     this.autoLockMinutes = 10,
     this.wolEnabled = false,
+    this.allowScreenshots = false,
     this.languageCode,
     this.terminalFontSize = TerminalFontSize.m,
   });
@@ -70,6 +72,7 @@ class AppSettings {
     bool? fingerprintEnabled,
     int? autoLockMinutes,
     bool? wolEnabled,
+    bool? allowScreenshots,
     String? languageCode,
     bool clearLanguageCode = false,
     TerminalFontSize? terminalFontSize,
@@ -85,6 +88,7 @@ class AppSettings {
       fingerprintEnabled: fingerprintEnabled ?? this.fingerprintEnabled,
       autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
       wolEnabled: wolEnabled ?? this.wolEnabled,
+      allowScreenshots: allowScreenshots ?? this.allowScreenshots,
       languageCode: clearLanguageCode ? null : (languageCode ?? this.languageCode),
       terminalFontSize: terminalFontSize ?? this.terminalFontSize,
     );
@@ -101,6 +105,7 @@ class AppSettings {
     'fingerprintEnabled': fingerprintEnabled,
     'autoLockMinutes': autoLockMinutes,
     'wolEnabled': wolEnabled,
+    'allowScreenshots': allowScreenshots,
     'languageCode': languageCode,
     'terminalFontSize': terminalFontSize.name,
   };
@@ -116,6 +121,7 @@ class AppSettings {
     fingerprintEnabled: json['fingerprintEnabled'] as bool? ?? false,
     autoLockMinutes: json['autoLockMinutes'] as int? ?? 10,
     wolEnabled: json['wolEnabled'] as bool? ?? false,
+    allowScreenshots: json['allowScreenshots'] as bool? ?? false,
     languageCode: json['languageCode'] as String?,
     terminalFontSize: TerminalFontSize.values.byName(
       json['terminalFontSize'] as String? ?? 'm',

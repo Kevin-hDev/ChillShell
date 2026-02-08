@@ -623,4 +623,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unexpectedError => 'Unexpected error';
+
+  @override
+  String get allowScreenshots => 'Screenshots';
+
+  @override
+  String get allowScreenshotsWarning =>
+      'When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses).';
 }

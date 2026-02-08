@@ -8,6 +8,7 @@ import '../../../core/l10n/l10n.dart';
 import '../../../services/biometric_service.dart';
 import '../../../services/pin_service.dart';
 import '../../../services/audit_log_service.dart';
+import '../../../services/screenshot_protection_service.dart';
 import '../../../models/audit_entry.dart';
 import '../../terminal/providers/terminal_provider.dart';
 import '../providers/settings_provider.dart';
@@ -229,6 +230,55 @@ class SecuritySection extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: VibeTermSpacing.lg),
+        // Section Capture d'écran
+        SectionHeader(title: l10n.allowScreenshots.toUpperCase()),
+        const SizedBox(height: VibeTermSpacing.sm),
+        Container(
+          decoration: BoxDecoration(
+            color: theme.bgBlock,
+            borderRadius: BorderRadius.circular(VibeTermRadius.md),
+            border: Border.all(color: theme.border),
+          ),
+          child: _ToggleRow(
+            icon: Icons.screenshot_monitor,
+            label: l10n.allowScreenshots,
+            value: settings.appSettings.allowScreenshots,
+            onChanged: (value) {
+              ref.read(settingsProvider.notifier).toggleAllowScreenshots(value);
+              // Appliquer immédiatement : protection = inverse de allowScreenshots
+              ScreenshotProtectionService.setEnabled(!value);
+            },
+            theme: theme,
+          ),
+        ),
+        const SizedBox(height: VibeTermSpacing.sm),
+        // Card d'avertissement
+        Container(
+          decoration: BoxDecoration(
+            color: theme.bgBlock,
+            borderRadius: BorderRadius.circular(VibeTermRadius.md),
+            border: Border.all(color: theme.border),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(VibeTermSpacing.sm),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: theme.warning, size: 18),
+                const SizedBox(width: VibeTermSpacing.sm),
+                Expanded(
+                  child: Text(
+                    l10n.allowScreenshotsWarning,
+                    style: VibeTermTypography.itemDescription.copyWith(
+                      color: theme.textMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

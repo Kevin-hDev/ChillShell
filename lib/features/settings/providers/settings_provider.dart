@@ -134,6 +134,13 @@ class SettingsNotifier extends Notifier<SettingsState> {
     _saveSettings();
   }
 
+  void toggleAllowScreenshots(bool enabled) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(allowScreenshots: enabled),
+    );
+    _saveSettings();
+  }
+
   void setAutoLockMinutes(int minutes) {
     state = state.copyWith(
       appSettings: state.appSettings.copyWith(autoLockMinutes: minutes),

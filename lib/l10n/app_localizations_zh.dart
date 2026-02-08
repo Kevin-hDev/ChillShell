@@ -614,4 +614,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get unexpectedError => '意外错误';
+
+  @override
+  String get allowScreenshots => '截屏';
+
+  @override
+  String get allowScreenshotsWarning =>
+      '启用后，允许截屏和录屏。请注意不要分享敏感信息（SSH密钥、密码、服务器地址）。';
 }
