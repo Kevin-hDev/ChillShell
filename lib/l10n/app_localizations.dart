@@ -1231,6 +1231,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unexpected error'**
   String get unexpectedError;
+
+  /// No description provided for @allowScreenshots.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots'**
+  String get allowScreenshots;
+
+  /// No description provided for @allowScreenshotsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses).'**
+  String get allowScreenshotsWarning;
 }
 
 class _AppLocalizationsDelegate

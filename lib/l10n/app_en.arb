@@ -295,5 +295,7 @@
       }
     }
   },
-  "unexpectedError": "Unexpected error"
+  "unexpectedError": "Unexpected error",
+  "allowScreenshots": "Screenshots",
+  "allowScreenshotsWarning": "When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses)."
 }

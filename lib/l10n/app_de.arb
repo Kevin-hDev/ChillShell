@@ -197,5 +197,7 @@
       }
     }
   },
-  "unexpectedError": "Unerwarteter Fehler"
+  "unexpectedError": "Unerwarteter Fehler",
+  "allowScreenshots": "Screenshots",
+  "allowScreenshotsWarning": "Wenn aktiviert, sind Screenshots und Bildschirmaufnahmen erlaubt. Achten Sie darauf, keine sensiblen Informationen weiterzugeben (SSH-Schlüssel, Passwörter, Serveradressen)."
 }

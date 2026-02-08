@@ -13,6 +13,7 @@ import 'features/terminal/providers/providers.dart';
 import 'services/biometric_service.dart';
 import 'services/device_security_service.dart';
 import 'services/foreground_ssh_service.dart';
+import 'services/screenshot_protection_service.dart';
 import 'services/pin_service.dart';
 
 void main() async {
@@ -144,6 +145,9 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
   Future<void> _checkLockStatus(SettingsState settings) async {
     if (_checkingLock) return;
     _checkingLock = true;
+
+    // Appliquer la protection screenshot selon le setting utilisateur
+    ScreenshotProtectionService.setEnabled(!settings.appSettings.allowScreenshots);
 
     final pinEnabled = settings.appSettings.pinLockEnabled;
     final fingerprintEnabled = settings.appSettings.fingerprintEnabled;
