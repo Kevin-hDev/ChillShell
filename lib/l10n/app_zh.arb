@@ -199,5 +199,8 @@
   },
   "unexpectedError": "意外错误",
   "allowScreenshots": "截屏",
-  "allowScreenshotsWarning": "启用后，允许截屏和录屏。请注意不要分享敏感信息（SSH密钥、密码、服务器地址）。"
+  "allowScreenshotsWarning": "启用后，允许截屏和录屏。请注意不要分享敏感信息（SSH密钥、密码、服务器地址）。",
+  "rename": "重命名",
+  "renameDialogHint": "新名称",
+  "nameCannotBeEmpty": "名称不能为空"
 }

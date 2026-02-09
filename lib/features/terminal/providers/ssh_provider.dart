@@ -9,6 +9,7 @@ import '../../../services/foreground_ssh_service.dart';
 import '../../../services/audit_log_service.dart';
 import '../../../models/audit_entry.dart';
 import '../../../core/security/secure_buffer.dart';
+import '../../settings/providers/settings_provider.dart';
 
 enum SSHConnectionState { disconnected, connecting, connected, error, reconnecting }
 
@@ -252,6 +253,7 @@ class SSHNotifier extends Notifier<SSHState> {
           connectionInfo: 'Connecté à $host',
         );
         AuditLogService.log(AuditEventType.sshConnect, details: {'host': host, 'port': '$port'});
+        ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(keyId);
         return true;
       } else {
         AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
@@ -585,6 +587,7 @@ class SSHNotifier extends Notifier<SSHState> {
           );
           _startConnectionMonitor();
           AuditLogService.log(AuditEventType.sshReconnect, details: {'host': info.host, 'port': '${info.port}'});
+          ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(info.keyId);
           if (kDebugMode) debugPrint('Reconnection successful');
         } else {
           _handleDisconnection();

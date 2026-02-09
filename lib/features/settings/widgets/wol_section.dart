@@ -103,6 +103,10 @@ class _WolSectionState extends ConsumerState<WolSection>
           onDeleteConfig: (configId) {
             ref.read(wolProvider.notifier).deleteConfig(configId);
           },
+          onRenameConfig: (configId, newName) {
+            final config = wolState.configs.firstWhere((c) => c.id == configId);
+            ref.read(wolProvider.notifier).updateConfig(config.copyWith(name: newName));
+          },
           isSelectionMode: isSelectionMode,
           selectedIds: selectedIds,
           onLongPress: enterSelectionMode,
@@ -188,6 +192,7 @@ class _WolConfigsCard extends StatelessWidget {
   final bool isLoading;
   final VoidCallback? onAddConfig;
   final void Function(String) onDeleteConfig;
+  final void Function(String, String) onRenameConfig;
   final bool isSelectionMode;
   final Set<String> selectedIds;
   final void Function(String) onLongPress;
@@ -199,6 +204,7 @@ class _WolConfigsCard extends StatelessWidget {
     required this.isLoading,
     required this.onAddConfig,
     required this.onDeleteConfig,
+    required this.onRenameConfig,
     required this.isSelectionMode,
     required this.selectedIds,
     required this.onLongPress,
@@ -237,6 +243,7 @@ class _WolConfigsCard extends StatelessWidget {
                   _WolConfigItem(
                     config: config,
                     onDelete: () => onDeleteConfig(config.id),
+                    onRename: (newName) => onRenameConfig(config.id, newName),
                     isSelectionMode: isSelectionMode,
                     isSelected: selectedIds.contains(config.id),
                     onLongPress: () => onLongPress(config.id),
@@ -281,6 +288,7 @@ class _EmptyState extends StatelessWidget {
 class _WolConfigItem extends StatelessWidget {
   final dynamic config;
   final VoidCallback onDelete;
+  final void Function(String) onRename;
   final bool isSelectionMode;
   final bool isSelected;
   final VoidCallback onLongPress;
@@ -290,6 +298,7 @@ class _WolConfigItem extends StatelessWidget {
   const _WolConfigItem({
     required this.config,
     required this.onDelete,
+    required this.onRename,
     required this.isSelectionMode,
     required this.isSelected,
     required this.onLongPress,
@@ -323,7 +332,7 @@ class _WolConfigItem extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return InkWell(
-      onTap: isSelectionMode ? onSelectionToggle : null,
+      onTap: isSelectionMode ? onSelectionToggle : () => _showRenameDialog(context),
       onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -368,6 +377,46 @@ class _WolConfigItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRenameDialog(BuildContext context) {
+    final l10n = context.l10n;
+    final controller = TextEditingController(text: config.name);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        title: Text(l10n.rename, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: TextStyle(color: theme.text),
+          decoration: InputDecoration(
+            hintText: l10n.renameDialogHint,
+            hintStyle: TextStyle(color: theme.textMuted),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.border)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.accent)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
+          ),
+          TextButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                onRename(newName);
+                Navigator.pop(dialogContext);
+              }
+            },
+            child: Text(l10n.save, style: TextStyle(color: theme.accent)),
+          ),
+        ],
       ),
     );
   }

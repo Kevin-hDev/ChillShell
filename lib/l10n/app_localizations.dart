@@ -1243,6 +1243,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses).'**
   String get allowScreenshotsWarning;
+
+  /// No description provided for @rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
+  /// No description provided for @renameDialogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New name'**
+  String get renameDialogHint;
+
+  /// No description provided for @nameCannotBeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Name cannot be empty'**
+  String get nameCannotBeEmpty;
 }
 
 class _AppLocalizationsDelegate

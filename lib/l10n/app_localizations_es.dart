@@ -635,4 +635,13 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get allowScreenshotsWarning =>
       'Cuando está activado, se permiten las capturas y grabación de pantalla. Tenga cuidado de no compartir información sensible (claves SSH, contraseñas, direcciones de servidores).';
+
+  @override
+  String get rename => 'Renombrar';
+
+  @override
+  String get renameDialogHint => 'Nuevo nombre';
+
+  @override
+  String get nameCannotBeEmpty => 'El nombre no puede estar vacío';
 }
