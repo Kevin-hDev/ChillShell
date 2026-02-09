@@ -199,5 +199,8 @@
   },
   "unexpectedError": "Erreur inattendue",
   "allowScreenshots": "Captures d'écran",
-  "allowScreenshotsWarning": "Lorsque activé, les captures d'écran et l'enregistrement d'écran sont autorisés. Attention à ne pas partager d'informations sensibles (clés SSH, mots de passe, adresses serveurs)."
+  "allowScreenshotsWarning": "Lorsque activé, les captures d'écran et l'enregistrement d'écran sont autorisés. Attention à ne pas partager d'informations sensibles (clés SSH, mots de passe, adresses serveurs).",
+  "rename": "Renommer",
+  "renameDialogHint": "Nouveau nom",
+  "nameCannotBeEmpty": "Le nom ne peut pas être vide"
 }

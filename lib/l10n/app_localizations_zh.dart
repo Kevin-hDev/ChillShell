@@ -621,4 +621,13 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get allowScreenshotsWarning =>
       '启用后，允许截屏和录屏。请注意不要分享敏感信息（SSH密钥、密码、服务器地址）。';
+
+  @override
+  String get rename => '重命名';
+
+  @override
+  String get renameDialogHint => '新名称';
+
+  @override
+  String get nameCannotBeEmpty => '名称不能为空';
 }

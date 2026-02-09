@@ -89,6 +89,22 @@ class SettingsNotifier extends Notifier<SettingsState> {
     if (kDebugMode) debugPrint('SSH key added');
   }
 
+  Future<void> updateSSHKeyLastUsed(String keyId) async {
+    final newKeys = state.sshKeys.map((k) {
+      return k.id == keyId ? k.copyWith(lastUsed: DateTime.now()) : k;
+    }).toList();
+    state = state.copyWith(sshKeys: newKeys);
+    await SecureStorageService.saveKeyMetadata(newKeys);
+  }
+
+  Future<void> renameSSHKey(String id, String newName) async {
+    final newKeys = state.sshKeys.map((k) {
+      return k.id == id ? k.copyWith(name: newName) : k;
+    }).toList();
+    state = state.copyWith(sshKeys: newKeys);
+    await SecureStorageService.saveKeyMetadata(newKeys);
+  }
+
   Future<void> removeSSHKey(String id) async {
     final removedKey = state.sshKeys.where((k) => k.id == id).firstOrNull;
     final newKeys = state.sshKeys.where((k) => k.id != id).toList();

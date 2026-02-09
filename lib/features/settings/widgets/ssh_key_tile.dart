@@ -116,7 +116,7 @@ class SSHKeyTile extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Padding(
+      builder: (sheetContext) => Padding(
         padding: const EdgeInsets.all(VibeTermSpacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -127,9 +127,68 @@ class SSHKeyTile extends ConsumerWidget {
             Text(l10n.sshKeyTypeLabel(sshKey.typeLabel), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
             Text(l10n.sshKeyHostLabel(sshKey.host), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
             Text(l10n.sshKeyLastUsedLabel(sshKey.lastUsedLabel), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
-            const SizedBox(height: VibeTermSpacing.lg),
+            const SizedBox(height: VibeTermSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: Icon(Icons.edit, color: theme.accent, size: 18),
+                label: Text(l10n.rename, style: TextStyle(color: theme.accent)),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: theme.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pop(sheetContext);
+                  _showRenameDialog(context, ref);
+                },
+              ),
+            ),
+            const SizedBox(height: VibeTermSpacing.sm),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRenameDialog(BuildContext context, WidgetRef ref) {
+    final theme = ref.read(vibeTermThemeProvider);
+    final l10n = context.l10n;
+    final controller = TextEditingController(text: sshKey.name);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: theme.bgBlock,
+        title: Text(l10n.rename, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          style: TextStyle(color: theme.text),
+          decoration: InputDecoration(
+            hintText: l10n.renameDialogHint,
+            hintStyle: TextStyle(color: theme.textMuted),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.border)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.accent)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
+          ),
+          TextButton(
+            onPressed: () {
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                ref.read(settingsProvider.notifier).renameSSHKey(sshKey.id, newName);
+                Navigator.pop(dialogContext);
+              }
+            },
+            child: Text(l10n.save, style: TextStyle(color: theme.accent)),
+          ),
+        ],
       ),
     );
   }

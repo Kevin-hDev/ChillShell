@@ -16,7 +16,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-VibeTerm is a Flutter mobile terminal app for controlling a PC remotely via SSH, inspired by Warp Terminal. Documentation is in French, code is in English.
+**ChillShell** (nom de code interne : VibeTerm) est une app mobile Flutter pour contrôler un PC à distance via SSH, inspirée de Warp Terminal. La documentation est en français, le code en anglais. L'app supporte Android et iOS.
+
+### Fonctionnalités principales
+- **Terminal SSH** : connexions SSH avec clés Ed25519, onglets multiples, reconnexion auto
+- **Wake-on-LAN** : réveil de PC à distance via Magic Packet (config MAC + connexion SSH liée)
+- **Sécurité** : verrouillage PIN/biométrie, protection screenshot, nettoyage presse-papier, détection root, journal d'audit
+- **i18n** : 5 langues (EN, FR, ES, DE, ZH) via fichiers ARB
+- **Thèmes** : Warp Dark (défaut), Dracula, Nord
 
 ## Commands
 
@@ -24,7 +31,7 @@ VibeTerm is a Flutter mobile terminal app for controlling a PC remotely via SSH,
 flutter pub get              # Install dependencies
 flutter run                  # Run on connected device
 flutter run -d <device_id>   # Run on specific device
-flutter test                 # Run tests
+flutter test                 # Run tests (97 tests)
 flutter analyze              # Code analysis
 dart format lib/             # Format code
 flutter build apk            # Build Android APK
@@ -36,6 +43,11 @@ For Riverpod code generation:
 dart run build_runner build  # Generate provider code
 ```
 
+For i18n (after modifying .arb files):
+```bash
+flutter gen-l10n             # Generate localization files from lib/l10n/app_*.arb
+```
+
 ## Architecture
 
 **Feature-First + Riverpod Pattern:**
@@ -45,10 +57,23 @@ Screen (Widget) → Provider (State) → Service (Business Logic) → External l
 
 ### Directory Structure
 - `lib/core/theme/` - Colors, typography, spacing constants (Warp Dark theme)
-- `lib/features/` - Feature modules (terminal/, settings/, auth/)
+- `lib/core/l10n/` - Localization extension (`context.l10n`)
+- `lib/l10n/` - ARB translation files (app_en.arb, app_fr.arb, etc.) + generated localizations
+- `lib/features/` - Feature modules:
+  - `terminal/` - SSH terminal, tabs, reconnection logic
+  - `settings/` - App settings, SSH keys management, WOL configuration
+  - `auth/` - PIN code, biometric lock, lock screen
   - Each feature has: screens/, widgets/, providers/
-- `lib/models/` - Data classes (Session, SSHKey, Command)
-- `lib/services/` - Business logic wrappers (SSH, tmux, storage, biometric)
+- `lib/models/` - Data classes (Session, SSHKey, SavedConnection, WolConfig, Command, AppSettings)
+- `lib/services/` - Business logic:
+  - `ssh_service.dart` - SSH connection handling
+  - `secure_storage_service.dart` - Encrypted key/data storage
+  - `wol_service.dart` - Wake-on-LAN packet sending
+  - `biometric_service.dart` - Fingerprint/face auth
+  - `pin_service.dart` - PIN code management
+  - `audit_log_service.dart` - Security event logging
+  - `screenshot_protection_service.dart` - Screenshot/screen recording protection
+  - `device_security_service.dart` - Root/jailbreak detection
 - `lib/shared/widgets/` - Reusable widgets
 
 ### Key Dependencies
@@ -59,6 +84,19 @@ Screen (Widget) → Provider (State) → Service (Business Logic) → External l
 | `xterm` | Terminal rendering |
 | `flutter_secure_storage` | Secure key storage |
 | `local_auth` | Biometric authentication |
+| `wake_on_lan` | WOL Magic Packet sending |
+| `cryptography` / `pointycastle` | SSH cryptographic operations |
+| `flutter_foreground_task` | Background SSH connection persistence (Android) |
+| `google_fonts` | JetBrains Mono font |
+| `uuid` | Unique ID generation for models |
+
+## Internationalization (i18n)
+
+- 5 languages: English, French, Spanish, German, Chinese
+- Translation files: `lib/l10n/app_{en,fr,es,de,zh}.arb`
+- Access in code: `context.l10n.keyName` (via extension in `lib/core/l10n/l10n.dart`)
+- Generated files: `lib/l10n/app_localizations*.dart` (do not edit manually)
+- **Rule**: All user-facing strings must use l10n keys, never hardcode text
 
 ## Design System Reference
 
@@ -76,6 +114,8 @@ Core palette: bg=#0F0F0F, accent=#10B981 (emerald green)
 2. **State**: Use Riverpod (`StateNotifierProvider` for complex state). No GetX/Bloc.
 3. **Widgets**: Prefer StatelessWidget and ConsumerWidget for Riverpod integration.
 4. **Dependencies**: Don't add packages without justification.
+5. **i18n**: All user-visible text must go through l10n. Update all 5 ARB files + run `flutter gen-l10n`.
+6. **Models**: Use immutable data classes with `copyWith()`. Never mutate state directly.
 
 ## Documentation
 

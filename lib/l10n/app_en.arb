@@ -297,5 +297,8 @@
   },
   "unexpectedError": "Unexpected error",
   "allowScreenshots": "Screenshots",
-  "allowScreenshotsWarning": "When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses)."
+  "allowScreenshotsWarning": "When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses).",
+  "rename": "Rename",
+  "renameDialogHint": "New name",
+  "nameCannotBeEmpty": "Name cannot be empty"
 }

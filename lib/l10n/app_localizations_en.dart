@@ -630,4 +630,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get allowScreenshotsWarning =>
       'When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses).';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
+  String get renameDialogHint => 'New name';
+
+  @override
+  String get nameCannotBeEmpty => 'Name cannot be empty';
 }
