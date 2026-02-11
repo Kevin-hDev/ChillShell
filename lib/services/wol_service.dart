@@ -157,6 +157,10 @@ class WolService {
 
     try {
       final connected = await tryConnect();
+      // Vérifier si annulé PENDANT tryConnect (l'utilisateur a pu cliquer Annuler)
+      if (_cancelCompleter == null || _cancelCompleter!.isCompleted) {
+        return;
+      }
       if (connected) {
         _cancelCompleter = null;
         onSuccess();
@@ -216,6 +220,10 @@ class WolService {
       // Tenter la connexion SSH
       try {
         final connected = await tryConnect();
+        // Vérifier si annulé PENDANT tryConnect (l'utilisateur a pu cliquer Annuler)
+        if (_cancelCompleter == null || _cancelCompleter!.isCompleted) {
+          return;
+        }
         if (connected) {
           _cancelCompleter = null;
           onSuccess();
