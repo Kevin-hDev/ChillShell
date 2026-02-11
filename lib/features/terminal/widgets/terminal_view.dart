@@ -179,38 +179,48 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   }
 
   /// Gère le scroll tactile en alternate buffer
-  /// Convertit les pixels en PageUp/PageDown pour les CLI modernes
+  /// Envoie des mouse wheel SGR au centre du terminal (position-aware pour
+  /// les apps comme Crush qui routent les événements selon la position).
+  /// Fallback clavier (flèches) pour les apps qui ne supportent pas la souris.
   void _handleAltBufferScroll(DragUpdateDetails details, Terminal terminal) {
     _altBufferScrollAccumulator += details.delta.dy;
 
-    // Seuil plus bas pour un scroll fluide (environ 1 ligne)
+    // Seuil pour un scroll fluide (environ 1 ligne)
     const scrollThreshold = 30.0;
 
     if (_altBufferScrollAccumulator.abs() > scrollThreshold) {
-      // Doigt vers le bas (delta < 0) = scroll up = wheel up
-      // Doigt vers le haut (delta > 0) = scroll down = wheel down
+      // Doigt vers le haut (delta < 0) = scroll up
+      // Doigt vers le bas (delta > 0) = scroll down
       final bool scrollUp = _altBufferScrollAccumulator < 0;
 
-      // Envoyer DEUX formats de mouse wheel pour compatibilité maximale :
-      // 1. Format X10 (ancien, plus compatible) : \x1b[M + (32+button) + (32+col) + (32+row)
-      //    Button: 64 = wheel up, 65 = wheel down
-      // 2. Format SGR 1006 (moderne) : \x1b[<button;col;rowM
+      // Vérifier si l'app courante a besoin de scroll clavier
+      final sshState = ref.read(sshProvider);
+      final tabId = sshState.currentTabId;
+      final currentCmd = tabId != null ? sshState.tabCurrentCommand[tabId] : null;
+      final cmdName = _extractCommandName(currentCmd);
+      final useKeyboardScroll = cmdName != null && _keyboardScrollApps.contains(cmdName);
 
-      final int buttonCode = scrollUp ? 64 : 65;
-      const int col = 1;
-      const int row = 1;
-
-      // Format SGR 1006 (moderne, fonctionnait pour Vibe)
-      final String sgrSequence = '\x1b[<$buttonCode;$col;${row}M';
-
-      // Envoyer au serveur SSH
-      ref.read(sshProvider.notifier).write(sgrSequence);
+      if (useKeyboardScroll) {
+        // Apps sans support souris : envoyer flèches clavier (↑/↓)
+        final isAppMode = terminal.cursorKeysMode;
+        final prefix = isAppMode ? '\x1bO' : '\x1b[';
+        final arrowKey = scrollUp ? '${prefix}A' : '${prefix}B';
+        ref.read(sshProvider.notifier).write(arrowKey);
+        if (kDebugMode) debugPrint('ALT_SCROLL: Arrow ${scrollUp ? "UP" : "DOWN"} sent (keyboard scroll for $cmdName)');
+      } else {
+        // Mouse wheel SGR 1006 — coordonnées au CENTRE du terminal
+        // pour que les apps position-aware (Crush, etc.) routent l'événement
+        // vers la zone de contenu, pas le header en (1,1).
+        final int buttonCode = scrollUp ? 64 : 65;
+        final int col = (terminal.viewWidth ~/ 2).clamp(1, terminal.viewWidth);
+        final int row = (terminal.viewHeight ~/ 2).clamp(1, terminal.viewHeight);
+        final String sgrSequence = '\x1b[<$buttonCode;$col;${row}M';
+        ref.read(sshProvider.notifier).write(sgrSequence);
+        if (kDebugMode) debugPrint('ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} at ($col,$row) sent (SGR)');
+      }
 
       // Forcer un redraw du terminal local après le scroll
-      // Cela aide si l'app distante scroll mais n'envoie pas de refresh
       terminal.notifyListeners();
-
-      if (kDebugMode) debugPrint('ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} sent');
 
       _altBufferScrollAccumulator = 0.0;
     }
@@ -433,7 +443,15 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   /// la perte de messages (ils effacent et réécrivent tout à chaque resize).
   static const _cliAgentCommands = <String>{
     'claude', 'codex', 'opencode', 'aider', 'gemini', 'cody',
-    'amazon-q', 'aws-q',
+    'amazon-q', 'aws-q', 'crush',
+  };
+
+  /// Apps qui ne supportent PAS le mouse wheel SGR.
+  /// Pour ces apps, on envoie des flèches clavier (↑/↓) pour le scroll.
+  /// Note : Crush supporte le mouse wheel (Bubble Tea) → utilise SGR.
+  /// Note : OpenCode ne répond ni au mouse ni aux flèches (limitation connue).
+  static const _keyboardScrollApps = <String>{
+    'opencode',
   };
 
   /// Vérifie si la commande en cours est un agent CLI moderne
@@ -582,10 +600,10 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         children: [
           // Terminal toujours en bas du stack
           terminalWidget,
-          // En alternate buffer ET pas en mode éditeur (CLI modernes comme Vibe)
+          // En alternate buffer ET pas en mode éditeur (CLI modernes comme Vibe, Crush)
           // → GestureDetector transparent PAR-DESSUS le terminal pour capturer le scroll
-          // → Envoie des mouse wheel SGR pour les apps qui supportent (Vibe fonctionne)
-          // Note: OpenCode ne répond pas à ces événements (limitation OpenTUI)
+          // → Mouse wheel SGR pour les apps qui supportent (Vibe, etc.)
+          // → Flèches clavier pour les apps Bubble Tea (Crush, OpenCode)
           if (_isInAltBuffer && !isEditorMode)
             Positioned.fill(
               child: GestureDetector(

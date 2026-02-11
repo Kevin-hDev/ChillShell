@@ -671,7 +671,7 @@ class SSHNotifier extends Notifier<SSHState> {
   static const _interactiveMenuCommands = <String>[
     // AI Coding CLI (vibe coding tools)
     'claude', 'opencode', 'aider', 'gemini', 'codex', 'cody',
-    'amazon-q', 'aws-q',
+    'amazon-q', 'aws-q', 'crush',
     // Fuzzy finders & selectors
     'fzf', 'fzy', 'sk', 'peco', 'percol',
     // Monitoring avec navigation
@@ -697,7 +697,7 @@ class SSHNotifier extends Notifier<SSHState> {
   static const _longRunningCommands = <String>[
     // AI Coding CLI (vibe coding tools)
     'claude', 'opencode', 'aider', 'gemini', 'codex', 'cody',
-    'amazon-q', 'aws-q',
+    'amazon-q', 'aws-q', 'crush',
     // Serveurs & Dev
     'npm', 'npx', 'yarn', 'pnpm', 'node', 'nodemon', 'ts-node',
     'python', 'python3', 'py', 'flask', 'uvicorn', 'gunicorn', 'django',
