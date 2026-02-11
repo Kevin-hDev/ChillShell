@@ -10,6 +10,7 @@ import '../widgets/appearance_section.dart';
 import '../widgets/security_section.dart';
 import '../widgets/wol_section.dart';
 import '../widgets/add_wol_sheet.dart';
+import '../widgets/tailscale_dashboard.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   final VoidCallback? onTerminalTap;
@@ -27,7 +28,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -62,11 +63,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 _ConnectionTab(),
                 // Onglet 2: Accès (Tailscale + Clés SSH)
                 _AccessTab(),
-                // Onglet 3: Général (Thème + Langue + Taille police)
+                // Onglet 3: Tailscale Dashboard
+                _TailscaleTab(),
+                // Onglet 4: Général (Thème + Langue + Taille police)
                 _GeneralTab(),
-                // Onglet 4: Sécurité
+                // Onglet 5: Sécurité
                 _SecurityTab(),
-                // Onglet 5: WOL
+                // Onglet 6: WOL
                 _WolTab(),
               ],
             ),
@@ -120,6 +123,7 @@ class _SettingsTabBar extends StatelessWidget {
         tabs: [
           Tab(text: l10n.connection),
           Tab(text: l10n.access),
+          Tab(text: l10n.tailscaleTab),
           Tab(text: l10n.general),
           Tab(text: l10n.security),
           Tab(text: l10n.wol),
@@ -152,6 +156,16 @@ class _AccessTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const AccessSection();
+  }
+}
+
+/// Onglet Tailscale : Dashboard avec statut et appareils
+class _TailscaleTab extends StatelessWidget {
+  const _TailscaleTab();
+
+  @override
+  Widget build(BuildContext context) {
+    return const TailscaleDashboard();
   }
 }
 

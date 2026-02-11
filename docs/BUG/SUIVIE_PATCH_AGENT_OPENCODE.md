@@ -8,10 +8,11 @@
 
 | Fonctionnalite | Etat | Notes |
 |----------------|------|-------|
-| Affichage | OK | TUI OpenCode s'affiche correctement |
+| Affichage | **LIMITATION** | Bordures panneaux cassees a 45 colonnes (limitation OpenCode) |
 | Envoi messages | OK | Texte envoye via GhostTextInput fonctionne |
-| Scroll | **EN COURS** | Le scroll souris est DESACTIVE dans OpenCode |
+| Scroll | **OK** | Fix #1 : PgUp/PgDown envoyes quand swipe (CONFIRME) |
 | Resize protection | OK | growOnlyResize actif (CLI agent detecte) |
+| SessionInfoBar | OK | Masquee automatiquement quand agent CLI actif |
 
 ---
 
@@ -78,7 +79,7 @@ Les fleches sont reservees a la navigation dans l'editeur.
 
 ## CORRECTIONS APPLIQUEES
 
-### Fix #1 — Scroll PgUp/PgDown pour OpenCode (11 Fev 2026) — A TESTER
+### Fix #1 — Scroll PgUp/PgDown pour OpenCode (11 Fev 2026) — CONFIRME
 
 **Probleme** : OpenCode n'a PAS de mouse scroll. Il utilise uniquement
 PgUp/PgDown et Ctrl+U/Ctrl+D pour scroller.
@@ -89,6 +90,18 @@ PgUp/PgDown et Ctrl+U/Ctrl+D pour scroller.
 **Sequences** :
 - Page Up : `\x1b[5~`
 - Page Down : `\x1b[6~`
+
+**Resultat** : CONFIRME — le scroll fonctionne dans OpenCode via swipe.
+
+### Fix #2 — SessionInfoBar masquee pour agents CLI (11 Fev 2026) — OK
+
+**Probleme** : La barre d'info session (tmux, IP, Tailscale) prenait une
+ligne d'espace vertical inutile quand un agent CLI est actif.
+
+**Fix** : `terminal_screen.dart` — la `SessionInfoBar` est masquee
+automatiquement quand `tabCurrentCommand` correspond a un agent CLI connu.
+
+**Resultat** : Gain d'une ligne d'espace pour le terminal.
 
 ---
 
@@ -124,13 +137,41 @@ OpenCode (Go, Bubble Tea v1)
 
 ---
 
+## Probleme d'affichage : bordures panneaux cassees
+
+### Symptome
+
+Les panneaux d'OpenCode (zone system prompt, zone chat) sont entoures de
+bordures avec des caracteres box-drawing (`─`, `│`, `┌`, `┐`). Sur un ecran
+mobile (~45 colonnes en taille 10px), ces bordures se superposent au texte
+et creent un affichage confus avec des lignes horizontales qui traversent
+le contenu.
+
+### Cause
+
+**Limitation OpenCode** — son layout Lip Gloss (framework CSS pour TUI) est
+concu pour des terminaux de 80+ colonnes. A 45 colonnes, les panneaux sont
+trop etroits pour afficher correctement les bordures + le contenu.
+
+### Verdict
+
+**NON CORRIGEABLE cote ChillShell.** C'est le code Go de Lip Gloss/Bubble Tea
+qui gere le rendu des bordures. OpenCode devrait adapter son layout pour les
+terminaux etroits.
+
+Teste avec police 10px (~45 colonnes) : les bordures sont toujours cassees.
+Descendre en dessous de 10px serait illisible sur mobile.
+
+---
+
 ## Historique complet des tentatives
 
 | # | Approche | Fichier | Effet | Etat |
 |---|---------|---------|-------|------|
 | 1 | SGR mouse (1,1) | terminal_view.dart | Ignore (pas de mouse tracking) | **ECHEC** |
 | 2 | Fleches clavier | terminal_view.dart | Ignore (pas de binding fleches) | **ECHEC** |
-| 3 | PgUp/PgDown | terminal_view.dart | Correspond aux bindings OpenCode | **A TESTER** |
+| 3 | PgUp/PgDown | terminal_view.dart | Scroll fonctionne | **CONFIRME** |
+| 4 | SessionInfoBar masquee | terminal_screen.dart | Gain 1 ligne d'espace | **OK** |
 
 ---
 
@@ -139,6 +180,8 @@ OpenCode (Go, Bubble Tea v1)
 - [x] Analyser le repo OpenCode pour comprendre le systeme de scroll
 - [x] Decouvrir que le mouse est DESACTIVE volontairement
 - [x] Identifier les bons keybindings (PgUp/PgDown/Ctrl+U/D)
-- [ ] Implementer l'envoi de PgUp/PgDown pour le swipe
-- [ ] Tester avec OpenCode sur device
+- [x] Implementer l'envoi de PgUp/PgDown pour le swipe
+- [x] Tester avec OpenCode sur device — scroll CONFIRME
+- [x] Masquer SessionInfoBar pour gagner de l'espace
+- [x] Investiguer affichage casse (bordures panneaux) — limitation OpenCode
 - [ ] Verifier que les autres agents ne sont pas impactes

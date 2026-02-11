@@ -203,5 +203,29 @@
   "allowScreenshotsWarning": "启用后，允许截屏和录屏。请注意不要分享敏感信息（SSH密钥、密码、服务器地址）。",
   "rename": "重命名",
   "renameDialogHint": "新名称",
-  "nameCannotBeEmpty": "名称不能为空"
+  "nameCannotBeEmpty": "名称不能为空",
+  "tailscaleLogin": "登录",
+  "tailscaleCreateAccount": "创建账户",
+  "tailscaleAuthPrompt": "创建您的Tailscale账户并直接在应用中进行身份验证",
+  "tailscaleWhatIs": "什么是Tailscale？",
+  "tailscaleExplainer": "Tailscale在您的设备之间创建一个安全的私有网络，可从任何地方访问（WiFi、4G、5G），无需复杂配置。",
+  "tailscaleConnected": "已连接",
+  "tailscaleDisconnected": "已断开",
+  "tailscaleMyIP": "我的IP",
+  "tailscaleMyDevices": "我的设备",
+  "tailscaleDevicesCount": "我的设备 ({count})",
+  "@tailscaleDevicesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tailscaleCopyIP": "复制IP",
+  "tailscaleNewSSH": "SSH连接",
+  "tailscaleDisconnect": "断开连接",
+  "tailscaleOnline": "在线",
+  "tailscaleOffline": "离线",
+  "tailscaleIPCopied": "IP已复制",
+  "tailscaleTab": "Tailscale"
 }

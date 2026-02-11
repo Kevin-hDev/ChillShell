@@ -45,6 +45,10 @@ class AppSettings {
   // Multi-langues et taille de police
   final String? languageCode;  // null = auto-détection
   final TerminalFontSize terminalFontSize;
+  // Tailscale
+  final String? tailscaleToken;
+  final bool tailscaleEnabled;
+  final String? tailscaleDeviceName;
 
   const AppSettings({
     this.theme = AppTheme.warpDark,
@@ -60,6 +64,9 @@ class AppSettings {
     this.allowScreenshots = false,
     this.languageCode,
     this.terminalFontSize = TerminalFontSize.m,
+    this.tailscaleToken,
+    this.tailscaleEnabled = false,
+    this.tailscaleDeviceName,
   });
 
   AppSettings copyWith({
@@ -77,6 +84,11 @@ class AppSettings {
     String? languageCode,
     bool clearLanguageCode = false,
     TerminalFontSize? terminalFontSize,
+    String? tailscaleToken,
+    bool clearTailscaleToken = false,
+    bool? tailscaleEnabled,
+    String? tailscaleDeviceName,
+    bool clearTailscaleDeviceName = false,
   }) {
     return AppSettings(
       theme: theme ?? this.theme,
@@ -92,6 +104,9 @@ class AppSettings {
       allowScreenshots: allowScreenshots ?? this.allowScreenshots,
       languageCode: clearLanguageCode ? null : (languageCode ?? this.languageCode),
       terminalFontSize: terminalFontSize ?? this.terminalFontSize,
+      tailscaleToken: clearTailscaleToken ? null : (tailscaleToken ?? this.tailscaleToken),
+      tailscaleEnabled: tailscaleEnabled ?? this.tailscaleEnabled,
+      tailscaleDeviceName: clearTailscaleDeviceName ? null : (tailscaleDeviceName ?? this.tailscaleDeviceName),
     );
   }
 
@@ -109,6 +124,9 @@ class AppSettings {
     'allowScreenshots': allowScreenshots,
     'languageCode': languageCode,
     'terminalFontSize': terminalFontSize.name,
+    'tailscaleToken': tailscaleToken,
+    'tailscaleEnabled': tailscaleEnabled,
+    'tailscaleDeviceName': tailscaleDeviceName,
   };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -127,5 +145,8 @@ class AppSettings {
     terminalFontSize: TerminalFontSize.values.byName(
       json['terminalFontSize'] as String? ?? 'm',
     ),
+    tailscaleToken: json['tailscaleToken'] as String?,
+    tailscaleEnabled: json['tailscaleEnabled'] as bool? ?? false,
+    tailscaleDeviceName: json['tailscaleDeviceName'] as String?,
   );
 }
