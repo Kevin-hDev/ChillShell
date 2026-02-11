@@ -13,6 +13,7 @@ import '../../../models/wol_config.dart';
 import '../../../shared/widgets/app_header.dart';
 import '../../../shared/widgets/chillshell_loader.dart';
 import '../../../services/secure_storage_service.dart';
+import '../../../services/ssh_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../features/settings/providers/settings_provider.dart';
 import '../../../features/settings/providers/wol_provider.dart';
@@ -38,6 +39,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   final _ghostTextInputKey = GlobalKey<GhostTextInputState>();
   // GlobalKey pour préserver l'animation du loader entre les rebuilds
   final _loaderKey = GlobalKey();
+  /// Flag d'annulation WOL : empêche tryConnect de finaliser si l'utilisateur a annulé
+  bool _wolCancelled = false;
 
   @override
   void initState() {
@@ -315,21 +318,22 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   /// Lance WolStartScreen automatiquement au démarrage de l'app.
   void _launchWolStartScreenAuto(WolConfig config, SavedConnection connection) {
+    _wolCancelled = false;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => WolStartScreen(
           config: config,
           tryConnect: () => _tryConnectForWol(connection),
           onSuccess: () {
-            // Revenir à l'écran terminal (connexion établie)
+            // Revenir à l'écran terminal puis établir la vraie connexion SSH
             Navigator.of(context).pop();
+            _connectAfterWol(connection);
           },
           onCancel: () {
-            // Revenir à l'écran d'accueil normal
+            _wolCancelled = true;
             Navigator.of(context).pop();
           },
           onError: (error) {
-            // Revenir à l'écran d'accueil et afficher l'erreur
             Navigator.of(context).pop();
             _showWolErrorSnackBar(error);
           },
@@ -761,21 +765,22 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     if (!mounted) return;
 
     // Naviguer vers WolStartScreen
+    _wolCancelled = false;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => WolStartScreen(
           config: config,
           tryConnect: () => _tryConnectForWol(sshConnection),
           onSuccess: () {
-            // Revenir à l'écran terminal (connexion établie)
+            // Revenir à l'écran terminal puis établir la vraie connexion SSH
             Navigator.of(context).pop();
+            _connectAfterWol(sshConnection);
           },
           onCancel: () {
-            // Revenir à l'écran d'accueil
+            _wolCancelled = true;
             Navigator.of(context).pop();
           },
           onError: (error) {
-            // Revenir à l'écran d'accueil et afficher l'erreur
             Navigator.of(context).pop();
             _showWolErrorSnackBar(error);
           },
@@ -784,47 +789,41 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     );
   }
 
-  /// Tente une connexion SSH pour le WOL polling
+  /// Teste la connectivité SSH pour le WOL polling.
+  /// Utilise SSHService directement (pas le provider) pour ne PAS modifier
+  /// l'état UI pendant le test — sinon le terminal apparaît brièvement si
+  /// l'utilisateur annule pendant une connexion en cours.
   Future<bool> _tryConnectForWol(SavedConnection connection) async {
-    final l10n = context.l10n;
+    if (_wolCancelled) return false;
+
     final privateKey = await SecureStorageService.getPrivateKey(connection.keyId);
     if (privateKey == null || privateKey.isEmpty) return false;
+    if (_wolCancelled) return false;
 
-    // Créer une session pour la connexion
-    final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
-    ref.read(sessionsProvider.notifier).addSession(
-      name: l10n.terminalTab(tabNumber.toString()),
-      host: connection.host,
-      username: connection.username,
-      port: connection.port,
-    );
-
-    final sessions = ref.read(sessionsProvider);
-    final sessionId = sessions.last.id;
-
-    final success = await ref.read(sshProvider.notifier).connect(
-      host: connection.host,
-      username: connection.username,
-      privateKey: privateKey,
-      keyId: connection.keyId,
-      sessionId: sessionId,
-      port: connection.port,
-      onFirstHostKey: _showHostKeyDialog,
-      onHostKeyMismatch: _showHostKeyMismatchDialog,
-    );
-
-    if (success) {
-      ref.read(sessionsProvider.notifier).updateSessionStatus(
-        sessionId,
-        ConnectionStatus.connected,
+    // Test de connectivité en isolation (aucun changement d'état UI)
+    final testService = SSHService();
+    try {
+      final success = await testService.connect(
+        host: connection.host,
+        username: connection.username,
+        privateKey: privateKey,
+        port: connection.port,
+        onFirstHostKey: _showHostKeyDialog,
+        onHostKeyMismatch: _showHostKeyMismatchDialog,
       );
-      await StorageService().updateConnectionLastConnected(connection.id);
-    } else {
-      // Nettoyer la session si échec
-      ref.read(sessionsProvider.notifier).removeSession(sessionId);
+      await testService.disconnect();
+      return success && !_wolCancelled;
+    } catch (_) {
+      await testService.disconnect();
+      return false;
     }
+  }
 
-    return success;
+  /// Établit la vraie connexion SSH après un WOL réussi.
+  Future<void> _connectAfterWol(SavedConnection connection) async {
+    final privateKey = await SecureStorageService.getPrivateKey(connection.keyId);
+    if (privateKey == null || privateKey.isEmpty || !mounted) return;
+    await _performDirectSshConnect(connection, privateKey);
   }
 
   /// Affiche une SnackBar d'erreur WOL
