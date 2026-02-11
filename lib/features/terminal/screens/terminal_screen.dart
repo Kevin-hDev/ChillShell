@@ -13,7 +13,6 @@ import '../../../models/wol_config.dart';
 import '../../../shared/widgets/app_header.dart';
 import '../../../shared/widgets/chillshell_loader.dart';
 import '../../../services/secure_storage_service.dart';
-import '../../../services/ssh_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../features/settings/providers/settings_provider.dart';
 import '../../../features/settings/providers/wol_provider.dart';
@@ -816,9 +815,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   }
 
   /// Teste la connectivité SSH pour le WOL polling.
-  /// Utilise SSHService directement (pas le provider) pour ne PAS modifier
-  /// l'état UI pendant le test — sinon le terminal apparaît brièvement si
-  /// l'utilisateur annule pendant une connexion en cours.
+  /// Exécuté dans le background isolate SSH → pas de saccade d'animation.
+  /// Ne modifie pas l'état UI (pas de tab créée, pas de changement d'état).
   Future<bool> _tryConnectForWol(SavedConnection connection) async {
     if (_wolCancelled) return false;
 
@@ -826,23 +824,15 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     if (privateKey == null || privateKey.isEmpty) return false;
     if (_wolCancelled) return false;
 
-    // Test de connectivité en isolation (aucun changement d'état UI)
-    final testService = SSHService();
-    try {
-      final success = await testService.connect(
-        host: connection.host,
-        username: connection.username,
-        privateKey: privateKey,
-        port: connection.port,
-        onFirstHostKey: _showHostKeyDialog,
-        onHostKeyMismatch: _showHostKeyMismatchDialog,
-      );
-      await testService.disconnect();
-      return success && !_wolCancelled;
-    } catch (_) {
-      await testService.disconnect();
-      return false;
-    }
+    // Test de connectivité via le background isolate (aucun blocage UI)
+    final sshNotifier = ref.read(sshProvider.notifier);
+    final success = await sshNotifier.testSshConnectivity(
+      host: connection.host,
+      username: connection.username,
+      privateKey: privateKey,
+      port: connection.port,
+    );
+    return success && !_wolCancelled;
   }
 
   /// Établit la vraie connexion SSH après un WOL réussi.
