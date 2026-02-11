@@ -532,6 +532,32 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
               textAlign: TextAlign.center,
             ),
+            const SizedBox(height: VibeTermSpacing.xl),
+            // Bouton Annuler la connexion
+            TextButton(
+              onPressed: () async {
+                await ref.read(sshProvider.notifier).disconnect();
+                ref.read(sessionsProvider.notifier).clearSessions();
+                ref.read(activeSessionIndexProvider.notifier).set(0);
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: VibeTermSpacing.lg,
+                  vertical: VibeTermSpacing.md,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(VibeTermRadius.md),
+                  side: BorderSide(color: theme.border),
+                ),
+              ),
+              child: Text(
+                l10n.cancel,
+                style: VibeTermTypography.caption.copyWith(
+                  color: theme.textMuted,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ],
         ),
       );
