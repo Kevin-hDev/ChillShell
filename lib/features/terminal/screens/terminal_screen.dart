@@ -437,7 +437,12 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                 // (uniquement en mode normal, pas en mode éditeur vim/nano)
                 if (isConnected && !isEditorMode)
                   Positioned.fill(
-                    bottom: _kInputOverlayHeight + MediaQuery.of(context).padding.bottom,
+                    // viewPadding.bottom est CONSTANT (ne change pas avec le clavier)
+                    // contrairement à padding.bottom qui oscille quand la barre de
+                    // navigation Android apparaît/disparaît avec le clavier.
+                    // Cela empêche le terminal de changer de taille → pas de SIGWINCH
+                    // inutile → les agents CLI (Codex, etc.) ne redessinent pas.
+                    bottom: _kInputOverlayHeight + MediaQuery.of(context).viewPadding.bottom,
                     child: _buildContent(sshState, sessions, theme),
                   )
                 else
