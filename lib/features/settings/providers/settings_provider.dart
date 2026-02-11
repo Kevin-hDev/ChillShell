@@ -210,16 +210,12 @@ class SettingsNotifier extends Notifier<SettingsState> {
   }
 
   void updateTailscaleSettings({
-    String? token,
-    bool clearToken = false,
     bool? enabled,
     String? deviceName,
     bool clearDeviceName = false,
   }) {
     state = state.copyWith(
       appSettings: state.appSettings.copyWith(
-        tailscaleToken: token,
-        clearTailscaleToken: clearToken,
         tailscaleEnabled: enabled,
         tailscaleDeviceName: deviceName,
         clearTailscaleDeviceName: clearDeviceName,

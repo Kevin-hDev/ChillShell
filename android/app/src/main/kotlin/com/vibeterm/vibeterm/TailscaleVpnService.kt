@@ -5,25 +5,20 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
-import android.net.VpnService
 import android.content.pm.ServiceInfo
+import android.net.VpnService
 import android.os.Build
-import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import java.util.UUID
 
 /**
- * Android VpnService that manages the Tailscale WireGuard tunnel.
+ * VPN service implementing the libtailscale.IPNService interface.
  *
- * This service:
- * - Runs as a foreground service with a persistent notification
- * - Establishes and maintains the VPN tunnel via libtailscale
- * - Handles start/stop lifecycle from TailscalePlugin
- *
- * When libtailscale.aar is integrated, this service will implement
- * the IPNService and VPNServiceBuilder interfaces from the Go library.
+ * Go calls methods on this service to build and establish the VPN tunnel.
+ * The service runs in the foreground with a persistent notification.
  */
-class TailscaleVpnService : VpnService() {
+class TailscaleVpnService : VpnService(), libtailscale.IPNService {
 
     companion object {
         private const val TAG = "TailscaleVpnService"
@@ -33,11 +28,12 @@ class TailscaleVpnService : VpnService() {
         const val ACTION_START = "com.chillshell.tailscale.START"
         const val ACTION_STOP = "com.chillshell.tailscale.STOP"
 
-        /** Whether the VPN service is currently running. */
         @Volatile
         var isRunning: Boolean = false
             private set
     }
+
+    private val serviceId: String = UUID.randomUUID().toString()
 
     override fun onCreate() {
         super.onCreate()
@@ -60,11 +56,47 @@ class TailscaleVpnService : VpnService() {
         Log.d(TAG, "TailscaleVpnService destroyed")
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
-
     override fun onRevoke() {
-        // Called when the user revokes VPN permission from system settings
         Log.w(TAG, "VPN permission revoked by user")
+        stopVpn()
+    }
+
+    // --- libtailscale.IPNService interface ---
+
+    override fun id(): String = serviceId
+
+    override fun protect(fd: Int): Boolean {
+        return super.protect(fd)
+    }
+
+    override fun newBuilder(): libtailscale.VPNServiceBuilder {
+        val b = Builder()
+            .setSession("ChillShell Tailscale")
+            .allowFamily(android.system.OsConstants.AF_INET)
+            .allowFamily(android.system.OsConstants.AF_INET6)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            b.setMetered(false)
+        }
+
+        return VPNServiceBuilderWrapper(b)
+    }
+
+    override fun updateVpnStatus(active: Boolean) {
+        isRunning = active
+        if (active) {
+            updateNotification("Tailscale actif")
+        }
+        // Notify the Flutter plugin of state change
+        TailscalePlugin.instance?.onVpnStateChanged(active)
+    }
+
+    override fun close() {
+        stopVpn()
+        libtailscale.Libtailscale.serviceDisconnect(this)
+    }
+
+    override fun disconnectVPN() {
         stopVpn()
     }
 
@@ -85,36 +117,18 @@ class TailscaleVpnService : VpnService() {
         } else {
             startForeground(NOTIFICATION_ID, buildNotification("Connexion en cours..."))
         }
+
         isRunning = true
 
-        // TODO: When libtailscale.aar is integrated:
-        // 1. Create a VpnService.Builder to configure the tunnel
-        //    builder.setMtu(1280)
-        //    builder.addAddress("100.x.y.z", 32)
-        //    builder.addRoute("100.64.0.0", 10)  // Tailscale CGNAT range
-        //    builder.addDnsServer(...)
-        //    builder.establish()
-        //
-        // 2. Pass the ParcelFileDescriptor to libtailscale
-        // 3. Start the WireGuard engine
-        //
-        // For now, the service runs as a placeholder foreground service
-        // ready to be connected with the Go library.
+        // Request VPN from Go backend — Go will call back newBuilder() + establish()
+        libtailscale.Libtailscale.requestVPN(this)
 
-        Log.d(TAG, "VPN service started (awaiting libtailscale integration)")
-        updateNotification("Tailscale actif")
+        Log.d(TAG, "VPN service started, tunnel requested from libtailscale")
     }
 
     private fun stopVpn() {
         if (!isRunning) return
-
         isRunning = false
-
-        // TODO: When libtailscale.aar is integrated:
-        // 1. Shut down the WireGuard engine
-        // 2. Close the VPN tunnel file descriptor
-        // 3. Notify the Go backend of disconnect
-
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
         Log.d(TAG, "VPN service stopped")
@@ -131,7 +145,6 @@ class TailscaleVpnService : VpnService() {
             description = "Notification for active Tailscale VPN connection"
             setShowBadge(false)
         }
-
         val manager = getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(channel)
     }
@@ -161,53 +174,57 @@ class TailscaleVpnService : VpnService() {
         val manager = getSystemService(NotificationManager::class.java)
         manager.notify(NOTIFICATION_ID, buildNotification(text))
     }
+}
 
-    // --- VPN Builder helpers (for libtailscale integration) ---
+/**
+ * Wrapper around Android's VpnService.Builder that implements the
+ * libtailscale.VPNServiceBuilder Go interface.
+ */
+class VPNServiceBuilderWrapper(
+    private val builder: VpnService.Builder
+) : libtailscale.VPNServiceBuilder {
 
-    /**
-     * Creates a configured VPN tunnel. Called by libtailscale when the
-     * WireGuard handshake completes and the tunnel parameters are known.
-     *
-     * @param mtu The MTU for the tunnel (typically 1280)
-     * @param addresses List of Tailscale IPs to assign (e.g. "100.64.0.1/32")
-     * @param routes List of routes to send through the tunnel
-     * @param dnsServers List of DNS server IPs
-     * @return The tunnel file descriptor, or null on failure
-     */
-    fun configureTunnel(
-        mtu: Int,
-        addresses: List<String>,
-        routes: List<String>,
-        dnsServers: List<String>
-    ): android.os.ParcelFileDescriptor? {
-        val builder = Builder()
+    override fun addAddress(addr: String, prefixLen: Int) {
+        builder.addAddress(addr, prefixLen)
+    }
+
+    override fun addDNSServer(server: String) {
+        builder.addDnsServer(server)
+    }
+
+    override fun addRoute(route: String, prefixLen: Int) {
+        builder.addRoute(route, prefixLen)
+    }
+
+    override fun addSearchDomain(domain: String) {
+        builder.addSearchDomain(domain)
+    }
+
+    override fun excludeRoute(route: String, prefixLen: Int) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val prefix = android.net.IpPrefix(java.net.InetAddress.getByName(route), prefixLen)
+            builder.excludeRoute(prefix)
+        }
+    }
+
+    override fun setMTU(mtu: Int) {
         builder.setMtu(mtu)
+    }
 
-        for (addr in addresses) {
-            val parts = addr.split("/")
-            val ip = parts[0]
-            val prefix = parts.getOrNull(1)?.toIntOrNull() ?: 32
-            builder.addAddress(ip, prefix)
-        }
+    override fun establish(): libtailscale.ParcelFileDescriptor? {
+        val pfd = builder.establish() ?: return null
+        return ParcelFileDescriptorWrapper(pfd)
+    }
+}
 
-        for (route in routes) {
-            val parts = route.split("/")
-            val ip = parts[0]
-            val prefix = parts.getOrNull(1)?.toIntOrNull() ?: 32
-            builder.addRoute(ip, prefix)
-        }
+/**
+ * Wrapper for Android ParcelFileDescriptor implementing the Go interface.
+ */
+class ParcelFileDescriptorWrapper(
+    private val pfd: android.os.ParcelFileDescriptor
+) : libtailscale.ParcelFileDescriptor {
 
-        for (dns in dnsServers) {
-            builder.addDnsServer(dns)
-        }
-
-        builder.setSession("ChillShell Tailscale")
-
-        return try {
-            builder.establish()
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to establish VPN tunnel", e)
-            null
-        }
+    override fun detach(): Int {
+        return pfd.detachFd()
     }
 }

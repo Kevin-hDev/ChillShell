@@ -177,6 +177,10 @@ class _StatusCard extends StatelessWidget {
                         duration: const Duration(seconds: 2),
                       ),
                     );
+                    // Nettoyer le presse-papier après 30 secondes
+                    Future.delayed(const Duration(seconds: 30), () {
+                      Clipboard.setData(const ClipboardData(text: ''));
+                    });
                   },
                   icon: Icon(Icons.copy, color: theme.textMuted, size: 16),
                   tooltip: l10n.tailscaleCopyIP,
@@ -260,11 +264,10 @@ class _DeviceCard extends StatelessWidget {
             ),
             const SizedBox(height: VibeTermSpacing.sm),
 
-            // Boutons d'action
+            // Bouton copier IP
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                // Copier IP
                 IconButton(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: device.ip));
@@ -274,26 +277,13 @@ class _DeviceCard extends StatelessWidget {
                         duration: const Duration(seconds: 2),
                       ),
                     );
+                    // Nettoyer le presse-papier après 30 secondes
+                    Future.delayed(const Duration(seconds: 30), () {
+                      Clipboard.setData(const ClipboardData(text: ''));
+                    });
                   },
                   icon: Icon(Icons.copy, color: theme.textMuted, size: 16),
                   tooltip: l10n.tailscaleCopyIP,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-                const SizedBox(width: VibeTermSpacing.md),
-                // Connexion SSH
-                IconButton(
-                  onPressed: device.isOnline
-                      ? () {
-                          // TODO: Navigate to new SSH connection form with device.ip pre-filled
-                        }
-                      : null,
-                  icon: Icon(
-                    Icons.terminal,
-                    color: device.isOnline ? theme.accent : theme.textMuted,
-                    size: 18,
-                  ),
-                  tooltip: l10n.tailscaleNewSSH,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),

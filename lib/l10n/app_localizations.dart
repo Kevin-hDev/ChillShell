@@ -1334,12 +1334,6 @@ abstract class AppLocalizations {
   /// **'Copy IP'**
   String get tailscaleCopyIP;
 
-  /// No description provided for @tailscaleNewSSH.
-  ///
-  /// In en, this message translates to:
-  /// **'SSH Connection'**
-  String get tailscaleNewSSH;
-
   /// No description provided for @tailscaleDisconnect.
   ///
   /// In en, this message translates to:

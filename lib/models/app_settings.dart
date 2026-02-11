@@ -46,7 +46,6 @@ class AppSettings {
   final String? languageCode;  // null = auto-détection
   final TerminalFontSize terminalFontSize;
   // Tailscale
-  final String? tailscaleToken;
   final bool tailscaleEnabled;
   final String? tailscaleDeviceName;
 
@@ -64,7 +63,6 @@ class AppSettings {
     this.allowScreenshots = false,
     this.languageCode,
     this.terminalFontSize = TerminalFontSize.m,
-    this.tailscaleToken,
     this.tailscaleEnabled = false,
     this.tailscaleDeviceName,
   });
@@ -84,8 +82,6 @@ class AppSettings {
     String? languageCode,
     bool clearLanguageCode = false,
     TerminalFontSize? terminalFontSize,
-    String? tailscaleToken,
-    bool clearTailscaleToken = false,
     bool? tailscaleEnabled,
     String? tailscaleDeviceName,
     bool clearTailscaleDeviceName = false,
@@ -104,7 +100,6 @@ class AppSettings {
       allowScreenshots: allowScreenshots ?? this.allowScreenshots,
       languageCode: clearLanguageCode ? null : (languageCode ?? this.languageCode),
       terminalFontSize: terminalFontSize ?? this.terminalFontSize,
-      tailscaleToken: clearTailscaleToken ? null : (tailscaleToken ?? this.tailscaleToken),
       tailscaleEnabled: tailscaleEnabled ?? this.tailscaleEnabled,
       tailscaleDeviceName: clearTailscaleDeviceName ? null : (tailscaleDeviceName ?? this.tailscaleDeviceName),
     );
@@ -124,7 +119,6 @@ class AppSettings {
     'allowScreenshots': allowScreenshots,
     'languageCode': languageCode,
     'terminalFontSize': terminalFontSize.name,
-    'tailscaleToken': tailscaleToken,
     'tailscaleEnabled': tailscaleEnabled,
     'tailscaleDeviceName': tailscaleDeviceName,
   };
@@ -145,7 +139,6 @@ class AppSettings {
     terminalFontSize: TerminalFontSize.values.byName(
       json['terminalFontSize'] as String? ?? 'm',
     ),
-    tailscaleToken: json['tailscaleToken'] as String?,
     tailscaleEnabled: json['tailscaleEnabled'] as bool? ?? false,
     tailscaleDeviceName: json['tailscaleDeviceName'] as String?,
   );
