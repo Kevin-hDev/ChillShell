@@ -857,11 +857,46 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       return;
     }
 
-    // Créer un nouvel onglet avec nouvelle connexion SSH
+    // 1. Ajouter l'onglet dans l'UI IMMÉDIATEMENT (feedback instantané)
+    final sessions = ref.read(sessionsProvider);
+    if (sessions.isEmpty) return;
+
+    final firstSession = sessions.first;
+    final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
+
+    ref.read(sessionsProvider.notifier).addSession(
+      name: l10n.terminalTab(tabNumber.toString()),
+      host: firstSession.host,
+      username: firstSession.username,
+      port: firstSession.port,
+    );
+
+    final newSessions = ref.read(sessionsProvider);
+    final newSessionId = newSessions.last.id;
+
+    // Statut "connecting" → point jaune visible immédiatement
+    ref.read(sessionsProvider.notifier).updateSessionStatus(
+      newSessionId,
+      ConnectionStatus.connecting,
+    );
+
+    // 2. Sélectionner le nouvel onglet immédiatement
+    ref.read(activeSessionIndexProvider.notifier).set(newSessions.length - 1);
+
+    // 3. Créer la connexion SSH (l'event loop Flutter continue de peindre
+    //    les frames pendant l'await, donc l'onglet reste visible)
     final tabId = await sshNotifier.createNewTab();
 
     if (tabId == null) {
+      // Échec : retirer l'onglet et restaurer la sélection
       if (mounted) {
+        ref.read(sessionsProvider.notifier).removeSession(newSessionId);
+        final updatedSessions = ref.read(sessionsProvider);
+        if (updatedSessions.isNotEmpty) {
+          ref.read(activeSessionIndexProvider.notifier).set(
+            (updatedSessions.length - 1).clamp(0, updatedSessions.length - 1),
+          );
+        }
         final theme = ref.read(vibeTermThemeProvider);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -874,29 +909,12 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       return;
     }
 
-    // Ajouter l'onglet dans l'UI
-    final sessions = ref.read(sessionsProvider);
-    if (sessions.isNotEmpty) {
-      final firstSession = sessions.first;
-      // Utiliser le compteur global qui ne décrémente jamais
-      final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
-
-      ref.read(sessionsProvider.notifier).addSession(
-        name: l10n.terminalTab(tabNumber.toString()),
-        host: firstSession.host,
-        username: firstSession.username,
-        port: firstSession.port,
-      );
-
-      final newSessions = ref.read(sessionsProvider);
-      final newSessionId = newSessions.last.id;
+    // 4. Connexion réussie → point vert
+    if (mounted) {
       ref.read(sessionsProvider.notifier).updateSessionStatus(
         newSessionId,
         ConnectionStatus.connected,
       );
-
-      // Sélectionner le nouvel onglet
-      ref.read(activeSessionIndexProvider.notifier).set(newSessions.length - 1);
     }
   }
 
