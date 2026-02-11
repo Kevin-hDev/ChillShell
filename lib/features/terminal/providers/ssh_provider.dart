@@ -211,6 +211,9 @@ class SSHNotifier extends Notifier<SSHState> {
     // avant de lancer les opérations crypto qui bloquent le thread UI
     await Future<void>.delayed(const Duration(milliseconds: 150));
 
+    // Vérifier si annulé pendant le délai
+    if (state.connectionState != SSHConnectionState.connecting) return false;
+
     final connectionInfo = SSHConnectionInfo(
       host: host,
       username: username,
@@ -233,8 +236,20 @@ class SSHNotifier extends Notifier<SSHState> {
         onHostKeyMismatch: onHostKeyMismatch,
       );
 
+      // Vérifier si annulé pendant la connexion SSH
+      if (state.connectionState != SSHConnectionState.connecting) {
+        await newService.disconnect();
+        return false;
+      }
+
       if (success) {
         await newService.startShell();
+
+        // Vérifier si annulé pendant le startShell
+        if (state.connectionState != SSHConnectionState.connecting) {
+          await newService.disconnect();
+          return false;
+        }
 
         _tabServices[tabId] = newService;
 
