@@ -22,7 +22,8 @@ dependencies:
   
   # === Terminal & SSH ===
   dartssh2: ^2.13.0                 # Client SSH (Ed25519)
-  xterm: ^4.0.0                     # Rendu terminal
+  xterm:                              # Rendu terminal (fork local — fix buffer crash)
+    path: packages/xterm
   flutter_pty: ^0.4.2               # Terminal local (shell Android)
 
   # === Cryptography ===

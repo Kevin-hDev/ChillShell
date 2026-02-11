@@ -57,6 +57,9 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   final Map<String, Terminal> _terminals = {};
   final Map<String, StreamSubscription<Uint8List>?> _subscriptions = {};
 
+  /// Dernière taille envoyée par tab (pour détecter les changements réels)
+  final Map<String, (int, int)> _lastSentSize = {};
+
   late TerminalController terminalController;
   late ScrollController _scrollController;
   String? _currentTabId;
@@ -228,12 +231,44 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       terminal.onResize = (width, height, pixelWidth, pixelHeight) {
         // Ne pas envoyer de resize pendant l'alternate screen mode
         // pour éviter la corruption d'affichage (Codex, etc.)
-        // On utilise _isInAltBuffer (notre tracking) plutôt que terminal.isUsingAltBuffer
-        // car notre détection est mise à jour dès réception des séquences ANSI
         if (_isInAltBuffer) {
           if (kDebugMode) debugPrint('RESIZE: Skipped (alternate screen active)');
           return;
         }
+
+        // Vérifier si la taille a réellement changé
+        final lastSize = _lastSentSize[tabId];
+        if (lastSize != null && lastSize.$1 == width && lastSize.$2 == height) {
+          return; // Pas de changement, ignorer
+        }
+
+        // Guard agents CLI : autoriser les AUGMENTATIONS de hauteur (clavier fermé
+        // → plus de lignes → Codex redessine avec plus de contenu visible),
+        // mais BLOQUER les DIMINUTIONS (clavier ouvert → Codex redessinérait
+        // avec moins de lignes → messages "disparaissent").
+        if (lastSize != null && lastSize.$1 == width && lastSize.$2 != height) {
+          final sshState = ref.read(sshProvider);
+          final currentCommand = sshState.tabCurrentCommand[tabId];
+          if (currentCommand != null && _isCliAgentCommand(currentCommand)) {
+            if (height < lastSize.$2) {
+              // Hauteur DIMINUE → bloquer (empêche Codex de redessiner avec moins de lignes)
+              if (kDebugMode) {
+                debugPrint('RESIZE: Blocked height shrink ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)');
+              }
+              return;
+            }
+            // Hauteur AUGMENTE → autoriser (Codex redessine avec plus de lignes)
+            if (kDebugMode) {
+              debugPrint('RESIZE: Allowed height grow ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)');
+            }
+          }
+        }
+
+        if (kDebugMode) {
+          final oldStr = lastSize != null ? '${lastSize.$1}x${lastSize.$2}' : 'initial';
+          debugPrint('RESIZE: $oldStr → ${width}x$height (tab=$tabId)');
+        }
+        _lastSentSize[tabId] = (width, height);
         ref.read(sshProvider.notifier).resizeTerminalForTab(tabId, width, height);
       };
       _terminals[tabId] = terminal;
@@ -272,10 +307,16 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
           // race conditions entre write() et resize (bug connu avec TUI apps)
           try {
             terminal.write(decoded);
-          } catch (e) {
+          } catch (e, stackTrace) {
             // Ignorer silencieusement les erreurs de buffer xterm.dart
             // Cela arrive quand resize et write sont concurrents
-            if (kDebugMode) debugPrint('XTERM: Buffer error (ignored): ${e.runtimeType}');
+            if (kDebugMode) {
+              debugPrint('XTERM: Buffer error (ignored): $e');
+              debugPrint('XTERM: Data length: ${decoded.length} chars');
+              // Afficher les 3 premières lignes de la stack trace pour identifier l'assertion
+              final traceLines = stackTrace.toString().split('\n').take(3).join('\n');
+              debugPrint('XTERM: Stack: $traceLines');
+            }
           }
           // Envoyer la sortie au provider pour détecter les erreurs de commande
           ref.read(terminalProvider.notifier).onTerminalOutput(decoded);
@@ -334,6 +375,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     _subscriptions[tabId]?.cancel();
     _subscriptions.remove(tabId);
     _terminals.remove(tabId);
+    _lastSentSize.remove(tabId);
     if (kDebugMode) debugPrint('Cleaned up resources for tab $tabId');
   }
 
@@ -384,6 +426,20 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         if (kDebugMode) debugPrint('EDITOR MODE: Exited alternate screen');
       }
     }
+  }
+
+  /// Agents CLI modernes qui redessinent leur TUI sur SIGWINCH.
+  /// Le resize height-only est bloqué pour ces agents afin d'éviter
+  /// la perte de messages (ils effacent et réécrivent tout à chaque resize).
+  static const _cliAgentCommands = <String>{
+    'claude', 'codex', 'opencode', 'aider', 'gemini', 'cody',
+    'amazon-q', 'aws-q',
+  };
+
+  /// Vérifie si la commande en cours est un agent CLI moderne
+  bool _isCliAgentCommand(String command) {
+    final name = _extractCommandName(command);
+    return name != null && _cliAgentCommands.contains(name);
   }
 
   /// Extrait le nom de la commande (sans chemin, sans arguments)
@@ -439,6 +495,7 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         }
         _subscriptions.clear();
         _terminals.clear();
+        _lastSentSize.clear();
         _currentTabId = null;
       }
     });
@@ -478,6 +535,16 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     // Mode édition : quand une app utilise l'alternate screen (nano, vim, etc.)
     final isEditorMode = ref.watch(isEditorModeProvider);
 
+    // Détecter si un agent CLI est actif pour désactiver l'auto-resize.
+    // Quand autoResize=false, xterm ne redimensionne PAS son buffer interne
+    // lors des changements de taille du widget (ex: clavier qui se ferme/ouvre).
+    // Sans ça, xterm fait lines.pop() en rétrécissant → lignes perdues → messages
+    // qui disparaissent dans Codex CLI et autres agents TUI.
+    final currentCommand = ref.watch(
+      sshProvider.select((s) => s.tabCurrentCommand[s.currentTabId]),
+    );
+    final isCliAgentActive = currentCommand != null && _isCliAgentCommand(currentCommand);
+
     // Afficher le terminal xterm avec bouton Copier flottant
     // Key avec l'ID stable pour forcer Flutter à recréer le widget
     // ClipRect pour empêcher le contenu de déborder sur les barres au-dessus
@@ -492,6 +559,11 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       autofocus: isEditorMode,
       readOnly: !isEditorMode,  // Mode normal: true (champ en bas), Mode édition: false (saisie directe)
       hardwareKeyboardOnly: !isEditorMode,  // Mode édition: clavier virtuel autorisé
+      // Mode grow-only pour agents CLI : le buffer peut GRANDIR (clavier fermé
+      // = plus de lignes visibles) mais ne RÉTRÉCIT PAS (clavier ouvert).
+      // Empêche Buffer.resize() d'appeler lines.pop() qui supprime des lignes,
+      // ET empêche Codex de redessiner avec moins de lignes (pas de SIGWINCH).
+      growOnlyResize: isCliAgentActive,
       backgroundOpacity: 0,
       theme: _getTerminalTheme(theme, isEditorMode: isEditorMode),
       textStyle: TerminalStyle(

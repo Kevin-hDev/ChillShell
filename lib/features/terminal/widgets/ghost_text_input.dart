@@ -322,7 +322,13 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
                               expands: false,
                               keyboardType: TextInputType.multiline,
                               textInputAction: TextInputAction.send,
-                              onSubmitted: (_) => _onSubmit(),
+                              // onEditingComplete au lieu de onSubmitted :
+                              // onSubmitted ferme le clavier (unfocus) avant notre callback,
+                              // causant un cycle clavier fermé→ouvert qui redimensionne
+                              // le widget terminal → xterm perd des lignes.
+                              // onEditingComplete remplace le comportement par défaut
+                              // (qui inclut l'unfocus), donc le clavier reste ouvert.
+                              onEditingComplete: _onSubmit,
                               decoration: InputDecoration(
                                 hintText: _ctrlArmed
                                     ? context.l10n.pressKeyForCtrl
