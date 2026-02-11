@@ -251,19 +251,36 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  /// Historique de navigation pour le bouton retour (comme un navigateur web)
+  final List<int> _history = [];
+
+  void _navigateTo(int index) {
+    if (index == _currentIndex) return;
+    _history.add(_currentIndex);
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return IndexedStack(
-      index: _currentIndex,
-      children: [
-        TerminalScreen(
-          onSettingsTap: () => setState(() => _currentIndex = 1),
-        ),
-        SettingsScreen(
-          onTerminalTap: () => setState(() => _currentIndex = 0),
-        ),
-      ],
+    return PopScope(
+      // Autoriser la sortie uniquement s'il n'y a plus d'historique
+      canPop: _history.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _history.isNotEmpty) {
+          setState(() => _currentIndex = _history.removeLast());
+        }
+      },
+      child: IndexedStack(
+        index: _currentIndex,
+        children: [
+          TerminalScreen(
+            onSettingsTap: () => _navigateTo(1),
+          ),
+          SettingsScreen(
+            onTerminalTap: () => _navigateTo(0),
+          ),
+        ],
+      ),
     );
   }
 }
