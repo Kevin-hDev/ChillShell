@@ -10,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class PinService {
   static const _hashKey = 'vibeterm_pin_hash';
   static const _saltKey = 'vibeterm_pin_salt';
+  static const _pinLengthKey = 'vibeterm_pin_length';
   // Ancienne clé (v1) — PIN stocké en clair, utilisé pour la migration
   static const _legacyPinKey = 'vibeterm_pin_code';
   static const _versionKey = 'vibeterm_pin_version';
@@ -71,6 +72,14 @@ class PinService {
     await _storage.write(key: _saltKey, value: base64Encode(salt));
     await _storage.write(key: _hashKey, value: hash);
     await _storage.write(key: _versionKey, value: _currentVersion);
+    await _storage.write(key: _pinLengthKey, value: pin.length.toString());
+  }
+
+  /// Retourne la longueur du PIN stocké (8 par défaut)
+  static Future<int> getPinLength() async {
+    final stored = await _storage.read(key: _pinLengthKey);
+    if (stored != null) return int.tryParse(stored) ?? 8;
+    return 8;
   }
 
   /// Vérifie si le PIN entré correspond au PIN stocké
