@@ -17,6 +17,7 @@ enum AppTheme {
 
 /// Tailles de police disponibles pour le terminal
 enum TerminalFontSize {
+  xxs(10.0, 'XXS'),
   xs(12.0, 'XS'),
   s(14.0, 'S'),
   m(17.0, 'M'),

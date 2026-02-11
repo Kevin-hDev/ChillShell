@@ -200,6 +200,12 @@ abstract class AppLocalizations {
   /// **'Font size'**
   String get fontSize;
 
+  /// No description provided for @fontSizeXXS.
+  ///
+  /// In en, this message translates to:
+  /// **'XXS (10px)'**
+  String get fontSizeXXS;
+
   /// No description provided for @fontSizeXS.
   ///
   /// In en, this message translates to:

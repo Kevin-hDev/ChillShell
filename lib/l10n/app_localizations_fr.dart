@@ -58,6 +58,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get fontSize => 'Taille de police';
 
   @override
+  String get fontSizeXXS => 'XXS (10px)';
+
+  @override
   String get fontSizeXS => 'XS (12px)';
 
   @override

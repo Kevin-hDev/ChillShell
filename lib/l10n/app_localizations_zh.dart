@@ -57,6 +57,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fontSize => '字体大小';
 
   @override
+  String get fontSizeXXS => 'XXS (10px)';
+
+  @override
   String get fontSizeXS => 'XS (12px)';
 
   @override

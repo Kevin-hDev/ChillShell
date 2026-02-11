@@ -271,6 +271,7 @@ class _FontSizeSelector extends StatelessWidget {
 
     // Labels localisés pour les tailles
     final sizeLabels = {
+      TerminalFontSize.xxs: l10n.fontSizeXXS,
       TerminalFontSize.xs: l10n.fontSizeXS,
       TerminalFontSize.s: l10n.fontSizeS,
       TerminalFontSize.m: l10n.fontSizeM,
