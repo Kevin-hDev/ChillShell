@@ -16,6 +16,7 @@
   "theme": "Tema",
   "language": "Idioma",
   "fontSize": "Tamaño de fuente",
+  "fontSizeXXS": "XXS (10px)",
   "fontSizeXS": "XS (12px)",
   "fontSizeS": "S (14px)",
   "fontSizeM": "M (17px)",

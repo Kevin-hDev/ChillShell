@@ -201,12 +201,12 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       final useKeyboardScroll = cmdName != null && _keyboardScrollApps.contains(cmdName);
 
       if (useKeyboardScroll) {
-        // Apps sans support souris : envoyer flèches clavier (↑/↓)
-        final isAppMode = terminal.cursorKeysMode;
-        final prefix = isAppMode ? '\x1bO' : '\x1b[';
-        final arrowKey = scrollUp ? '${prefix}A' : '${prefix}B';
-        ref.read(sshProvider.notifier).write(arrowKey);
-        if (kDebugMode) debugPrint('ALT_SCROLL: Arrow ${scrollUp ? "UP" : "DOWN"} sent (keyboard scroll for $cmdName)');
+        // Apps sans support souris (OpenCode) : envoyer Page Up/Down
+        // OpenCode utilise PgUp/PgDown pour scroller, PAS les flèches.
+        // Page Up: \x1b[5~ / Page Down: \x1b[6~
+        final pageKey = scrollUp ? '\x1b[5~' : '\x1b[6~';
+        ref.read(sshProvider.notifier).write(pageKey);
+        if (kDebugMode) debugPrint('ALT_SCROLL: Page ${scrollUp ? "UP" : "DOWN"} sent (keyboard scroll for $cmdName)');
       } else {
         // Mouse wheel SGR 1006 — coordonnées au CENTRE du terminal
         // pour que les apps position-aware (Crush, etc.) routent l'événement
@@ -446,10 +446,9 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     'amazon-q', 'aws-q', 'crush',
   };
 
-  /// Apps qui ne supportent PAS le mouse wheel SGR.
-  /// Pour ces apps, on envoie des flèches clavier (↑/↓) pour le scroll.
-  /// Note : Crush supporte le mouse wheel (Bubble Tea) → utilise SGR.
-  /// Note : OpenCode ne répond ni au mouse ni aux flèches (limitation connue).
+  /// Apps sans support mouse wheel SGR.
+  /// Pour ces apps, on envoie Page Up/Down au lieu de mouse wheel.
+  /// OpenCode (Bubble Tea v1) : mouse désactivé, scroll = PgUp/PgDown/Ctrl+U/D.
   static const _keyboardScrollApps = <String>{
     'opencode',
   };

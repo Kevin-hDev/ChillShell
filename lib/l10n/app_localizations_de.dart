@@ -59,6 +59,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get fontSize => 'Schriftgröße';
 
   @override
+  String get fontSizeXXS => 'XXS (10px)';
+
+  @override
   String get fontSizeXS => 'XS (12px)';
 
   @override

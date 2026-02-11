@@ -16,6 +16,7 @@
   "theme": "主题",
   "language": "语言",
   "fontSize": "字体大小",
+  "fontSizeXXS": "XXS (10px)",
   "fontSizeXS": "XS (12px)",
   "fontSizeS": "S (14px)",
   "fontSizeM": "M (17px)",

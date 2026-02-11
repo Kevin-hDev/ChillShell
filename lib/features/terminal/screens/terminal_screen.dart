@@ -24,6 +24,13 @@ import '../widgets/wol_start_screen.dart';
 /// ESC row: ~37px, GhostTextInput: ~103px = 140px sans SafeArea
 const double _kInputOverlayHeight = 140;
 
+/// Agents CLI IA connus — la barre d'info session est masquée quand l'un
+/// d'eux est actif pour maximiser l'espace terminal sur petit écran.
+const _kCliAgentNames = <String>{
+  'claude', 'codex', 'opencode', 'aider', 'gemini', 'cody',
+  'amazon-q', 'aws-q', 'crush',
+};
+
 class TerminalScreen extends ConsumerStatefulWidget {
   final VoidCallback? onSettingsTap;
 
@@ -386,6 +393,16 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     }
   }
 
+  /// Vérifie si un agent CLI IA est actif sur l'onglet courant.
+  bool _isCliAgentActive(SSHState sshState) {
+    final tabId = sshState.currentTabId;
+    if (tabId == null) return false;
+    final cmd = sshState.tabCurrentCommand[tabId];
+    if (cmd == null || cmd.isEmpty) return false;
+    final name = cmd.split(RegExp(r'\s+')).first.toLowerCase();
+    return _kCliAgentNames.contains(name);
+  }
+
   @override
   Widget build(BuildContext context) {
     final sshState = ref.watch(sshProvider);
@@ -428,7 +445,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             onScrollToBottom: () => terminalViewKey.currentState?.scrollToBottom(),
             onImageImport: _handleImageImport,
           ),
-          if (sshState.connectionState == SSHConnectionState.connected)
+          if (sshState.connectionState == SSHConnectionState.connected &&
+              !_isCliAgentActive(sshState))
             const SessionInfoBar(),
           Expanded(
             child: Stack(
