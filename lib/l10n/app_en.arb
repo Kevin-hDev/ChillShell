@@ -320,7 +320,6 @@
     }
   },
   "tailscaleCopyIP": "Copy IP",
-  "tailscaleNewSSH": "SSH Connection",
   "tailscaleDisconnect": "Disconnect",
   "tailscaleOnline": "Online",
   "tailscaleOffline": "Offline",

@@ -1,16 +1,27 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/tailscale_device.dart';
 
-/// Service de communication avec le plugin natif Tailscale et l'API REST.
+/// Service de communication avec le plugin natif Tailscale via MethodChannel.
 ///
-/// - MethodChannel pour les opérations locales (login, logout, getStatus, getMyIP)
-/// - API REST Tailscale pour la liste des machines distantes
+/// - MethodChannel pour login, logout, getStatus, getMyIP, getPeers
+/// - Les peers sont récupérés via la LocalAPI Go (pas besoin de token REST)
 class TailscaleService {
   static const _channel = MethodChannel('com.chillshell.tailscale');
-  static const _apiBase = 'https://api.tailscale.com/api/v2';
+
+  /// Callback appelé par le natif quand l'état Tailscale change.
+  void Function(Map<String, dynamic> state)? onStateChanged;
+
+  TailscaleService() {
+    _channel.setMethodCallHandler(_handleNativeCall);
+  }
+
+  Future<dynamic> _handleNativeCall(MethodCall call) async {
+    if (call.method == 'onStateChanged' && onStateChanged != null) {
+      final args = Map<String, dynamic>.from(call.arguments as Map);
+      onStateChanged!(args);
+    }
+  }
 
   /// Démarre le flux OAuth Tailscale (côté Android: demande permission VPN + lance le service).
   /// Retourne une Map avec le résultat du login, ou null si erreur.
@@ -51,49 +62,24 @@ class TailscaleService {
     }
   }
 
-  /// Retourne l'IP Tailscale locale (100.x.y.z).
-  Future<String?> getMyIP() async {
+  /// Récupère la liste des peers via la LocalAPI Go (pas besoin de token REST).
+  Future<List<TailscaleDevice>> getPeers() async {
     try {
-      final result = await _channel.invokeMethod<String>('getMyIP');
-      return result;
+      final result = await _channel.invokeMethod<List>('getPeers');
+      if (result == null) return [];
+
+      return result.map((item) {
+        final map = Map<String, dynamic>.from(item as Map);
+        return TailscaleDevice(
+          name: map['name'] as String? ?? '',
+          ip: map['ip'] as String? ?? '',
+          isOnline: map['isOnline'] as bool? ?? false,
+          os: map['os'] as String? ?? '',
+          id: map['id'] as String? ?? '',
+        );
+      }).toList();
     } on PlatformException catch (e) {
-      if (kDebugMode) debugPrint('TailscaleService: getMyIP error: $e');
-      return null;
-    }
-  }
-
-  /// Récupère la liste des machines via l'API REST Tailscale.
-  /// Nécessite un token OAuth valide.
-  Future<List<TailscaleDevice>> fetchDevices(String token) async {
-    try {
-      final client = HttpClient();
-      final request = await client.getUrl(
-        Uri.parse('$_apiBase/tailnet/-/devices'),
-      );
-      request.headers.set('Authorization', 'Bearer $token');
-      request.headers.set('Accept', 'application/json');
-
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
-
-      if (response.statusCode != 200) {
-        if (kDebugMode) {
-          debugPrint('TailscaleService: API error ${response.statusCode}: $body');
-        }
-        client.close();
-        return [];
-      }
-
-      client.close();
-
-      final json = jsonDecode(body) as Map<String, dynamic>;
-      final devicesJson = json['devices'] as List<dynamic>? ?? [];
-
-      return devicesJson
-          .map((d) => TailscaleDevice.fromJson(d as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      if (kDebugMode) debugPrint('TailscaleService: fetchDevices error: $e');
+      if (kDebugMode) debugPrint('TailscaleService: getPeers error: $e');
       return [];
     }
   }

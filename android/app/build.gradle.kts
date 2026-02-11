@@ -50,6 +50,12 @@ dependencies {
     // AndroidX Core for NotificationCompat in TailscaleVpnService
     implementation("androidx.core:core-ktx:1.12.0")
 
+    // EncryptedSharedPreferences for libtailscale AppContext
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // Coroutines for async IPN Bus watcher and LocalAPI calls
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
     // libtailscale.aar built from gomobile (tailscale-android)
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
 }

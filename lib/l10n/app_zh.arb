@@ -222,7 +222,6 @@
     }
   },
   "tailscaleCopyIP": "复制IP",
-  "tailscaleNewSSH": "SSH连接",
   "tailscaleDisconnect": "断开连接",
   "tailscaleOnline": "在线",
   "tailscaleOffline": "离线",

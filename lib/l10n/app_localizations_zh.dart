@@ -671,9 +671,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tailscaleCopyIP => '复制IP';
 
   @override
-  String get tailscaleNewSSH => 'SSH连接';
-
-  @override
   String get tailscaleDisconnect => '断开连接';
 
   @override

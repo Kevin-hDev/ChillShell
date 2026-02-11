@@ -3,8 +3,12 @@ package com.vibeterm.vibeterm
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.VpnService
+import android.os.Build
 import android.util.Log
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -13,38 +17,51 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
+import kotlinx.coroutines.*
+import org.json.JSONArray
+import org.json.JSONObject
+import java.net.NetworkInterface
+import java.util.Collections
 
 /**
- * Flutter plugin bridging Tailscale native operations via MethodChannel.
+ * Flutter plugin that bridges Tailscale via libtailscale (Go).
  *
- * Exposed methods:
- * - login: starts OAuth flow and VPN tunnel
- * - logout: stops tunnel and clears state
- * - getStatus: returns connection status map
- * - getMyIP: returns Tailscale IP (100.x.y.z)
+ * Implements libtailscale.AppContext so Go can call back into Android
+ * for encrypted storage, device info, and network interfaces.
  *
- * Requires libtailscale.aar to be present in android/app/libs/.
- * Build it from https://github.com/tailscale/tailscale-android with:
- *   gomobile bind -target android -androidapi 26 -o libtailscale.aar ./libtailscale
+ * Handles:
+ * - Login via LocalAPI /login-interactive → browser OAuth
+ * - VPN tunnel lifecycle via TailscaleVpnService
+ * - IPN Bus notifications (state changes, browse URL, IP address)
  */
 class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
-    PluginRegistry.ActivityResultListener {
+    PluginRegistry.ActivityResultListener, libtailscale.AppContext {
 
     companion object {
         private const val TAG = "TailscalePlugin"
         private const val CHANNEL_NAME = "com.chillshell.tailscale"
         private const val VPN_PERMISSION_REQUEST_CODE = 9001
         private const val PREFS_NAME = "tailscale_prefs"
-        private const val KEY_AUTH_TOKEN = "auth_token"
-        private const val KEY_TAILSCALE_IP = "tailscale_ip"
-        private const val KEY_DEVICE_NAME = "device_name"
-        private const val KEY_IS_CONNECTED = "is_connected"
+        private const val ENCRYPTED_PREFS_NAME = "tailscale_encrypted_prefs"
+
+        /** Singleton for VPN service callbacks. */
+        var instance: TailscalePlugin? = null
+            private set
     }
 
     private lateinit var channel: MethodChannel
     private var context: Context? = null
     private var activity: Activity? = null
     private var pendingLoginResult: Result? = null
+    private var tailscaleApp: libtailscale.Application? = null
+    private var notificationManager: libtailscale.NotificationManager? = null
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    // Cached state from IPN Bus
+    private var currentIP: String? = null
+    private var currentDeviceName: String? = null
+    private var isConnected: Boolean = false
+    private var pendingBrowseURL: String? = null
 
     // --- FlutterPlugin lifecycle ---
 
@@ -52,12 +69,17 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         context = binding.applicationContext
         channel = MethodChannel(binding.binaryMessenger, CHANNEL_NAME)
         channel.setMethodCallHandler(this)
+        instance = this
+        initLibtailscale()
         Log.d(TAG, "TailscalePlugin attached to engine")
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        notificationManager?.stop()
+        scope.cancel()
         context = null
+        instance = null
         Log.d(TAG, "TailscalePlugin detached from engine")
     }
 
@@ -68,17 +90,179 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         binding.addActivityResultListener(this)
     }
 
-    override fun onDetachedFromActivityForConfigChanges() {
-        activity = null
-    }
+    override fun onDetachedFromActivityForConfigChanges() { activity = null }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         activity = binding.activity
         binding.addActivityResultListener(this)
     }
 
-    override fun onDetachedFromActivity() {
-        activity = null
+    override fun onDetachedFromActivity() { activity = null }
+
+    // --- Initialize libtailscale Go backend ---
+
+    private fun initLibtailscale() {
+        val ctx = context ?: return
+        try {
+            val dataDir = ctx.filesDir.absolutePath
+            tailscaleApp = libtailscale.Libtailscale.start(
+                dataDir,         // dataDir for Go state
+                dataDir,         // directFileRoot
+                false,           // hardware attestation (not needed)
+                this             // AppContext implementation
+            )
+            Log.d(TAG, "libtailscale started successfully")
+            startNotificationWatcher()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start libtailscale", e)
+        }
+    }
+
+    // --- IPN Bus notification watcher ---
+
+    private fun startNotificationWatcher() {
+        val app = tailscaleApp ?: return
+        scope.launch {
+            try {
+                // Watch mask: Netmap(1) | Prefs(2) | InitialState(4)
+                val mask: Long = 1 or 2 or 4
+                notificationManager = app.watchNotifications(mask,
+                    object : libtailscale.NotificationCallback {
+                        override fun onNotify(data: ByteArray) {
+                            handleNotification(String(data, Charsets.UTF_8))
+                        }
+                    }
+                )
+                Log.d(TAG, "IPN Bus notification watcher started")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start notification watcher", e)
+            }
+        }
+    }
+
+    private fun handleNotification(jsonStr: String) {
+        try {
+            val json = JSONObject(jsonStr)
+
+            // BrowseToURL — OAuth login URL from Go
+            if (json.has("BrowseToURL") && !json.isNull("BrowseToURL")) {
+                val url = json.getString("BrowseToURL")
+                if (url.isNotEmpty() && url.startsWith("http")) {
+                    Log.d(TAG, "BrowseToURL received (${url.length} chars)")
+                    pendingBrowseURL = url
+                    openBrowserForAuth(url)
+                } else {
+                    Log.d(TAG, "BrowseToURL ignored (empty or invalid)")
+                }
+            }
+
+            // State change
+            if (json.has("State") && !json.isNull("State")) {
+                val state = json.optInt("State", -1)
+                if (state >= 0) {
+                    // State: 0=NoState, 1=InUseOtherUser, 2=NeedsLogin,
+                    //        3=NeedsMachineAuth, 4=Stopped, 5=Starting, 6=Running
+                    Log.d(TAG, "State changed: $state")
+                    val wasConnected = isConnected
+                    isConnected = state == 6 // Running
+                    if (isConnected != wasConnected) {
+                        notifyFlutterStateChanged()
+                    }
+
+                    // Start VPN service when state is Running
+                    if (isConnected && !TailscaleVpnService.isRunning) {
+                        startVpnService()
+                    }
+                }
+            }
+
+            // NetMap — contains self node with IP
+            if (json.has("NetMap") && !json.isNull("NetMap")) {
+                val netMap = json.getJSONObject("NetMap")
+                if (netMap.has("SelfNode")) {
+                    val selfNode = netMap.getJSONObject("SelfNode")
+
+                    // Extract device name
+                    if (selfNode.has("Name")) {
+                        currentDeviceName = selfNode.getString("Name")
+                            .removeSuffix(".") // Remove trailing dot
+                    }
+
+                    // Extract IP from Addresses
+                    if (selfNode.has("Addresses")) {
+                        val addrs = selfNode.getJSONArray("Addresses")
+                        for (i in 0 until addrs.length()) {
+                            val addr = addrs.getString(i)
+                            // Take the first IPv4 (100.x.y.z/32)
+                            if (addr.startsWith("100.")) {
+                                currentIP = addr.split("/")[0]
+                                break
+                            }
+                        }
+                    }
+                    notifyFlutterStateChanged()
+                }
+            }
+
+            // LoginFinished
+            if (json.has("LoginFinished") && !json.isNull("LoginFinished")) {
+                Log.d(TAG, "Login finished successfully")
+                // Resolve pending login result
+                val result = pendingLoginResult
+                pendingLoginResult = null
+                activity?.runOnUiThread {
+                    result?.success(mapOf(
+                        "status" to "logged_in",
+                        "myIP" to currentIP,
+                        "deviceName" to currentDeviceName
+                    ))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling IPN notification", e)
+        }
+    }
+
+    private fun openBrowserForAuth(url: String) {
+        val act = activity ?: return
+        act.runOnUiThread {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                act.startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to open browser for auth", e)
+            }
+        }
+    }
+
+    private fun notifyFlutterStateChanged() {
+        activity?.runOnUiThread {
+            channel.invokeMethod("onStateChanged", mapOf(
+                "isConnected" to isConnected,
+                "myIP" to currentIP,
+                "deviceName" to currentDeviceName
+            ))
+        }
+    }
+
+    /** Start VPN service when Tailscale reaches Running state. */
+    private fun startVpnService() {
+        val ctx = context ?: return
+        try {
+            val serviceIntent = Intent(ctx, TailscaleVpnService::class.java).apply {
+                action = TailscaleVpnService.ACTION_START
+            }
+            ctx.startForegroundService(serviceIntent)
+            Log.d(TAG, "VPN service start requested")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start VPN service", e)
+        }
+    }
+
+    /** Called from TailscaleVpnService when VPN state changes. */
+    fun onVpnStateChanged(active: Boolean) {
+        isConnected = active
+        notifyFlutterStateChanged()
     }
 
     // --- MethodCallHandler ---
@@ -88,7 +272,7 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             "login" -> handleLogin(result)
             "logout" -> handleLogout(result)
             "getStatus" -> handleGetStatus(result)
-            "getMyIP" -> handleGetMyIP(result)
+            "getPeers" -> handleGetPeers(result)
             else -> result.notImplemented()
         }
     }
@@ -98,54 +282,56 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private fun handleLogin(result: Result) {
         val currentActivity = activity
         if (currentActivity == null) {
-            result.error("NO_ACTIVITY", "No activity available for VPN permission", null)
+            result.error("NO_ACTIVITY", "No activity available", null)
             return
         }
 
-        // Step 1: Check VPN permission
+        // Check VPN permission
         val vpnIntent = VpnService.prepare(currentActivity)
         if (vpnIntent != null) {
-            // Need to request VPN permission first
             pendingLoginResult = result
             currentActivity.startActivityForResult(vpnIntent, VPN_PERMISSION_REQUEST_CODE)
             return
         }
 
-        // VPN permission already granted, proceed with Tailscale login
         startTailscaleLogin(result)
     }
 
     private fun startTailscaleLogin(result: Result) {
-        val ctx = context ?: run {
-            result.error("NO_CONTEXT", "Application context not available", null)
+        val app = tailscaleApp
+        if (app == null) {
+            result.error("NOT_INITIALIZED", "libtailscale not initialized", null)
             return
         }
 
-        try {
-            // Start the VPN service
-            val serviceIntent = Intent(ctx, TailscaleVpnService::class.java).apply {
-                action = TailscaleVpnService.ACTION_START
+        val ctx = context ?: run {
+            result.error("NO_CONTEXT", "No context", null)
+            return
+        }
+
+        pendingLoginResult = result
+
+        scope.launch {
+            try {
+                // Call LocalAPI to start interactive login
+                // Go will send BrowseToURL notification → opens browser
+                // VPN service starts later when Go reaches Running state
+                Log.d(TAG, "Calling login-interactive...")
+                val response = app.callLocalAPI(
+                    30000, // 30 second timeout
+                    "POST",
+                    "/localapi/v0/login-interactive",
+                    null // no body
+                )
+                Log.d(TAG, "login-interactive response: ${response.statusCode()}")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start login", e)
+                withContext(Dispatchers.Main) {
+                    val r = pendingLoginResult
+                    pendingLoginResult = null
+                    r?.error("LOGIN_FAILED", "Authentication failed", null)
+                }
             }
-            ctx.startForegroundService(serviceIntent)
-
-            // TODO: When libtailscale.aar is integrated, this will:
-            // 1. Initialize the Tailscale backend via libtailscale
-            // 2. Start the OAuth login flow (opens browser/webview)
-            // 3. Receive the auth token callback
-            // 4. Establish the WireGuard tunnel
-            //
-            // For now, we signal that the native layer is ready and
-            // the Dart side should handle OAuth via the Tailscale API.
-
-            Log.d(TAG, "Tailscale VPN service started, awaiting OAuth from Dart layer")
-
-            result.success(mapOf(
-                "status" to "vpn_service_started",
-                "message" to "VPN service started. Complete OAuth via Dart layer."
-            ))
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start Tailscale login", e)
-            result.error("LOGIN_FAILED", e.message, null)
         }
     }
 
@@ -153,69 +339,132 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
     private fun handleLogout(result: Result) {
         val ctx = context ?: run {
-            result.error("NO_CONTEXT", "Application context not available", null)
+            result.error("NO_CONTEXT", "No context", null)
             return
         }
 
-        try {
-            // Stop the VPN service
-            val serviceIntent = Intent(ctx, TailscaleVpnService::class.java).apply {
-                action = TailscaleVpnService.ACTION_STOP
+        scope.launch {
+            try {
+                // Tell Go to log out
+                tailscaleApp?.callLocalAPI(10000, "POST", "/localapi/v0/logout", null)
+
+                // Stop VPN service
+                val serviceIntent = Intent(ctx, TailscaleVpnService::class.java).apply {
+                    action = TailscaleVpnService.ACTION_STOP
+                }
+                ctx.startService(serviceIntent)
+
+                isConnected = false
+                currentIP = null
+                currentDeviceName = null
+
+                withContext(Dispatchers.Main) {
+                    result.success(null)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to logout", e)
+                withContext(Dispatchers.Main) {
+                    result.error("LOGOUT_FAILED", "Logout failed", null)
+                }
             }
-            ctx.startService(serviceIntent)
-
-            // Clear stored auth state
-            val prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit()
-                .remove(KEY_AUTH_TOKEN)
-                .remove(KEY_TAILSCALE_IP)
-                .remove(KEY_DEVICE_NAME)
-                .putBoolean(KEY_IS_CONNECTED, false)
-                .apply()
-
-            Log.d(TAG, "Tailscale logout complete")
-            result.success(null)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to logout", e)
-            result.error("LOGOUT_FAILED", e.message, null)
         }
     }
 
     // --- Status ---
 
     private fun handleGetStatus(result: Result) {
-        val ctx = context ?: run {
-            result.error("NO_CONTEXT", "Application context not available", null)
-            return
-        }
-
-        val prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val isConnected = prefs.getBoolean(KEY_IS_CONNECTED, false)
-        val myIP = prefs.getString(KEY_TAILSCALE_IP, null)
-        val deviceName = prefs.getString(KEY_DEVICE_NAME, null)
-
         result.success(mapOf(
             "isConnected" to isConnected,
-            "myIP" to myIP,
-            "deviceName" to deviceName,
+            "myIP" to currentIP,
+            "deviceName" to currentDeviceName,
             "vpnServiceRunning" to TailscaleVpnService.isRunning
         ))
     }
 
-    // --- Get IP ---
+    // --- Get Peers via LocalAPI ---
 
-    private fun handleGetMyIP(result: Result) {
-        val ctx = context ?: run {
-            result.error("NO_CONTEXT", "Application context not available", null)
+    private fun handleGetPeers(result: Result) {
+        val app = tailscaleApp
+        if (app == null) {
+            result.error("NOT_INITIALIZED", "libtailscale not initialized", null)
             return
         }
 
-        val prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val ip = prefs.getString(KEY_TAILSCALE_IP, null)
-        if (ip != null) {
-            result.success(ip)
-        } else {
-            result.error("NOT_CONNECTED", "No Tailscale IP available. Not connected.", null)
+        scope.launch {
+            try {
+                val response = app.callLocalAPI(
+                    10000,
+                    "GET",
+                    "/localapi/v0/status",
+                    null
+                )
+                val bodyBytes = response.bodyBytes()
+                val bodyStr = if (bodyBytes != null) String(bodyBytes, Charsets.UTF_8) else "{}"
+                val json = JSONObject(bodyStr)
+
+                val peers = mutableListOf<Map<String, Any?>>()
+
+                // Self node
+                if (json.has("Self") && !json.isNull("Self")) {
+                    val self = json.getJSONObject("Self")
+                    parsePeer(self)?.let { peers.add(it) }
+                }
+
+                // Peer nodes
+                if (json.has("Peer") && !json.isNull("Peer")) {
+                    val peerMap = json.getJSONObject("Peer")
+                    val keys = peerMap.keys()
+                    while (keys.hasNext()) {
+                        val key = keys.next()
+                        val peer = peerMap.getJSONObject(key)
+                        parsePeer(peer)?.let { peers.add(it) }
+                    }
+                }
+
+                withContext(Dispatchers.Main) {
+                    result.success(peers)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to get peers", e)
+                withContext(Dispatchers.Main) {
+                    result.error("PEERS_FAILED", "Failed to fetch peers", null)
+                }
+            }
+        }
+    }
+
+    private fun parsePeer(peer: JSONObject): Map<String, Any?>? {
+        try {
+            val name = peer.optString("HostName", "")
+            val dnsName = peer.optString("DNSName", "").removeSuffix(".")
+            val online = peer.optBoolean("Online", false)
+            val os = peer.optString("OS", "")
+
+            // Extract first IPv4 from TailscaleIPs
+            var ip = ""
+            if (peer.has("TailscaleIPs") && !peer.isNull("TailscaleIPs")) {
+                val ips = peer.getJSONArray("TailscaleIPs")
+                for (i in 0 until ips.length()) {
+                    val addr = ips.getString(i)
+                    if (addr.startsWith("100.")) {
+                        ip = addr
+                        break
+                    }
+                }
+            }
+
+            if (ip.isEmpty()) return null
+
+            return mapOf(
+                "name" to (dnsName.ifEmpty { name }),
+                "ip" to ip,
+                "isOnline" to online,
+                "os" to os,
+                "id" to peer.optString("PublicKey", "").take(16)
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse peer: ${e.message ?: "Unknown error"}")
+            return null
         }
     }
 
@@ -224,48 +473,139 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         if (requestCode == VPN_PERMISSION_REQUEST_CODE) {
             val result = pendingLoginResult
-            pendingLoginResult = null
-
             if (resultCode == Activity.RESULT_OK) {
                 if (result != null) {
                     startTailscaleLogin(result)
                 }
             } else {
-                result?.error(
-                    "VPN_PERMISSION_DENIED",
-                    "User denied VPN permission",
-                    null
-                )
+                pendingLoginResult = null
+                result?.error("VPN_PERMISSION_DENIED", "User denied VPN permission", null)
             }
             return true
         }
         return false
     }
 
-    // --- State updates from VPN service ---
+    // ========================================================
+    // libtailscale.AppContext interface implementation
+    // ========================================================
 
-    /**
-     * Called by TailscaleVpnService when the tunnel state changes.
-     * Updates stored preferences so getStatus returns current values.
-     */
-    fun updateConnectionState(isConnected: Boolean, ip: String?, deviceName: String?) {
-        val ctx = context ?: return
-        val prefs = ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit()
-            .putBoolean(KEY_IS_CONNECTED, isConnected)
-            .apply {
-                if (ip != null) putString(KEY_TAILSCALE_IP, ip)
-                if (deviceName != null) putString(KEY_DEVICE_NAME, deviceName)
+    override fun log(tag: String, msg: String) {
+        Log.d("TS-$tag", msg)
+    }
+
+    override fun encryptToPref(key: String, value: String) {
+        getEncryptedPrefs().edit().putString(key, value).apply()
+    }
+
+    override fun decryptFromPref(key: String): String? {
+        return getEncryptedPrefs().getString(key, null)
+    }
+
+    override fun getStateStoreKeysJSON(): String {
+        val prefs = getEncryptedPrefs()
+        val keys = prefs.all.keys
+        val jsonArray = JSONArray(keys.toList())
+        return jsonArray.toString()
+    }
+
+    override fun getOSVersion(): String {
+        return "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+    }
+
+    override fun getDeviceName(): String {
+        return "${Build.MANUFACTURER} ${Build.MODEL}"
+    }
+
+    override fun getInstallSource(): String = "chillshell"
+
+    override fun shouldUseGoogleDNSFallback(): Boolean = true
+
+    override fun isChromeOS(): Boolean = false
+
+    override fun getInterfacesAsJson(): String {
+        try {
+            val interfaces = Collections.list(NetworkInterface.getNetworkInterfaces())
+            val jsonArray = JSONArray()
+
+            for (iface in interfaces) {
+                val addrs = JSONArray()
+                for (addr in iface.interfaceAddresses) {
+                    val addrObj = JSONObject()
+                    addrObj.put("ip", addr.address.hostAddress)
+                    addrObj.put("prefixLen", addr.networkPrefixLength)
+                    addrs.put(addrObj)
+                }
+
+                val obj = JSONObject()
+                obj.put("name", iface.name)
+                obj.put("index", iface.index)
+                obj.put("mtu", iface.mtu)
+                obj.put("up", iface.isUp)
+                obj.put("addrs", addrs)
+                jsonArray.put(obj)
             }
-            .apply()
 
-        // Notify Flutter side of state change
-        activity?.runOnUiThread {
-            channel.invokeMethod("onStateChanged", mapOf(
-                "isConnected" to isConnected,
-                "myIP" to ip,
-                "deviceName" to deviceName
-            ))
+            return jsonArray.toString()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get interfaces", e)
+            return "[]"
         }
+    }
+
+    override fun getPlatformDNSConfig(): String = ""
+
+    // --- Syspolicy (MDM) - not used, return defaults ---
+
+    override fun getSyspolicyStringValue(key: String): String {
+        throw Exception("not configured")
+    }
+
+    override fun getSyspolicyBooleanValue(key: String): Boolean {
+        throw Exception("not configured")
+    }
+
+    override fun getSyspolicyStringArrayJSONValue(key: String): String {
+        throw Exception("not configured")
+    }
+
+    // --- Hardware Attestation - not supported in ChillShell ---
+
+    override fun hardwareAttestationKeySupported(): Boolean = false
+
+    override fun hardwareAttestationKeyCreate(): String {
+        throw Exception("not supported")
+    }
+
+    override fun hardwareAttestationKeyRelease(id: String) {
+        throw Exception("not supported")
+    }
+
+    override fun hardwareAttestationKeyPublic(id: String): ByteArray {
+        throw Exception("not supported")
+    }
+
+    override fun hardwareAttestationKeySign(id: String, data: ByteArray): ByteArray {
+        throw Exception("not supported")
+    }
+
+    override fun hardwareAttestationKeyLoad(id: String) {
+        throw Exception("not supported")
+    }
+
+    // --- Encrypted SharedPreferences ---
+
+    private fun getEncryptedPrefs(): SharedPreferences {
+        val ctx = context ?: throw IllegalStateException("No context")
+        val masterKey = MasterKey.Builder(ctx)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        return EncryptedSharedPreferences.create(
+            ctx,
+            ENCRYPTED_PREFS_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 }

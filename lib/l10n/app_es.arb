@@ -222,7 +222,6 @@
     }
   },
   "tailscaleCopyIP": "Copiar IP",
-  "tailscaleNewSSH": "Conexión SSH",
   "tailscaleDisconnect": "Desconectar",
   "tailscaleOnline": "En línea",
   "tailscaleOffline": "Sin conexión",

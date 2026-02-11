@@ -686,9 +686,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get tailscaleCopyIP => 'Copiar IP';
 
   @override
-  String get tailscaleNewSSH => 'Conexión SSH';
-
-  @override
   String get tailscaleDisconnect => 'Desconectar';
 
   @override

@@ -48,17 +48,46 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
 
   @override
   TailscaleState build() {
+    _service.onStateChanged = _onNativeStateChanged;
+    ref.onDispose(() => _service.onStateChanged = null);
     Future.microtask(_init);
     return const TailscaleState();
   }
 
+  void _onNativeStateChanged(Map<String, dynamic> data) {
+    final wasConnected = state.isConnected;
+    final isConnected = data['isConnected'] as bool? ?? state.isConnected;
+    final ip = data['myIP'] as String?;
+    final deviceName = data['deviceName'] as String?;
+
+    state = state.copyWith(
+      isConnected: isConnected,
+      myIP: ip,
+      deviceName: deviceName,
+      isLoading: false,
+      clearError: true,
+    );
+
+    if (isConnected && !wasConnected) {
+      ref.read(settingsProvider.notifier).updateTailscaleSettings(
+        enabled: true,
+      );
+      // Charger la liste des peers dès qu'on est connecté
+      _fetchPeers();
+    }
+    if (deviceName != null) {
+      ref.read(settingsProvider.notifier).updateTailscaleSettings(
+        deviceName: deviceName,
+      );
+    }
+  }
+
   /// Initialise l'état Tailscale au démarrage.
-  /// Vérifie si un token existe et récupère le statut actuel.
+  /// Vérifie le statut actuel si Tailscale est activé.
   Future<void> _init() async {
     final settings = ref.read(settingsProvider).appSettings;
-    final token = settings.tailscaleToken;
 
-    if (token == null || !settings.tailscaleEnabled) return;
+    if (!settings.tailscaleEnabled) return;
 
     state = state.copyWith(isLoading: true);
 
@@ -76,8 +105,8 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
         clearError: true,
       );
 
-      if (isConnected && token.isNotEmpty) {
-        await _fetchDevices(token);
+      if (isConnected) {
+        await _fetchPeers();
       }
     } catch (e) {
       if (kDebugMode) debugPrint('TailscaleNotifier: init error: $e');
@@ -124,10 +153,9 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
         );
       }
 
-      // Récupérer la liste des appareils si on a un token
-      final token = ref.read(settingsProvider).appSettings.tailscaleToken;
-      if (isConnected && token != null) {
-        await _fetchDevices(token);
+      // Récupérer la liste des appareils via LocalAPI
+      if (isConnected) {
+        await _fetchPeers();
       }
     } catch (e) {
       if (kDebugMode) debugPrint('TailscaleNotifier: login error: $e');
@@ -144,7 +172,6 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
 
       // Nettoyer les settings
       ref.read(settingsProvider.notifier).updateTailscaleSettings(
-        clearToken: true,
         enabled: false,
         clearDeviceName: true,
       );
@@ -158,15 +185,13 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
 
   /// Rafraîchit la liste des appareils.
   Future<void> refreshDevices() async {
-    final token = ref.read(settingsProvider).appSettings.tailscaleToken;
-    if (token == null) return;
-    await _fetchDevices(token);
+    await _fetchPeers();
   }
 
-  /// Récupère la liste des appareils via l'API REST.
-  Future<void> _fetchDevices(String token) async {
+  /// Récupère la liste des peers via la LocalAPI Go.
+  Future<void> _fetchPeers() async {
     try {
-      final devices = await _service.fetchDevices(token);
+      final devices = await _service.getPeers();
       // Trier: en ligne d'abord, hors ligne ensuite
       devices.sort((a, b) {
         if (a.isOnline == b.isOnline) return a.name.compareTo(b.name);
@@ -174,7 +199,7 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
       });
       state = state.copyWith(devices: devices);
     } catch (e) {
-      if (kDebugMode) debugPrint('TailscaleNotifier: fetchDevices error: $e');
+      if (kDebugMode) debugPrint('TailscaleNotifier: fetchPeers error: $e');
     }
   }
 }
@@ -182,3 +207,4 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
 final tailscaleProvider = NotifierProvider<TailscaleNotifier, TailscaleState>(
   TailscaleNotifier.new,
 );
+
