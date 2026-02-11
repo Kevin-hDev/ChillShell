@@ -316,6 +316,15 @@ class SSHNotifier extends Notifier<SSHState> {
     }
   }
 
+  /// Rollback : retire un onglet de la liste après un échec de création
+  void _rollbackTab(String tabId) {
+    final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
+    state = state.copyWith(
+      tabIds: rollbackTabIds,
+      currentTabId: rollbackTabIds.isNotEmpty ? rollbackTabIds.last : null,
+    );
+  }
+
   /// Crée un nouvel onglet avec une nouvelle connexion SSH
   /// Retourne l'ID du nouvel onglet ou null si échec
   Future<String?> createNewTab() async {
@@ -332,8 +341,6 @@ class SSHNotifier extends Notifier<SSHState> {
 
     final tabId = _generateTabId();
 
-    if (kDebugMode) debugPrint('Creating new SSH connection for tab $tabId');
-
     // FEEDBACK IMMÉDIAT: Ajouter l'onglet en état "connecting"
     final newTabIds = [...state.tabIds, tabId];
     state = state.copyWith(
@@ -341,55 +348,55 @@ class SSHNotifier extends Notifier<SSHState> {
       tabIds: newTabIds,
     );
 
-    // Récupérer la clé privée depuis le stockage sécurisé
-    final privateKeyRaw = await SecureStorageService.getPrivateKey(info.keyId);
-    if (privateKeyRaw == null || privateKeyRaw.isEmpty) {
-      if (kDebugMode) debugPrint('Failed to retrieve private key for tab creation');
-      _isCreatingTab = false;
-      // Rollback: retirer l'onglet ajouté
-      final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
-      state = state.copyWith(
-        tabIds: rollbackTabIds,
-        currentTabId: rollbackTabIds.isNotEmpty ? rollbackTabIds.last : null,
-      );
-      return null;
-    }
-
-    // Sécurité : effacer la copie de la clé après utilisation
-    final keyBuffer = SecureBuffer.fromString(privateKeyRaw);
     try {
-      final newService = SSHService();
-      final success = await newService.connect(
-        host: info.host,
-        username: info.username,
-        privateKey: keyBuffer.toUtf8String(),
-        port: info.port,
-      );
+      // Chemin rapide : multiplexage SSH (~50ms)
+      // Réutilise la connexion TCP existante au lieu d'en créer une nouvelle
+      final existingService = _tabServices.values.where((s) => s.isConnected).firstOrNull;
+      if (existingService != null) {
+        final multiplexed = await existingService.openMultiplexedShell();
+        if (multiplexed != null) {
+          _tabServices[tabId] = multiplexed;
+          if (kDebugMode) debugPrint('Tab $tabId created via SSH multiplexing (fast)');
+          return tabId;
+        }
+        if (kDebugMode) debugPrint('SSH multiplexing failed, falling back to new connection');
+      }
 
-      if (success) {
-        await newService.startShell();
-        _tabServices[tabId] = newService;
-        return tabId;
-      } else {
-        // Rollback
-        final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
-        state = state.copyWith(
-          tabIds: rollbackTabIds,
-          currentTabId: rollbackTabIds.isNotEmpty ? rollbackTabIds.last : null,
-        );
+      // Chemin lent : nouvelle connexion complète (~1-2s)
+      final privateKeyRaw = await SecureStorageService.getPrivateKey(info.keyId);
+      if (privateKeyRaw == null || privateKeyRaw.isEmpty) {
+        if (kDebugMode) debugPrint('Failed to retrieve private key for tab creation');
+        _rollbackTab(tabId);
         return null;
       }
-    } catch (e) {
-      if (kDebugMode) debugPrint('Failed to create new tab: $e');
-      // Rollback
-      final rollbackTabIds = state.tabIds.where((id) => id != tabId).toList();
-      state = state.copyWith(
-        tabIds: rollbackTabIds,
-        currentTabId: rollbackTabIds.isNotEmpty ? rollbackTabIds.last : null,
-      );
-      return null;
+
+      final keyBuffer = SecureBuffer.fromString(privateKeyRaw);
+      try {
+        final newService = SSHService();
+        final success = await newService.connect(
+          host: info.host,
+          username: info.username,
+          privateKey: keyBuffer.toUtf8String(),
+          port: info.port,
+        );
+
+        if (success) {
+          await newService.startShell();
+          _tabServices[tabId] = newService;
+          if (kDebugMode) debugPrint('Tab $tabId created via new connection (slow)');
+          return tabId;
+        } else {
+          _rollbackTab(tabId);
+          return null;
+        }
+      } catch (e) {
+        if (kDebugMode) debugPrint('Failed to create new tab: $e');
+        _rollbackTab(tabId);
+        return null;
+      } finally {
+        keyBuffer.dispose();
+      }
     } finally {
-      keyBuffer.dispose();
       _isCreatingTab = false;
     }
   }
@@ -421,7 +428,16 @@ class SSHNotifier extends Notifier<SSHState> {
     // Déconnecter le service de cet onglet
     final serviceToClose = _tabServices[tabId];
     if (serviceToClose != null) {
-      await serviceToClose.disconnect();
+      // Si d'autres onglets partagent cette connexion SSH (multiplexage),
+      // fermer seulement la session shell, pas la connexion TCP entière
+      final hasSharedConnection = _tabServices.entries
+          .any((e) => e.key != tabId && serviceToClose.sharesClientWith(e.value));
+
+      if (hasSharedConnection) {
+        serviceToClose.closeSession();
+      } else {
+        await serviceToClose.disconnect();
+      }
       _tabServices.remove(tabId);
     }
 
