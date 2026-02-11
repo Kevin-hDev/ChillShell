@@ -159,6 +159,36 @@ class SSHService {
     }
   }
 
+  /// Ouvre un nouveau shell sur cette connexion SSH (multiplexage SSH).
+  /// Beaucoup plus rapide qu'une nouvelle connexion (~50ms vs ~1-2s).
+  Future<SSHService?> openMultiplexedShell({int width = 80, int height = 24}) async {
+    if (_client == null || !_isConnectionAlive) return null;
+
+    try {
+      final child = SSHService();
+      child._client = _client;
+      child._isConnectionAlive = true;
+      child._session = await _client!.shell(
+        pty: SSHPtyConfig(type: 'xterm-256color', width: width, height: height),
+      );
+      return child;
+    } catch (e) {
+      if (kDebugMode) debugPrint('SSHService: Multiplexed shell failed: $e');
+      return null;
+    }
+  }
+
+  /// Ferme uniquement la session shell, sans toucher à la connexion SSH.
+  /// Utilisé quand d'autres onglets partagent la même connexion (multiplexage).
+  void closeSession() {
+    _session?.close();
+    _session = null;
+  }
+
+  /// Vérifie si ce service partage la connexion SSH avec un autre.
+  bool sharesClientWith(SSHService other) =>
+      _client != null && identical(_client, other._client);
+
   Future<void> disconnect() async {
     _isConnectionAlive = false;
     _session?.close();
