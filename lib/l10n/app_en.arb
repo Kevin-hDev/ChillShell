@@ -300,32 +300,5 @@
   "allowScreenshotsWarning": "When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses).",
   "rename": "Rename",
   "renameDialogHint": "New name",
-  "nameCannotBeEmpty": "Name cannot be empty",
-  "premiumTitle": "ChillShell Premium",
-  "trialExpired": "Your 7-day free trial has ended",
-  "trialExpiredDesc": "Unlock ChillShell permanently with a single purchase. No subscription.",
-  "trialDaysRemaining": "{days} day(s) remaining in your trial",
-  "@trialDaysRemaining": {
-    "placeholders": {
-      "days": { "type": "int" }
-    }
-  },
-  "buyPremium": "Unlock Premium",
-  "restorePurchase": "Restore purchase",
-  "purchaseError": "Purchase failed. Please try again.",
-  "storeUnavailable": "Store unavailable. Please check your connection.",
-  "productNotFound": "Product not available. Please try later.",
-  "alreadyPremium": "You already have Premium access!",
-  "premiumFeature1": "Unlimited SSH connections",
-  "premiumFeature2": "Multiple tabs",
-  "premiumFeature3": "Wake-on-LAN",
-  "premiumFeature4": "All themes",
-  "premiumFeature5": "Biometric lock",
-  "oneTimePurchase": "One-time purchase — no subscription",
-  "trialBanner": "Trial: {days} day(s) left",
-  "@trialBanner": {
-    "placeholders": {
-      "days": { "type": "int" }
-    }
-  }
+  "nameCannotBeEmpty": "Name cannot be empty"
 }
