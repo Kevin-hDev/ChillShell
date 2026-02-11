@@ -630,4 +630,59 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nameCannotBeEmpty => '名称不能为空';
+
+  @override
+  String get premiumTitle => 'ChillShell 高级版';
+
+  @override
+  String get trialExpired => '您的7天免费试用已结束';
+
+  @override
+  String get trialExpiredDesc => '一次购买，永久解锁ChillShell。无订阅。';
+
+  @override
+  String trialDaysRemaining(int days) {
+    return '试用期还剩 $days 天';
+  }
+
+  @override
+  String get buyPremium => '解锁高级版';
+
+  @override
+  String get restorePurchase => '恢复购买';
+
+  @override
+  String get purchaseError => '购买失败，请重试。';
+
+  @override
+  String get storeUnavailable => '商店不可用，请检查网络连接。';
+
+  @override
+  String get productNotFound => '产品不可用，请稍后重试。';
+
+  @override
+  String get alreadyPremium => '您已拥有高级版访问权限！';
+
+  @override
+  String get premiumFeature1 => '无限SSH连接';
+
+  @override
+  String get premiumFeature2 => '多标签页';
+
+  @override
+  String get premiumFeature3 => 'Wake-on-LAN';
+
+  @override
+  String get premiumFeature4 => '所有主题';
+
+  @override
+  String get premiumFeature5 => '生物识别锁';
+
+  @override
+  String get oneTimePurchase => '一次性购买 — 无订阅';
+
+  @override
+  String trialBanner(int days) {
+    return '试用期：还剩 $days 天';
+  }
 }

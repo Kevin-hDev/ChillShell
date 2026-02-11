@@ -648,4 +648,62 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get nameCannotBeEmpty => 'Name darf nicht leer sein';
+
+  @override
+  String get premiumTitle => 'ChillShell Premium';
+
+  @override
+  String get trialExpired => 'Ihre 7-tägige Testphase ist abgelaufen';
+
+  @override
+  String get trialExpiredDesc =>
+      'Schalten Sie ChillShell dauerhaft mit einem einmaligen Kauf frei. Kein Abo.';
+
+  @override
+  String trialDaysRemaining(int days) {
+    return '$days Tag(e) in Ihrer Testphase verbleibend';
+  }
+
+  @override
+  String get buyPremium => 'Premium freischalten';
+
+  @override
+  String get restorePurchase => 'Kauf wiederherstellen';
+
+  @override
+  String get purchaseError => 'Kauf fehlgeschlagen. Bitte erneut versuchen.';
+
+  @override
+  String get storeUnavailable =>
+      'Store nicht verfügbar. Prüfen Sie Ihre Verbindung.';
+
+  @override
+  String get productNotFound =>
+      'Produkt nicht verfügbar. Versuchen Sie es später.';
+
+  @override
+  String get alreadyPremium => 'Sie haben bereits Premium-Zugang!';
+
+  @override
+  String get premiumFeature1 => 'Unbegrenzte SSH-Verbindungen';
+
+  @override
+  String get premiumFeature2 => 'Mehrere Tabs';
+
+  @override
+  String get premiumFeature3 => 'Wake-on-LAN';
+
+  @override
+  String get premiumFeature4 => 'Alle Themes';
+
+  @override
+  String get premiumFeature5 => 'Biometrische Sperre';
+
+  @override
+  String get oneTimePurchase => 'Einmalkauf — kein Abonnement';
+
+  @override
+  String trialBanner(int days) {
+    return 'Test: $days Tag(e) verbleibend';
+  }
 }
