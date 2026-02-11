@@ -34,16 +34,23 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   int _failedAttempts = 0;
   DateTime? _lockoutUntil;
   Timer? _lockoutTimer;
+  int _storedPinLength = 8;
 
   @override
   void initState() {
     super.initState();
+    _loadPinLength();
     // Lancer l'empreinte automatiquement si activée (post-frame pour accès context.l10n)
     if (widget.fingerprintEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _authenticateFingerprint();
       });
     }
+  }
+
+  Future<void> _loadPinLength() async {
+    final length = await PinService.getPinLength();
+    if (mounted) setState(() => _storedPinLength = length);
   }
 
   @override
@@ -74,18 +81,14 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     }
   }
 
-  /// Longueur maximale du PIN (8 chiffres, rétrocompat 6)
-  static const _maxPinLength = 8;
-  static const _legacyPinLength = 6;
-
   void _addDigit(String digit) {
-    if (_pin.length >= _maxPinLength) return;
+    if (_pin.length >= _storedPinLength) return;
     setState(() {
       _pin += digit;
       _errorMessage = null;
     });
-    // Auto-vérification à 8 chiffres (nouveau) ou 6 chiffres (ancien PIN)
-    if (_pin.length == _maxPinLength || _pin.length == _legacyPinLength) {
+    // Auto-vérification uniquement à la longueur du PIN stocké
+    if (_pin.length == _storedPinLength) {
       _verifyPin();
     }
   }
@@ -189,8 +192,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
                 // PIN entry (si PIN activé)
                 if (widget.pinEnabled) ...[
-                  // 8 cercles (rétrocompat 6)
-                  _PinDots(length: _pin.length, total: _maxPinLength, theme: theme),
+                  _PinDots(length: _pin.length, total: _storedPinLength, theme: theme),
 
                   // Erreur
                   if (_errorMessage != null) ...[

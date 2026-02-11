@@ -429,20 +429,28 @@ class _VerifyPinDialog extends StatefulWidget {
 }
 
 class _VerifyPinDialogState extends State<_VerifyPinDialog> {
-  /// Rétrocompatibilité : accepte 6 (ancien) et 8 (nouveau) chiffres
-  static const _maxPinLength = 8;
-  static const _legacyPinLength = 6;
-
   String _pin = '';
   String? _error;
+  int _storedPinLength = 8;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPinLength();
+  }
+
+  Future<void> _loadPinLength() async {
+    final length = await PinService.getPinLength();
+    if (mounted) setState(() => _storedPinLength = length);
+  }
 
   void _addDigit(String digit) {
-    if (_pin.length >= _maxPinLength) return;
+    if (_pin.length >= _storedPinLength) return;
     setState(() {
       _pin += digit;
       _error = null;
     });
-    if (_pin.length == _maxPinLength || _pin.length == _legacyPinLength) {
+    if (_pin.length == _storedPinLength) {
       _onPinComplete();
     }
   }
@@ -483,7 +491,7 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: VibeTermSpacing.md),
-          _PinDots(length: _pin.length, total: _maxPinLength, theme: theme),
+          _PinDots(length: _pin.length, total: _storedPinLength, theme: theme),
           if (_error != null) ...[
             const SizedBox(height: VibeTermSpacing.sm),
             Text(
