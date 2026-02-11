@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../services/ssh_service.dart';
-import '../../../services/secure_storage_service.dart';
+import '../../../services/ssh_isolate_client.dart';
+import '../../../services/ssh_service.dart'; // For HostKeyVerifyCallback typedef
 import '../../../services/local_shell_service.dart';
 import '../../../services/foreground_ssh_service.dart';
 import '../../../services/audit_log_service.dart';
 import '../../../models/audit_entry.dart';
-import '../../../core/security/secure_buffer.dart';
 import '../../settings/providers/settings_provider.dart';
 
 enum SSHConnectionState { disconnected, connecting, connected, error, reconnecting }
@@ -122,45 +121,29 @@ class SSHState {
 }
 
 class SSHNotifier extends Notifier<SSHState> {
-  /// Map des services SSH par ID stable (pas par index!)
-  final Map<String, SSHService> _tabServices = {};
-  /// Map des services de shell local par ID
+  /// Client isolate SSH — toutes les opérations SSH sont déléguées à un isolate séparé.
+  /// Cela libère le thread UI et élimine les saccades d'animation pendant le handshake SSH.
+  SSHIsolateClient? _isolateClient;
+
+  /// Map des services de shell local par ID (restent dans le main isolate)
   final Map<String, LocalShellService> _localTabServices = {};
 
-  Timer? _reconnectTimer;
-  Timer? _connectionCheckTimer;
   bool _isCreatingTab = false;
-
-  /// Throttle pour les resize PTY (évite le spam SIGWINCH pendant l'animation clavier)
-  static const _resizeThrottleMs = 150;
-  Timer? _resizeThrottleTimer;
-  DateTime? _lastResizeSent;
-  /// Dernières dimensions demandées par onglet (pour le throttle)
-  final Map<String, (int, int)> _pendingResizes = {};
-  /// Dernières dimensions envoyées par onglet (pour éviter les doublons)
-  final Map<String, (int, int)> _lastSentSizes = {};
 
   /// Indique si une création d'onglet est en cours
   bool get isCreatingTab => _isCreatingTab;
   bool _isDisposed = false;
 
-  // Callbacks pour les settings
+  // Callbacks pour les settings (définis par terminal_screen)
   bool Function()? shouldReconnect;
   bool Function()? shouldNotifyOnDisconnect;
-
-  static const _maxReconnectAttempts = 3;
-  static const _reconnectDelay = Duration(seconds: 5);
 
   @override
   SSHState build() {
     ref.onDispose(() {
       _isDisposed = true;
-      _connectionCheckTimer?.cancel();
-      _connectionCheckTimer = null;
-      _reconnectTimer?.cancel();
-      _reconnectTimer = null;
-      _resizeThrottleTimer?.cancel();
-      _resizeThrottleTimer = null;
+      _isolateClient?.dispose();
+      _isolateClient = null;
     });
     return const SSHState();
   }
@@ -176,19 +159,98 @@ class SSHNotifier extends Notifier<SSHState> {
     return number;
   }
 
-  /// Retourne le service de l'onglet actif
-  SSHService? get service => state.currentTabId != null ? _tabServices[state.currentTabId] : null;
-
-  /// Retourne le flux de sortie de l'onglet actif
-  Stream<Uint8List>? get outputStream => service?.session?.stdout;
-
   /// Retourne le flux de sortie d'un onglet spécifique par ID
   Stream<Uint8List>? getOutputStreamForTab(String tabId) {
     // Vérifier si c'est un onglet local
     if (state.localTabIds.contains(tabId)) {
       return _localTabServices[tabId]?.outputStream;
     }
-    return _tabServices[tabId]?.session?.stdout;
+    // SSH : flux provenant du background isolate via StreamController
+    return _isolateClient?.getOutputStream(tabId);
+  }
+
+  /// Initialise ou retourne le client isolate SSH
+  SSHIsolateClient _getOrCreateClient() {
+    if (_isolateClient == null) {
+      _isolateClient = SSHIsolateClient();
+      _setupIsolateCallbacks();
+    }
+    return _isolateClient!;
+  }
+
+  /// Configure les callbacks de l'isolate client pour recevoir les événements du worker
+  void _setupIsolateCallbacks() {
+    final client = _isolateClient!;
+
+    // Tab morte (stdout stream fermé)
+    client.onTabDead = (tabId) {
+      if (_isDisposed) return;
+      markTabAsDead(tabId);
+    };
+
+    // Toutes les connexions SSH perdues (détecté par le connection monitor du worker)
+    client.onAllDisconnected = () {
+      if (_isDisposed) return;
+      _handleDisconnection();
+    };
+
+    // Reconnexion en cours (du worker)
+    client.onReconnecting = (attempt, maxAttempts) {
+      if (_isDisposed) return;
+      state = state.copyWith(
+        connectionState: SSHConnectionState.reconnecting,
+        errorMessage: 'ssh:reconnecting:$attempt/$maxAttempts',
+        reconnectAttempts: attempt,
+      );
+    };
+
+    // Reconnexion réussie
+    client.onReconnected = (tabId) {
+      if (_isDisposed) return;
+
+      // Si le tabId est nouveau (reconnexion complète), mettre à jour tabIds
+      if (!state.tabIds.contains(tabId)) {
+        state = state.copyWith(
+          connectionState: SSHConnectionState.connected,
+          errorMessage: null,
+          reconnectAttempts: 0,
+          currentTabId: tabId,
+          tabIds: [tabId],
+        );
+      } else {
+        state = state.copyWith(
+          connectionState: SSHConnectionState.connected,
+          errorMessage: null,
+          reconnectAttempts: 0,
+          deadTabIds: state.deadTabIds.where((id) => id != tabId).toSet(),
+        );
+      }
+
+      final info = state.lastConnectionInfo;
+      if (info != null) {
+        AuditLogService.log(AuditEventType.sshReconnect, details: {'host': info.host, 'port': '${info.port}'});
+        ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(info.keyId);
+      }
+    };
+
+    // Échec de connexion (provient de reconnectTab/reconnectAll)
+    client.onConnectionFailed = (error, tabId) {
+      if (_isDisposed) return;
+      if (kDebugMode) debugPrint('SSH isolate connection failed: $error (tab: $tabId)');
+      // Si on est en reconnexion, passer en état d'erreur
+      if (state.connectionState == SSHConnectionState.reconnecting) {
+        state = state.copyWith(
+          connectionState: SSHConnectionState.disconnected,
+          errorMessage: 'ssh:connectionLost',
+        );
+      }
+    };
+
+    // Erreur générique
+    client.onError = (error, requestId) {
+      if (_isDisposed) return;
+      if (kDebugMode) debugPrint('SSH isolate error: $error');
+    };
   }
 
   Future<bool> connect({
@@ -207,11 +269,10 @@ class SSHNotifier extends Notifier<SSHState> {
       reconnectAttempts: 0,
     );
 
-    // Laisser le temps au loader de s'afficher et démarrer son animation
-    // avant de lancer les opérations crypto qui bloquent le thread UI
-    await Future<void>.delayed(const Duration(milliseconds: 150));
+    // Plus besoin de Future.delayed(150ms) — le handshake SSH tourne maintenant
+    // dans un isolate séparé, le thread UI reste libre pour l'animation.
 
-    // Vérifier si annulé pendant le délai
+    // Vérifier si annulé
     if (state.connectionState != SSHConnectionState.connecting) return false;
 
     final connectionInfo = SSHConnectionInfo(
@@ -224,72 +285,59 @@ class SSHNotifier extends Notifier<SSHState> {
 
     final tabId = _generateTabId();
 
-    try {
-      final newService = SSHService();
+    final client = _getOrCreateClient();
+    client.onFirstHostKey = onFirstHostKey;
+    client.onHostKeyMismatch = onHostKeyMismatch;
 
-      final success = await newService.connect(
+    try {
+      await client.connect(
         host: host,
         username: username,
         privateKey: privateKey,
+        keyId: keyId,
+        sessionId: sessionId,
+        tabId: tabId,
         port: port,
-        onFirstHostKey: onFirstHostKey,
-        onHostKeyMismatch: onHostKeyMismatch,
       );
 
       // Vérifier si annulé pendant la connexion SSH
       if (state.connectionState != SSHConnectionState.connecting) {
-        await newService.disconnect();
+        client.closeTab(tabId);
         return false;
       }
 
-      if (success) {
-        await newService.startShell();
-
-        // Vérifier si annulé pendant le startShell
-        if (state.connectionState != SSHConnectionState.connecting) {
-          await newService.disconnect();
-          return false;
-        }
-
-        _tabServices[tabId] = newService;
-
-        state = state.copyWith(
-          connectionState: SSHConnectionState.connected,
-          activeSessionId: sessionId,
-          lastConnectionInfo: connectionInfo,
-          reconnectAttempts: 0,
-          currentTabId: tabId,
-          tabIds: [tabId],
-        );
-
-        _startConnectionMonitor();
-        // Démarrer le foreground service pour maintenir la connexion
-        await ForegroundSSHService.start(
-          connectionInfo: 'Connecté à $host',
-        );
-        AuditLogService.log(AuditEventType.sshConnect, details: {'host': host, 'port': '$port'});
-        ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(keyId);
-        return true;
-      } else {
-        AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
-        state = state.copyWith(
-          connectionState: SSHConnectionState.error,
-          errorMessage: 'ssh:connectionFailed',
-        );
-        return false;
-      }
-    } on SSHException catch (e) {
-      AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port', 'error': e.error.name});
       state = state.copyWith(
-        connectionState: SSHConnectionState.error,
-        errorMessage: 'ssh:${e.error.name}',
+        connectionState: SSHConnectionState.connected,
+        activeSessionId: sessionId,
+        lastConnectionInfo: connectionInfo,
+        reconnectAttempts: 0,
+        currentTabId: tabId,
+        tabIds: [tabId],
       );
-      return false;
+
+      // Démarrer le foreground service pour maintenir la connexion
+      await ForegroundSSHService.start(
+        connectionInfo: 'Connecté à $host',
+      );
+      AuditLogService.log(AuditEventType.sshConnect, details: {'host': host, 'port': '$port'});
+      ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(keyId);
+      return true;
     } catch (e) {
       AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
+
+      // Mapper le message d'erreur (l'exception vient de l'isolate, pas SSHException directe)
+      final errorMsg = e.toString();
+      String mappedError = 'ssh:connectionFailed';
+      if (errorMsg.contains('timeout')) mappedError = 'ssh:timeout';
+      if (errorMsg.contains('ssh:')) {
+        // Si le worker a déjà encodé un code d'erreur SSH
+        final match = RegExp(r'ssh:(\w+)').firstMatch(errorMsg);
+        if (match != null) mappedError = 'ssh:${match.group(1)}';
+      }
+
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
-        errorMessage: 'ssh:connectionFailed',
+        errorMessage: mappedError,
       );
       return false;
     }
@@ -352,6 +400,9 @@ class SSHNotifier extends Notifier<SSHState> {
     final info = state.lastConnectionInfo;
     if (info == null) return null;
 
+    final client = _isolateClient;
+    if (client == null) return null;
+
     _isCreatingTab = true;
 
     final tabId = _generateTabId();
@@ -364,53 +415,19 @@ class SSHNotifier extends Notifier<SSHState> {
     );
 
     try {
-      // Chemin rapide : multiplexage SSH (~50ms)
-      // Réutilise la connexion TCP existante au lieu d'en créer une nouvelle
-      final existingService = _tabServices.values.where((s) => s.isConnected).firstOrNull;
-      if (existingService != null) {
-        final multiplexed = await existingService.openMultiplexedShell();
-        if (multiplexed != null) {
-          _tabServices[tabId] = multiplexed;
-          if (kDebugMode) debugPrint('Tab $tabId created via SSH multiplexing (fast)');
-          return tabId;
-        }
-        if (kDebugMode) debugPrint('SSH multiplexing failed, falling back to new connection');
-      }
-
-      // Chemin lent : nouvelle connexion complète (~1-2s)
-      final privateKeyRaw = await SecureStorageService.getPrivateKey(info.keyId);
-      if (privateKeyRaw == null || privateKeyRaw.isEmpty) {
-        if (kDebugMode) debugPrint('Failed to retrieve private key for tab creation');
+      // Délègue au worker : multiplexage SSH (~50ms) ou nouvelle connexion (~1-2s)
+      final resultTabId = await client.createTab(keyId: info.keyId, tabId: tabId);
+      if (resultTabId != null) {
+        if (kDebugMode) debugPrint('Tab $tabId created via isolate');
+        return tabId;
+      } else {
         _rollbackTab(tabId);
         return null;
       }
-
-      final keyBuffer = SecureBuffer.fromString(privateKeyRaw);
-      try {
-        final newService = SSHService();
-        final success = await newService.connect(
-          host: info.host,
-          username: info.username,
-          privateKey: keyBuffer.toUtf8String(),
-          port: info.port,
-        );
-
-        if (success) {
-          await newService.startShell();
-          _tabServices[tabId] = newService;
-          if (kDebugMode) debugPrint('Tab $tabId created via new connection (slow)');
-          return tabId;
-        } else {
-          _rollbackTab(tabId);
-          return null;
-        }
-      } catch (e) {
-        if (kDebugMode) debugPrint('Failed to create new tab: $e');
-        _rollbackTab(tabId);
-        return null;
-      } finally {
-        keyBuffer.dispose();
-      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('Failed to create new tab: $e');
+      _rollbackTab(tabId);
+      return null;
     } finally {
       _isCreatingTab = false;
     }
@@ -438,27 +455,10 @@ class SSHNotifier extends Notifier<SSHState> {
     if (state.localTabIds.contains(tabId)) {
       await _localTabServices[tabId]?.close();
       _localTabServices.remove(tabId);
+    } else {
+      // Fermer la tab SSH via l'isolate (le worker gère multiplexage/solo)
+      _isolateClient?.closeTab(tabId);
     }
-
-    // Déconnecter le service de cet onglet
-    final serviceToClose = _tabServices[tabId];
-    if (serviceToClose != null) {
-      // Si d'autres onglets partagent cette connexion SSH (multiplexage),
-      // fermer seulement la session shell, pas la connexion TCP entière
-      final hasSharedConnection = _tabServices.entries
-          .any((e) => e.key != tabId && serviceToClose.sharesClientWith(e.value));
-
-      if (hasSharedConnection) {
-        serviceToClose.closeSession();
-      } else {
-        await serviceToClose.disconnect();
-      }
-      _tabServices.remove(tabId);
-    }
-
-    // Nettoyer les données de resize pour cet onglet
-    _pendingResizes.remove(tabId);
-    _lastSentSizes.remove(tabId);
 
     // Retirer l'ID de la liste
     final newTabIds = state.tabIds.where((id) => id != tabId).toList();
@@ -491,31 +491,19 @@ class SSHNotifier extends Notifier<SSHState> {
     await closeTab(state.tabIds[index]);
   }
 
-  void _startConnectionMonitor() {
-    _connectionCheckTimer?.cancel();
-    _connectionCheckTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (_isDisposed) return;
-      final anyConnected = _tabServices.values.any((s) => s.isConnected);
-      if (!anyConnected && state.connectionState == SSHConnectionState.connected) {
-        if (kDebugMode) debugPrint('All SSH connections lost');
-        _handleDisconnection();
-      }
-    });
-  }
-
-  /// Pause le timer de vérification de connexion (app en arrière-plan)
+  /// Pause le monitoring de connexion (app en arrière-plan)
   void pauseConnectionMonitor() {
-    _connectionCheckTimer?.cancel();
-    _connectionCheckTimer = null;
+    _isolateClient?.pauseMonitor();
   }
 
-  /// Reprend le timer de vérification de connexion (app au premier plan)
+  /// Reprend le monitoring de connexion (app au premier plan)
   void resumeConnectionMonitor() {
     if (state.connectionState == SSHConnectionState.connected) {
-      _startConnectionMonitor();
+      _isolateClient?.resumeMonitor();
     }
   }
 
+  /// Gère la perte de connexion détectée par le worker
   void _handleDisconnection() {
     if (state.connectionState == SSHConnectionState.disconnected) return;
 
@@ -527,9 +515,15 @@ class SSHNotifier extends Notifier<SSHState> {
 
     if (wasConnected &&
         (shouldReconnect?.call() ?? false) &&
-        state.lastConnectionInfo != null &&
-        state.reconnectAttempts < _maxReconnectAttempts) {
-      _attemptReconnect();
+        state.lastConnectionInfo != null) {
+      // Passer en état "reconnecting" pour que l'UI montre le loader
+      state = state.copyWith(
+        connectionState: SSHConnectionState.reconnecting,
+        errorMessage: 'ssh:reconnecting:1/3',
+        reconnectAttempts: 1,
+      );
+      // Demander au worker de reconnecter l'onglet actif
+      _isolateClient?.reconnectTab(state.currentTabId ?? '');
     } else {
       state = state.copyWith(
         connectionState: SSHConnectionState.disconnected,
@@ -538,119 +532,15 @@ class SSHNotifier extends Notifier<SSHState> {
     }
   }
 
-  Future<void> _attemptReconnect() async {
-    final info = state.lastConnectionInfo;
-    if (info == null) return;
-
-    final attempts = state.reconnectAttempts + 1;
-    if (kDebugMode) debugPrint('Reconnect attempt $attempts/$_maxReconnectAttempts');
-
-    state = state.copyWith(
-      connectionState: SSHConnectionState.reconnecting,
-      errorMessage: 'ssh:reconnecting:$attempts/$_maxReconnectAttempts',
-      reconnectAttempts: attempts,
-    );
-
-    _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(_reconnectDelay, () async {
-      // Vérifier que le notifier n'est pas disposed avant toute opération
-      if (_isDisposed) return;
-
-      SecureBuffer? keyBuffer;
-      try {
-        // Récupérer la clé privée depuis le stockage sécurisé
-        final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
-
-        // Revérifier après l'opération async
-        if (_isDisposed) return;
-
-        if (privateKey == null) {
-          if (kDebugMode) debugPrint('Failed to retrieve private key for reconnection');
-          state = state.copyWith(
-            connectionState: SSHConnectionState.error,
-            errorMessage: 'ssh:privateKeyNotFound',
-          );
-          return;
-        }
-
-        keyBuffer = SecureBuffer.fromString(privateKey);
-
-        for (final service in _tabServices.values) {
-          await service.disconnect();
-        }
-        _tabServices.clear();
-
-        // Revérifier après les déconnexions
-        if (_isDisposed) return;
-
-        final tabId = _generateTabId();
-        final newService = SSHService();
-        final success = await newService.connect(
-          host: info.host,
-          username: info.username,
-          privateKey: keyBuffer.toUtf8String(),
-          port: info.port,
-        );
-
-        // Revérifier après la connexion
-        if (_isDisposed) {
-          await newService.disconnect();
-          return;
-        }
-
-        if (success) {
-          await newService.startShell();
-
-          // Revérifier après startShell
-          if (_isDisposed) {
-            await newService.disconnect();
-            return;
-          }
-
-          _tabServices[tabId] = newService;
-
-          state = state.copyWith(
-            connectionState: SSHConnectionState.connected,
-            errorMessage: null,
-            reconnectAttempts: 0,
-            currentTabId: tabId,
-            tabIds: [tabId],
-          );
-          _startConnectionMonitor();
-          AuditLogService.log(AuditEventType.sshReconnect, details: {'host': info.host, 'port': '${info.port}'});
-          ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(info.keyId);
-          if (kDebugMode) debugPrint('Reconnection successful');
-        } else {
-          _handleDisconnection();
-        }
-      } catch (e) {
-        if (kDebugMode) debugPrint('Reconnection failed');
-        if (!_isDisposed) {
-          _handleDisconnection();
-        }
-      } finally {
-        keyBuffer?.dispose();
-      }
-    });
-  }
-
   void clearDisconnectNotification() {
     state = state.copyWith(showDisconnectNotification: false);
   }
 
   Future<void> disconnect() async {
-    _connectionCheckTimer?.cancel();
-    _connectionCheckTimer = null;
-    _reconnectTimer?.cancel();
-    _reconnectTimer = null;
-
     final info = state.lastConnectionInfo;
 
-    // Fermer les services SSH
-    for (final service in _tabServices.values) {
-      await service.disconnect();
-    }
-    _tabServices.clear();
+    // Déconnecter toutes les sessions SSH via l'isolate
+    await _isolateClient?.disconnect();
 
     // Fermer les services Local Shell
     for (final service in _localTabServices.values) {
@@ -666,6 +556,24 @@ class SSHNotifier extends Notifier<SSHState> {
     }
 
     state = const SSHState();
+  }
+
+  /// Teste la connectivité SSH sans modifier l'état UI.
+  /// Utilisé par le polling WOL pour vérifier si le PC est réveillé.
+  /// Exécuté dans le background isolate → pas de saccade d'animation.
+  Future<bool> testSshConnectivity({
+    required String host,
+    required String username,
+    required String privateKey,
+    required int port,
+  }) async {
+    final client = _getOrCreateClient();
+    return client.testConnect(
+      host: host,
+      username: username,
+      privateKey: privateKey,
+      port: port,
+    );
   }
 
   /// Marque un onglet comme ayant une connexion morte (stream fermé)
@@ -692,59 +600,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
       if (isDead && state.lastConnectionInfo != null) {
         if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Tab $tabId needs reconnection');
-        // Tenter une reconnexion
-        final success = await _reconnectTab(tabId);
-        if (success) {
-          // Retirer de la liste des morts
-          state = state.copyWith(
-            deadTabIds: state.deadTabIds.where((id) => id != tabId).toSet(),
-          );
-        }
+        // Demander au worker de reconnecter cet onglet
+        _isolateClient?.reconnectTab(tabId);
       }
     }
-  }
-
-  /// Reconnecte un onglet spécifique
-  Future<bool> _reconnectTab(String tabId) async {
-    final info = state.lastConnectionInfo;
-    if (info == null) return false;
-
-    SecureBuffer? keyBuffer;
-    try {
-      if (kDebugMode) debugPrint('_reconnectTab: Reconnecting tab $tabId...');
-
-      final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
-      if (privateKey == null || privateKey.isEmpty) return false;
-
-      keyBuffer = SecureBuffer.fromString(privateKey);
-
-      final service = _tabServices[tabId];
-      if (service == null) return false;
-
-      // Fermer l'ancienne connexion
-      await service.disconnect();
-
-      // Créer une nouvelle connexion
-      final newService = SSHService();
-      final success = await newService.connect(
-        host: info.host,
-        username: info.username,
-        privateKey: keyBuffer.toUtf8String(),
-        port: info.port,
-      );
-
-      if (success) {
-        await newService.startShell();
-        _tabServices[tabId] = newService;
-        if (kDebugMode) debugPrint('_reconnectTab: Tab $tabId reconnected successfully');
-        return true;
-      }
-    } catch (e) {
-      if (kDebugMode) debugPrint('_reconnectTab: Failed to reconnect tab $tabId: $e');
-    } finally {
-      keyBuffer?.dispose();
-    }
-    return false;
   }
 
   void write(String data) {
@@ -767,8 +626,12 @@ class SSHNotifier extends Notifier<SSHState> {
     // Ne fonctionne pas pour les shells locaux
     if (state.localTabIds.contains(currentTabId)) return null;
 
-    final sshService = _tabServices[currentTabId];
-    return sshService?.executeCommandSilently(command);
+    try {
+      return await _isolateClient?.executeCommand(tabId: currentTabId, command: command);
+    } catch (e) {
+      if (kDebugMode) debugPrint('executeCommandSilently error: $e');
+      return null;
+    }
   }
 
   /// Écrit vers un onglet spécifique par ID
@@ -777,81 +640,29 @@ class SSHNotifier extends Notifier<SSHState> {
       _localTabServices[tabId]?.write(data);
       return;
     }
-    // SSH path
-    final sshService = _tabServices[tabId];
-    if (sshService != null) {
-      final session = sshService.session;
-      if (session != null) {
-        session.stdin.add(Uint8List.fromList(utf8.encode(data)));
-      }
-    }
+    // SSH : envoie via l'isolate (fire-and-forget, très rapide)
+    _isolateClient?.write(tabId, Uint8List.fromList(utf8.encode(data)));
   }
 
   /// Redimensionne le PTY de l'onglet actif
   void resizeTerminal(int width, int height) {
     if (state.currentTabId != null) {
-      _tabServices[state.currentTabId]?.resizeTerminal(width, height);
+      resizeTerminalForTab(state.currentTabId!, width, height);
     }
   }
 
   /// Redimensionne le PTY d'un onglet spécifique par ID
-  /// Utilise un throttle de 150ms pour limiter le spam SIGWINCH pendant l'animation du clavier
+  /// Le throttle de 150ms est maintenant géré par le worker dans l'isolate
   void resizeTerminalForTab(String tabId, int width, int height) {
     // Ignorer les dimensions invalides
     if (width <= 0 || height <= 0) return;
 
-    // Vérifier si les dimensions sont identiques aux dernières envoyées
-    final lastSent = _lastSentSizes[tabId];
-    if (lastSent != null && lastSent.$1 == width && lastSent.$2 == height) {
-      return; // Pas de changement, ignorer
-    }
-
-    // Stocker les dimensions demandées pour ce tab
-    _pendingResizes[tabId] = (width, height);
-
-    // Calculer le temps depuis le dernier resize envoyé
-    final now = DateTime.now();
-    final timeSinceLastSend = _lastResizeSent == null
-        ? _resizeThrottleMs
-        : now.difference(_lastResizeSent!).inMilliseconds;
-
-    if (timeSinceLastSend >= _resizeThrottleMs) {
-      // Assez de temps écoulé: envoyer immédiatement
-      _flushPendingResizes();
+    if (state.localTabIds.contains(tabId)) {
+      _localTabServices[tabId]?.resize(width, height);
     } else {
-      // Pas assez de temps: programmer l'envoi après le délai restant
-      _resizeThrottleTimer?.cancel();
-      final remainingDelay = _resizeThrottleMs - timeSinceLastSend;
-      _resizeThrottleTimer = Timer(Duration(milliseconds: remainingDelay), () {
-        _flushPendingResizes();
-      });
+      // Le worker gère le throttle côté isolate
+      _isolateClient?.resize(tabId, width, height);
     }
-  }
-
-  /// Envoie tous les resize en attente
-  void _flushPendingResizes() {
-    _lastResizeSent = DateTime.now();
-
-    for (final entry in _pendingResizes.entries) {
-      final tabId = entry.key;
-      final (width, height) = entry.value;
-
-      // Vérifier à nouveau si les dimensions ont changé depuis le dernier envoi
-      final lastSent = _lastSentSizes[tabId];
-      if (lastSent != null && lastSent.$1 == width && lastSent.$2 == height) {
-        continue; // Pas de changement
-      }
-
-      if (kDebugMode) debugPrint('PTY RESIZE SEND: tab=$tabId, ${width}x$height');
-      _lastSentSizes[tabId] = (width, height);
-
-      if (state.localTabIds.contains(tabId)) {
-        _localTabServices[tabId]?.resize(width, height);
-      } else {
-        _tabServices[tabId]?.resizeTerminal(width, height);
-      }
-    }
-    _pendingResizes.clear();
   }
 
   // === Gestion du bouton Send/Stop par onglet ===
@@ -1050,11 +861,15 @@ class SSHNotifier extends Notifier<SSHState> {
     // Ne fonctionne pas pour les shells locaux
     if (state.localTabIds.contains(currentTabId)) return null;
 
-    final sshService = _tabServices[currentTabId];
-    return sshService?.uploadFile(
-      localPath: localPath,
-      remotePath: remotePath,
-    );
+    try {
+      return await _isolateClient?.uploadFile(
+        localPath: localPath,
+        remotePath: remotePath,
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('uploadFile error: $e');
+      return null;
+    }
   }
 }
 

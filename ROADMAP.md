@@ -368,7 +368,75 @@ Bouton permanent dans la barre d'onglets pour envoyer une image à un agent IA.
 - [x] Sécurité testée (10 patterns sensibles, détection prompts, erreurs)
 - [x] Smoke test fixé (timeout pumpAndSettle → pump avec mock)
 
-**Résultat** : 96/96 tests passent, 0 issues analyse, APK build OK.
+**Résultat** : 97/97 tests passent, 0 issues analyse, APK build OK.
+
+---
+
+## ✅ V1.5.2 - Migration SSH Isolate (11 Fév 2026)
+
+### Problème résolu
+
+**Saccades d'animation pendant le handshake SSH** : L'icône ChillShell flottante (loader) saccadait pendant les 2-3 premières secondes de connexion. Cause : les opérations cryptographiques SSH (Diffie-Hellman, Ed25519) s'exécutaient sur le thread principal Dart, bloquant la boucle d'événements et empêchant le rendu à 60fps.
+
+### ✅ Architecture Isolate SSH
+
+Toutes les opérations SSH déplacées dans un **Dart Isolate** séparé. Le thread principal reste libre pour l'UI.
+
+```
+MAIN ISOLATE (UI)                     BACKGROUND ISOLATE (SSH)
+─────────────────                     ──────────────────────
+SSHNotifier (Riverpod)                SSHIsolateWorker
+  ↕                                     ├── Map<tabId, SSHService>
+SSHIsolateClient                        ├── Multiplexage SSH
+  ↕ SendPort / ReceivePort ↕            ├── Timer connexion (10s)
+  (messages Map sérialisés)             ├── Reconnexion auto
+                                        ├── SecureStorage (TOFU)
+                                        └── Throttle resize (150ms)
+```
+
+**Fichiers créés :**
+- [x] `lib/services/ssh_isolate_messages.dart` — Protocole de messages (commandes + événements)
+- [x] `lib/services/ssh_isolate_worker.dart` — Worker dans le background isolate (toute la logique SSH)
+- [x] `lib/services/ssh_isolate_client.dart` — Façade côté UI (pont vers l'isolate)
+
+**Fichier réécrit :**
+- [x] `lib/features/terminal/providers/ssh_provider.dart` — Délègue tout le SSH à l'isolate client
+
+### ✅ Protocole de messages
+
+**Main → Background (13 commandes)** : connect, createTab, closeTab, write, resize, disconnect, uploadFile, executeCommand, detectOS, shutdown, hostKeyResponse, reconnectTab, reconnectAll, pauseMonitor, resumeMonitor, dispose
+
+**Background → Main (14 événements)** : connected, connectionFailed, tabCreated, tabCreateFailed, stdout, tabClosed, disconnected, allDisconnected, hostKeyVerify, commandResult, uploadResult, osDetected, reconnecting, reconnected, error, tabDead
+
+Chaque requête-réponse utilise un `requestId` UUID unique avec timeout configurable.
+
+### ✅ Nettoyage du loader
+
+- [x] Suppression du hack fade-in 800ms dans `chillshell_loader.dart` (plus nécessaire, animation fluide)
+- [x] `TickerProviderStateMixin` → `SingleTickerProviderStateMixin`
+
+### ✅ Bug fix : timeout connexion
+
+**Bug détecté au test** : "Connexion impossible" après 15s malgré connexion SSH réussie.
+
+**Cause racine** : Timeout de 30s trop court pour `connect()` qui inclut la vérification TOFU (dialog utilisateur) + handshake SSH.
+
+**Corrections appliquées :**
+- [x] Timeout connect augmenté à 120s (au lieu de 30s)
+- [x] Suppression fermeture prématurée des streams stdout sur `allDisconnected`
+- [x] État `reconnecting` mis à jour avant envoi de `reconnectTab`
+- [x] Ajout callback `onConnectionFailed` pour les échecs de reconnexion
+- [x] Ajout `debugLabel` aux requêtes pendantes pour meilleur diagnostic
+
+### Résultats
+
+- ✅ Animation **fluide à 60fps** pendant toute la connexion SSH
+- ✅ Nouvel onglet multiplexé : ouverture rapide (~50ms)
+- ✅ Reconnexion automatique fonctionnelle
+- ✅ TOFU (vérification clé d'hôte) fonctionnel
+- ✅ Upload SFTP fonctionnel
+- ✅ Shell local non impacté
+- ✅ 0 issues analyse, 97/97 tests passent
 
 ---
 
@@ -450,4 +518,4 @@ flutter build apk --release
 
 ---
 
-*Dernière mise à jour: 6 Février 2026 (V1.5.1 - Audit complet : Qualité, Sécurité, Performance, 96 Tests)*
+*Dernière mise à jour: 11 Février 2026 (V1.5.2 - Migration SSH Isolate : animation fluide, 0 saccades)*

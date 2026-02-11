@@ -56,10 +56,6 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
   /// Animation de rotation pour l'indicateur de chargement
   late AnimationController _rotationController;
 
-  /// Fade-in pour masquer les saccades des premières frames
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-
   /// Progression actuelle du polling
   WolProgress? _progress;
 
@@ -94,16 +90,6 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
       vsync: this,
     );
     _rotationController.repeat();
-
-    // Fade-in pour masquer les saccades initiales
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
-      vsync: this,
-    )..forward();
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
 
     // Timer pour le chronomètre
     _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -163,7 +149,6 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
     _elapsedTimer?.cancel();
     _pulseController.dispose();
     _rotationController.dispose();
-    _fadeController.dispose();
     _wolService.dispose();
     super.dispose();
   }
@@ -176,10 +161,7 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
       body: SafeArea(
         child: _isSuccess
             ? _buildSuccessScreen(theme)
-            : FadeTransition(
-                opacity: _fadeAnimation,
-                child: _buildLoadingScreen(theme),
-              ),
+            : _buildLoadingScreen(theme),
       ),
     );
   }

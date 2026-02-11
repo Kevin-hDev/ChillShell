@@ -20,10 +20,6 @@ enum LoaderAnimationStyle {
 }
 
 /// Widget de chargement animé avec l'icône ChillShell.
-///
-/// Inclut un fade-in automatique pour masquer les saccades causées
-/// par les opérations lourdes sur le thread principal (ex: handshake SSH)
-/// qui bloquent les premières frames de l'animation.
 class ChillShellLoader extends StatefulWidget {
   /// Taille de l'image (largeur et hauteur)
   final double size;
@@ -50,32 +46,17 @@ class ChillShellLoader extends StatefulWidget {
 }
 
 class _ChillShellLoaderState extends State<ChillShellLoader>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late AnimationController _animController;
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Animation principale (rotation, flottement, etc.)
     _animController = AnimationController(
       vsync: this,
       duration: widget.duration,
     )..repeat(reverse: _shouldReverse());
-
-    // Fade-in : masque les saccades des premières frames
-    // Le handshake SSH bloque le thread ~600ms, le fade-in couvre cette période
-    _fadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..forward();
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    );
   }
 
   bool _shouldReverse() {
@@ -87,7 +68,6 @@ class _ChillShellLoaderState extends State<ChillShellLoader>
   @override
   void dispose() {
     _animController.dispose();
-    _fadeController.dispose();
     super.dispose();
   }
 
@@ -111,15 +91,12 @@ class _ChillShellLoaderState extends State<ChillShellLoader>
       );
     }
 
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: AnimatedBuilder(
-        animation: _animController,
-        builder: (context, child) {
-          return _buildAnimatedImage(child!);
-        },
-        child: image,
-      ),
+    return AnimatedBuilder(
+      animation: _animController,
+      builder: (context, child) {
+        return _buildAnimatedImage(child!);
+      },
+      child: image,
     );
   }
 
