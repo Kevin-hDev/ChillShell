@@ -14,6 +14,8 @@ import 'services/device_security_service.dart';
 import 'services/foreground_ssh_service.dart';
 import 'services/screenshot_protection_service.dart';
 import 'services/pin_service.dart';
+import 'features/purchase/providers/purchase_provider.dart';
+import 'features/purchase/screens/paywall_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -186,10 +188,10 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
+    final purchaseState = ref.watch(purchaseProvider);
 
-    // Attendre que les paramètres soient chargés depuis le stockage
-    if (settings.isLoading || !_lockStatusReady) {
-      // Paramètres chargés → lancer la vérification après le frame actuel
+    // Attendre que les paramètres ET l'état d'achat soient chargés
+    if (settings.isLoading || !_lockStatusReady || purchaseState.isLoading) {
       if (!settings.isLoading && !_checkingLock) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _checkLockStatus(settings);
@@ -203,6 +205,11 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
           ),
         ),
       );
+    }
+
+    // PAYWALL : AVANT le lock screen
+    if (!purchaseState.hasAccess) {
+      return const PaywallScreen();
     }
 
     if (_isLocked) {
@@ -263,7 +270,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      // Autoriser la sortie uniquement s'il n'y a plus d'historique
       canPop: _history.isEmpty,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop && _history.isNotEmpty) {
