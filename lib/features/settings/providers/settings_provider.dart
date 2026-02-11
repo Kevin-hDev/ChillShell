@@ -209,6 +209,25 @@ class SettingsNotifier extends Notifier<SettingsState> {
     _saveSettings();
   }
 
+  void updateTailscaleSettings({
+    String? token,
+    bool clearToken = false,
+    bool? enabled,
+    String? deviceName,
+    bool clearDeviceName = false,
+  }) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(
+        tailscaleToken: token,
+        clearTailscaleToken: clearToken,
+        tailscaleEnabled: enabled,
+        tailscaleDeviceName: deviceName,
+        clearTailscaleDeviceName: clearDeviceName,
+      ),
+    );
+    _saveSettings();
+  }
+
   /// Sélectionne UNE connexion comme connexion automatique.
   /// Désélectionne automatiquement l'ancienne.
   Future<void> selectAutoConnection(String connectionId) async {

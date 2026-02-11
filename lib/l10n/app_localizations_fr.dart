@@ -649,4 +649,59 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get nameCannotBeEmpty => 'Le nom ne peut pas être vide';
+
+  @override
+  String get tailscaleLogin => 'Se connecter';
+
+  @override
+  String get tailscaleCreateAccount => 'Créer un compte';
+
+  @override
+  String get tailscaleAuthPrompt =>
+      'Créez votre compte Tailscale et authentifiez-vous directement depuis l\'application';
+
+  @override
+  String get tailscaleWhatIs => 'Qu\'est-ce que Tailscale ?';
+
+  @override
+  String get tailscaleExplainer =>
+      'Tailscale crée un réseau privé sécurisé entre vos appareils, accessible de partout (WiFi, 4G, 5G) sans configuration complexe.';
+
+  @override
+  String get tailscaleConnected => 'Connecté';
+
+  @override
+  String get tailscaleDisconnected => 'Déconnecté';
+
+  @override
+  String get tailscaleMyIP => 'Mon IP';
+
+  @override
+  String get tailscaleMyDevices => 'Mes appareils';
+
+  @override
+  String tailscaleDevicesCount(int count) {
+    return 'Mes appareils ($count)';
+  }
+
+  @override
+  String get tailscaleCopyIP => 'Copier l\'IP';
+
+  @override
+  String get tailscaleNewSSH => 'Connexion SSH';
+
+  @override
+  String get tailscaleDisconnect => 'Se déconnecter';
+
+  @override
+  String get tailscaleOnline => 'En ligne';
+
+  @override
+  String get tailscaleOffline => 'Hors ligne';
+
+  @override
+  String get tailscaleIPCopied => 'IP copiée';
+
+  @override
+  String get tailscaleTab => 'Tailscale';
 }

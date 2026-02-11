@@ -301,5 +301,29 @@
   "allowScreenshotsWarning": "When enabled, screenshots and screen recording are allowed. Be careful not to share sensitive information (SSH keys, passwords, server addresses).",
   "rename": "Rename",
   "renameDialogHint": "New name",
-  "nameCannotBeEmpty": "Name cannot be empty"
+  "nameCannotBeEmpty": "Name cannot be empty",
+  "tailscaleLogin": "Log in",
+  "tailscaleCreateAccount": "Create account",
+  "tailscaleAuthPrompt": "Create your Tailscale account and authenticate directly from the app",
+  "tailscaleWhatIs": "What is Tailscale?",
+  "tailscaleExplainer": "Tailscale creates a secure private network between your devices, accessible from anywhere (WiFi, 4G, 5G) without complex configuration.",
+  "tailscaleConnected": "Connected",
+  "tailscaleDisconnected": "Disconnected",
+  "tailscaleMyIP": "My IP",
+  "tailscaleMyDevices": "My devices",
+  "tailscaleDevicesCount": "My devices ({count})",
+  "@tailscaleDevicesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tailscaleCopyIP": "Copy IP",
+  "tailscaleNewSSH": "SSH Connection",
+  "tailscaleDisconnect": "Disconnect",
+  "tailscaleOnline": "Online",
+  "tailscaleOffline": "Offline",
+  "tailscaleIPCopied": "IP copied",
+  "tailscaleTab": "Tailscale"
 }

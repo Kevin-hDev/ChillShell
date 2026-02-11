@@ -633,4 +633,58 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nameCannotBeEmpty => '名称不能为空';
+
+  @override
+  String get tailscaleLogin => '登录';
+
+  @override
+  String get tailscaleCreateAccount => '创建账户';
+
+  @override
+  String get tailscaleAuthPrompt => '创建您的Tailscale账户并直接在应用中进行身份验证';
+
+  @override
+  String get tailscaleWhatIs => '什么是Tailscale？';
+
+  @override
+  String get tailscaleExplainer =>
+      'Tailscale在您的设备之间创建一个安全的私有网络，可从任何地方访问（WiFi、4G、5G），无需复杂配置。';
+
+  @override
+  String get tailscaleConnected => '已连接';
+
+  @override
+  String get tailscaleDisconnected => '已断开';
+
+  @override
+  String get tailscaleMyIP => '我的IP';
+
+  @override
+  String get tailscaleMyDevices => '我的设备';
+
+  @override
+  String tailscaleDevicesCount(int count) {
+    return '我的设备 ($count)';
+  }
+
+  @override
+  String get tailscaleCopyIP => '复制IP';
+
+  @override
+  String get tailscaleNewSSH => 'SSH连接';
+
+  @override
+  String get tailscaleDisconnect => '断开连接';
+
+  @override
+  String get tailscaleOnline => '在线';
+
+  @override
+  String get tailscaleOffline => '离线';
+
+  @override
+  String get tailscaleIPCopied => 'IP已复制';
+
+  @override
+  String get tailscaleTab => 'Tailscale';
 }

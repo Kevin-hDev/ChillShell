@@ -5,6 +5,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Local AAR files (e.g. libtailscale.aar built from gomobile)
+repositories {
+    flatDir {
+        dirs("libs")
+    }
+}
+
 android {
     namespace = "com.vibeterm.vibeterm"
     compileSdk = flutter.compileSdkVersion
@@ -24,7 +31,7 @@ android {
         applicationId = "com.vibeterm.vibeterm"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 31
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -37,6 +44,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    // AndroidX Core for NotificationCompat in TailscaleVpnService
+    implementation("androidx.core:core-ktx:1.12.0")
+
+    // libtailscale.aar built from gomobile (tailscale-android)
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
 }
 
 flutter {

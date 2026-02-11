@@ -2,9 +2,12 @@
     <!-- Foreground Service pour maintenir SSH en arrière-plan -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Biométrie (empreinte digitale) -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <!-- Internet pour Tailscale API REST -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="ChillShell"
@@ -45,6 +48,17 @@
             android:foregroundServiceType="dataSync"
             android:stopWithTask="false"
             android:exported="false" />
+
+        <!-- Tailscale VPN Service -->
+        <service
+            android:name=".TailscaleVpnService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

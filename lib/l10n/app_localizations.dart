@@ -1267,6 +1267,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Name cannot be empty'**
   String get nameCannotBeEmpty;
+
+  /// No description provided for @tailscaleLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Log in'**
+  String get tailscaleLogin;
+
+  /// No description provided for @tailscaleCreateAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get tailscaleCreateAccount;
+
+  /// No description provided for @tailscaleAuthPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your Tailscale account and authenticate directly from the app'**
+  String get tailscaleAuthPrompt;
+
+  /// No description provided for @tailscaleWhatIs.
+  ///
+  /// In en, this message translates to:
+  /// **'What is Tailscale?'**
+  String get tailscaleWhatIs;
+
+  /// No description provided for @tailscaleExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale creates a secure private network between your devices, accessible from anywhere (WiFi, 4G, 5G) without complex configuration.'**
+  String get tailscaleExplainer;
+
+  /// No description provided for @tailscaleConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get tailscaleConnected;
+
+  /// No description provided for @tailscaleDisconnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnected'**
+  String get tailscaleDisconnected;
+
+  /// No description provided for @tailscaleMyIP.
+  ///
+  /// In en, this message translates to:
+  /// **'My IP'**
+  String get tailscaleMyIP;
+
+  /// No description provided for @tailscaleMyDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'My devices'**
+  String get tailscaleMyDevices;
+
+  /// No description provided for @tailscaleDevicesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'My devices ({count})'**
+  String tailscaleDevicesCount(int count);
+
+  /// No description provided for @tailscaleCopyIP.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy IP'**
+  String get tailscaleCopyIP;
+
+  /// No description provided for @tailscaleNewSSH.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH Connection'**
+  String get tailscaleNewSSH;
+
+  /// No description provided for @tailscaleDisconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get tailscaleDisconnect;
+
+  /// No description provided for @tailscaleOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get tailscaleOnline;
+
+  /// No description provided for @tailscaleOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get tailscaleOffline;
+
+  /// No description provided for @tailscaleIPCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'IP copied'**
+  String get tailscaleIPCopied;
+
+  /// No description provided for @tailscaleTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Tailscale'**
+  String get tailscaleTab;
 }
 
 class _AppLocalizationsDelegate
