@@ -202,32 +202,5 @@
   "allowScreenshotsWarning": "启用后，允许截屏和录屏。请注意不要分享敏感信息（SSH密钥、密码、服务器地址）。",
   "rename": "重命名",
   "renameDialogHint": "新名称",
-  "nameCannotBeEmpty": "名称不能为空",
-  "premiumTitle": "ChillShell 高级版",
-  "trialExpired": "您的7天免费试用已结束",
-  "trialExpiredDesc": "一次购买，永久解锁ChillShell。无订阅。",
-  "trialDaysRemaining": "试用期还剩 {days} 天",
-  "@trialDaysRemaining": {
-    "placeholders": {
-      "days": { "type": "int" }
-    }
-  },
-  "buyPremium": "解锁高级版",
-  "restorePurchase": "恢复购买",
-  "purchaseError": "购买失败，请重试。",
-  "storeUnavailable": "商店不可用，请检查网络连接。",
-  "productNotFound": "产品不可用，请稍后重试。",
-  "alreadyPremium": "您已拥有高级版访问权限！",
-  "premiumFeature1": "无限SSH连接",
-  "premiumFeature2": "多标签页",
-  "premiumFeature3": "Wake-on-LAN",
-  "premiumFeature4": "所有主题",
-  "premiumFeature5": "生物识别锁",
-  "oneTimePurchase": "一次性购买 — 无订阅",
-  "trialBanner": "试用期：还剩 {days} 天",
-  "@trialBanner": {
-    "placeholders": {
-      "days": { "type": "int" }
-    }
-  }
+  "nameCannotBeEmpty": "名称不能为空"
 }
