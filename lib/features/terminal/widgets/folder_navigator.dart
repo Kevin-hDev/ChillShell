@@ -67,8 +67,13 @@ class _FolderNavigatorState extends ConsumerState<FolderNavigator> {
     await ref.read(folderProvider.notifier).navigateToFolder(folderName, execute);
 
     // Envoyer aussi le cd au shell interactif pour synchroniser
-    final newPath = ref.read(folderProvider).currentPath;
-    ref.read(sshProvider.notifier).write('cd "$newPath"\r');
+    final folderState = ref.read(folderProvider);
+    final newPath = folderState.currentPath;
+    // Windows cmd.exe nécessite cd /d pour changer de lecteur (ex: C: → D:)
+    final cdCommand = folderState.remoteOS == 'windows'
+        ? 'cd /d "$newPath"'
+        : 'cd "$newPath"';
+    ref.read(sshProvider.notifier).write('$cdCommand\r');
   }
 
   OverlayEntry _createOverlayEntry() {

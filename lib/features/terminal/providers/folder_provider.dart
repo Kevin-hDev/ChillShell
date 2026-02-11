@@ -9,6 +9,8 @@ class FolderState {
   final bool isLoading;
   final String? error;
   final String searchQuery;
+  /// OS distant détecté ('linux', 'macos', 'windows') — mis en cache après le 1er appel
+  final String? remoteOS;
 
   const FolderState({
     this.currentPath = '~',
@@ -17,6 +19,7 @@ class FolderState {
     this.isLoading = false,
     this.error,
     this.searchQuery = '',
+    this.remoteOS,
   });
 
   FolderState copyWith({
@@ -26,6 +29,7 @@ class FolderState {
     bool? isLoading,
     String? error,
     String? searchQuery,
+    String? remoteOS,
   }) {
     return FolderState(
       currentPath: currentPath ?? this.currentPath,
@@ -34,6 +38,7 @@ class FolderState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       searchQuery: searchQuery ?? this.searchQuery,
+      remoteOS: remoteOS ?? this.remoteOS,
     );
   }
 
@@ -43,6 +48,9 @@ class FolderState {
     final query = searchQuery.toLowerCase();
     return folders.where((f) => f.toLowerCase().contains(query)).toList();
   }
+
+  /// Séparateur de chemin selon l'OS distant
+  String get pathSeparator => remoteOS == 'windows' ? r'\' : '/';
 }
 
 /// Callback type pour exécuter des commandes SSH silencieuses
@@ -55,23 +63,22 @@ class FolderNotifier extends Notifier<FolderState> {
 
   /// Récupère le chemin courant et la liste des dossiers via SSH exec (silencieux)
   /// Si basePath est fourni, on liste ce dossier, sinon on liste le home
+  /// Détecte automatiquement l'OS distant (Linux/macOS/Windows) au premier appel
   Future<void> loadFolders(SilentCommandExecutor execute, {String? basePath}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Construire la commande combinée (tout en une seule exécution car chaque .run() est isolé)
-      // Note: ~ ne fonctionne pas dans SSH exec, utiliser $HOME pour le home
-      // SÉCURITÉ: Utiliser des guillemets simples pour empêcher l'injection de commandes
-      // ($(...), `...`, $var ne sont PAS interprétés dans les guillemets simples)
-      String command;
-      if (basePath == null) {
-        // Pas de chemin spécifié → utiliser $HOME (sans guillemets pour expansion)
-        command = 'cd \$HOME && pwd && echo "___SEP___" && ls -1 -d --color=never */ 2>/dev/null';
-      } else {
-        // Chemin spécifié → guillemets simples + échappement des ' dans le chemin
-        final safePath = basePath.replaceAll("'", r"'\''");
-        command = "cd '$safePath' && pwd && echo '___SEP___' && ls -1 -d --color=never */ 2>/dev/null";
+      // Détecter l'OS distant si pas encore fait (résultat mis en cache dans l'état)
+      String os = state.remoteOS ?? '';
+      if (os.isEmpty) {
+        os = await _detectRemoteOS(execute);
+        state = state.copyWith(remoteOS: os);
       }
+
+      // Construire la commande selon l'OS distant
+      final command = os == 'windows'
+          ? _buildWindowsCommand(basePath)
+          : _buildUnixCommand(basePath);
 
       final result = await execute(command);
       if (result == null) {
@@ -79,7 +86,7 @@ class FolderNotifier extends Notifier<FolderState> {
         return;
       }
 
-      // Parser le résultat
+      // Parser le résultat (format identique pour les deux OS: chemin + ___SEP___ + liste)
       final sepIndex = result.indexOf('___SEP___');
       if (sepIndex == -1) {
         state = state.copyWith(isLoading: false, error: 'Erreur parsing');
@@ -87,9 +94,9 @@ class FolderNotifier extends Notifier<FolderState> {
       }
 
       final currentPath = result.substring(0, sepIndex).trim();
-      final lsPart = result.substring(sepIndex + '___SEP___'.length).trim();
+      final listPart = result.substring(sepIndex + '___SEP___'.length).trim();
 
-      final folders = lsPart
+      final folders = listPart
           .split('\n')
           .map((f) => f.trim())
           .where((f) => f.isNotEmpty)
@@ -97,13 +104,16 @@ class FolderNotifier extends Notifier<FolderState> {
           .toList();
 
       // Calculer le nom d'affichage (dernier segment du chemin)
+      final sep = os == 'windows' ? r'\' : '/';
       String displayName;
-      if (currentPath == '~' || currentPath.endsWith('/home') || currentPath == '/') {
+      if (currentPath == '~' || currentPath == '/') {
         displayName = '~';
+      } else if (os == 'windows' && RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
+        displayName = currentPath;
       } else {
-        final segments = currentPath.split('/');
+        final segments = currentPath.split(sep);
         displayName = segments.isNotEmpty ? segments.last : '~';
-        if (displayName.isEmpty) displayName = '/';
+        if (displayName.isEmpty) displayName = os == 'windows' ? currentPath : '/';
       }
 
       state = state.copyWith(
@@ -114,11 +124,42 @@ class FolderNotifier extends Notifier<FolderState> {
         error: null,
       );
 
-      if (kDebugMode) debugPrint('FolderProvider: path=$currentPath, folders=${folders.length}');
+      if (kDebugMode) debugPrint('FolderProvider: path=$currentPath, folders=${folders.length}, os=$os');
     } catch (e) {
       if (kDebugMode) debugPrint('FolderProvider: Error: $e');
       state = state.copyWith(isLoading: false, error: 'Erreur: $e');
     }
+  }
+
+  /// Détecte l'OS distant via uname -s (cache le résultat dans l'état)
+  Future<String> _detectRemoteOS(SilentCommandExecutor execute) async {
+    try {
+      final result = await execute('uname -s');
+      final output = (result ?? '').trim().toLowerCase();
+      if (output.contains('linux')) return 'linux';
+      if (output.contains('darwin')) return 'macos';
+    } catch (_) {}
+    // Si uname échoue ou donne autre chose → probablement Windows
+    return 'windows';
+  }
+
+  /// Commande pour lister les dossiers sur Linux/macOS
+  String _buildUnixCommand(String? basePath) {
+    if (basePath == null) {
+      return 'cd \$HOME && pwd && echo "___SEP___" && ls -1 -d --color=never */ 2>/dev/null';
+    }
+    final safePath = basePath.replaceAll("'", r"'\''");
+    return "cd '$safePath' && pwd && echo '___SEP___' && ls -1 -d --color=never */ 2>/dev/null";
+  }
+
+  /// Commande pour lister les dossiers sur Windows (cmd.exe)
+  String _buildWindowsCommand(String? basePath) {
+    if (basePath == null) {
+      return 'cd %USERPROFILE% && cd && echo ___SEP___ && dir /b /ad 2>NUL';
+    }
+    // cd /d permet de changer de lecteur (ex: de C: à D:)
+    final safePath = basePath.replaceAll('"', '');
+    return 'cd /d "$safePath" && cd && echo ___SEP___ && dir /b /ad 2>NUL';
   }
 
   /// Navigue vers un dossier et actualise la liste
@@ -126,21 +167,33 @@ class FolderNotifier extends Notifier<FolderState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      // Construire le chemin absolu
+      final os = state.remoteOS ?? 'linux';
+      final sep = os == 'windows' ? r'\' : '/';
+
       String targetPath;
       if (folderName == '..') {
         // Remonter d'un niveau
         final currentPath = state.currentPath;
         if (currentPath == '/' || currentPath == '~') {
           targetPath = currentPath;
+        } else if (os == 'windows' && RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
+          // Déjà à la racine du lecteur (ex: C:\)
+          targetPath = currentPath;
         } else {
-          final segments = currentPath.split('/');
+          final segments = currentPath.split(sep);
           segments.removeLast();
-          targetPath = segments.isEmpty ? '/' : segments.join('/');
+          if (os == 'windows') {
+            // Garder au minimum "C:\" au lieu de juste "C:"
+            targetPath = segments.length <= 1
+                ? '${segments.first}$sep'
+                : segments.join(sep);
+          } else {
+            targetPath = segments.isEmpty ? '/' : segments.join(sep);
+          }
         }
       } else {
         // Descendre dans le sous-dossier (chemin absolu)
-        targetPath = '${state.currentPath}/$folderName';
+        targetPath = '${state.currentPath}$sep$folderName';
       }
 
       // Charger les dossiers du nouveau chemin
