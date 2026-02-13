@@ -46,23 +46,6 @@ class SessionsNotifier extends Notifier<List<Session>> {
     }).toList();
   }
 
-  void updateTmuxSession(String id, String tmuxSession) {
-    state = state.map((s) {
-      if (s.id == id) {
-        return s.copyWith(tmuxSession: tmuxSession);
-      }
-      return s;
-    }).toList();
-  }
-
-  void toggleQuickAccess(String id) {
-    state = state.map((s) {
-      if (s.id == id) {
-        return s.copyWith(isQuickAccess: !s.isQuickAccess);
-      }
-      return s;
-    }).toList();
-  }
 }
 
 final sessionsProvider = NotifierProvider<SessionsNotifier, List<Session>>(

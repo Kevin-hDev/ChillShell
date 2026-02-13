@@ -21,6 +21,11 @@ class SSHIsolateClient {
   ReceivePort? _receivePort;
   StreamSubscription<dynamic>? _receiveSubscription;
 
+  ReceivePort? _errorPort;
+  ReceivePort? _exitPort;
+  StreamSubscription<dynamic>? _errorSubscription;
+  StreamSubscription<dynamic>? _exitSubscription;
+
   /// Stdout stream controllers par tab (broadcast avec buffer initial).
   final Map<String, StreamController<Uint8List>> _stdoutControllers = {};
 
@@ -93,7 +98,13 @@ class SSHIsolateClient {
     _receiveSubscription = _receivePort!.listen((message) {
       if (!completer.isCompleted) {
         // Premier message = SendPort du worker.
-        completer.complete(message as SendPort);
+        if (message is SendPort) {
+          completer.complete(message);
+        } else {
+          completer.completeError(
+            Exception('SSHClient: expected SendPort, got ${message.runtimeType}'),
+          );
+        }
       } else {
         _handleWorkerMessage(message);
       }
@@ -105,18 +116,18 @@ class SSHIsolateClient {
     );
 
     // Écoute des erreurs / exit du background isolate.
-    final errorPort = ReceivePort();
-    _isolate!.addErrorListener(errorPort.sendPort);
-    errorPort.listen((error) {
+    _errorPort = ReceivePort();
+    _isolate!.addErrorListener(_errorPort!.sendPort);
+    _errorSubscription = _errorPort!.listen((error) {
       if (kDebugMode) {
         debugPrint('SSHClient: isolate error: $error');
       }
       _onIsolateCrash('Isolate error: $error');
     });
 
-    final exitPort = ReceivePort();
-    _isolate!.addOnExitListener(exitPort.sendPort);
-    exitPort.listen((_) {
+    _exitPort = ReceivePort();
+    _isolate!.addOnExitListener(_exitPort!.sendPort);
+    _exitSubscription = _exitPort!.listen((_) {
       if (kDebugMode) {
         debugPrint('SSHClient: isolate exited');
       }
@@ -389,6 +400,20 @@ class SSHIsolateClient {
 
   /// Déconnecte toutes les sessions SSH.
   Future<void> disconnect() async {
+    if (kDebugMode) debugPrint('SSHClient: disconnect() — cancelling ${_pendingRequests.length} pending requests');
+
+    // Annuler toutes les requêtes en attente (connect, createTab, etc.)
+    // pour éviter qu'un ancien connect() ne timeout plus tard et
+    // n'écrase l'état d'une nouvelle connexion.
+    for (final entry in _pendingRequests.entries) {
+      if (!entry.value.isCompleted) {
+        entry.value.completeError(
+          Exception('SSHClient: disconnected while request pending'),
+        );
+      }
+    }
+    _pendingRequests.clear();
+
     _workerSendPort?.send(buildDisconnectMessage());
   }
 
@@ -513,6 +538,14 @@ class SSHIsolateClient {
 
     // Demander au worker de se cleanup.
     _workerSendPort?.send(buildDisposeMessage());
+
+    // Nettoyer les ports d'erreur et d'exit.
+    await _errorSubscription?.cancel();
+    _errorPort?.close();
+    _errorPort = null;
+    await _exitSubscription?.cancel();
+    _exitPort?.close();
+    _exitPort = null;
 
     // Annuler la souscription sur le receive port.
     await _receiveSubscription?.cancel();

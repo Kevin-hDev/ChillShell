@@ -703,4 +703,30 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tailscaleTab => 'Tailscale';
+
+  @override
+  String get sshKeyNeverUsed => 'Nie verwendet';
+
+  @override
+  String get sshKeyUsedToday => 'Heute';
+
+  @override
+  String get sshKeyUsedYesterday => 'Gestern';
+
+  @override
+  String sshKeyUsedDaysAgo(int days) {
+    return 'Vor $days Tagen';
+  }
+
+  @override
+  String get biometricError => 'Biometrische Authentifizierung fehlgeschlagen';
+
+  @override
+  String get folderNoResults => 'Keine Ergebnisse';
+
+  @override
+  String get folderNoSubfolders => 'Keine Unterordner';
+
+  @override
+  String get folderParent => 'Übergeordnet';
 }

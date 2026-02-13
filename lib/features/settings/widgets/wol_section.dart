@@ -6,6 +6,7 @@ import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../providers/settings_provider.dart';
+import '../../../models/wol_config.dart';
 import '../providers/wol_provider.dart';
 import 'section_header.dart';
 import 'selection_mixin.dart';
@@ -188,7 +189,7 @@ class _WolEnableCard extends StatelessWidget {
 
 /// Carte affichant la liste des configurations WOL ou un état vide.
 class _WolConfigsCard extends StatelessWidget {
-  final List<dynamic> configs;
+  final List<WolConfig> configs;
   final bool isLoading;
   final VoidCallback? onAddConfig;
   final void Function(String) onDeleteConfig;
@@ -286,7 +287,7 @@ class _EmptyState extends StatelessWidget {
 
 /// Item affichant une configuration WOL avec swipe pour supprimer.
 class _WolConfigItem extends StatelessWidget {
-  final dynamic config;
+  final WolConfig config;
   final VoidCallback onDelete;
   final void Function(String) onRename;
   final bool isSelectionMode;

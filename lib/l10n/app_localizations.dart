@@ -1363,6 +1363,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tailscale'**
   String get tailscaleTab;
+
+  /// No description provided for @sshKeyNeverUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Never used'**
+  String get sshKeyNeverUsed;
+
+  /// No description provided for @sshKeyUsedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get sshKeyUsedToday;
+
+  /// No description provided for @sshKeyUsedYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get sshKeyUsedYesterday;
+
+  /// No description provided for @sshKeyUsedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days ago'**
+  String sshKeyUsedDaysAgo(int days);
+
+  /// No description provided for @biometricError.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric authentication failed'**
+  String get biometricError;
+
+  /// No description provided for @folderNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get folderNoResults;
+
+  /// No description provided for @folderNoSubfolders.
+  ///
+  /// In en, this message translates to:
+  /// **'No subfolders'**
+  String get folderNoSubfolders;
+
+  /// No description provided for @folderParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent'**
+  String get folderParent;
 }
 
 class _AppLocalizationsDelegate

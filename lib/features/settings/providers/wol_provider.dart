@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../../../models/saved_connection.dart';
 import '../../../models/wol_config.dart';
 
 /// État du provider WOL contenant la liste des configurations.
@@ -136,7 +137,7 @@ class WolNotifier extends Notifier<WolState> {
   /// [sessionHost] Host de la session active
   /// [sessionUsername] Username de la session active
   WolConfig? getConfigForSession(
-    List<dynamic> savedConnections,
+    List<SavedConnection> savedConnections,
     String sessionHost,
     String sessionUsername,
   ) {

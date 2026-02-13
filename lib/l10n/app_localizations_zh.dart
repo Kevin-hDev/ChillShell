@@ -684,4 +684,30 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tailscaleTab => 'Tailscale';
+
+  @override
+  String get sshKeyNeverUsed => '从未使用';
+
+  @override
+  String get sshKeyUsedToday => '今天';
+
+  @override
+  String get sshKeyUsedYesterday => '昨天';
+
+  @override
+  String sshKeyUsedDaysAgo(int days) {
+    return '$days 天前';
+  }
+
+  @override
+  String get biometricError => '生物识别认证失败';
+
+  @override
+  String get folderNoResults => '无结果';
+
+  @override
+  String get folderNoSubfolders => '无子文件夹';
+
+  @override
+  String get folderParent => '上级';
 }

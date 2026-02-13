@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -263,6 +262,8 @@ class SSHNotifier extends Notifier<SSHState> {
     HostKeyVerifyCallback? onFirstHostKey,
     HostKeyVerifyCallback? onHostKeyMismatch,
   }) async {
+    if (kDebugMode) debugPrint('SSHNotifier: connect() called — host=$host port=$port');
+
     state = state.copyWith(
       connectionState: SSHConnectionState.connecting,
       errorMessage: null,
@@ -273,7 +274,10 @@ class SSHNotifier extends Notifier<SSHState> {
     // dans un isolate séparé, le thread UI reste libre pour l'animation.
 
     // Vérifier si annulé
-    if (state.connectionState != SSHConnectionState.connecting) return false;
+    if (state.connectionState != SSHConnectionState.connecting) {
+      if (kDebugMode) debugPrint('SSHNotifier: connect cancelled before start (state changed)');
+      return false;
+    }
 
     final connectionInfo = SSHConnectionInfo(
       host: host,
@@ -302,9 +306,11 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Vérifier si annulé pendant la connexion SSH
       if (state.connectionState != SSHConnectionState.connecting) {
+        if (kDebugMode) debugPrint('SSHNotifier: connect cancelled DURING SSH handshake (state=${state.connectionState})');
         client.closeTab(tabId);
         return false;
       }
+      if (kDebugMode) debugPrint('SSHNotifier: connect SUCCESS to $host:$port (tab=$tabId)');
 
       state = state.copyWith(
         connectionState: SSHConnectionState.connected,
@@ -323,6 +329,7 @@ class SSHNotifier extends Notifier<SSHState> {
       ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(keyId);
       return true;
     } catch (e) {
+      if (kDebugMode) debugPrint('SSHNotifier: connect FAILED to $host:$port — ${e.runtimeType}: $e');
       AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
 
       // Mapper le message d'erreur (l'exception vient de l'isolate, pas SSHException directe)
@@ -505,6 +512,7 @@ class SSHNotifier extends Notifier<SSHState> {
 
   /// Gère la perte de connexion détectée par le worker
   void _handleDisconnection() {
+    if (kDebugMode) debugPrint('SSHNotifier: _handleDisconnection() called (state=${state.connectionState})');
     if (state.connectionState == SSHConnectionState.disconnected) return;
 
     final wasConnected = state.connectionState == SSHConnectionState.connected;
@@ -537,6 +545,7 @@ class SSHNotifier extends Notifier<SSHState> {
   }
 
   Future<void> disconnect() async {
+    if (kDebugMode) debugPrint('SSHNotifier: disconnect() called (state=${state.connectionState})');
     final info = state.lastConnectionInfo;
 
     // Déconnecter toutes les sessions SSH via l'isolate
@@ -667,32 +676,6 @@ class SSHNotifier extends Notifier<SSHState> {
 
   // === Gestion du bouton Send/Stop par onglet ===
 
-  /// Liste des commandes avec menu interactif (nécessitent flèches ↑/↓)
-  static const _interactiveMenuCommands = <String>[
-    // AI Coding CLI (vibe coding tools)
-    'claude', 'opencode', 'aider', 'gemini', 'codex', 'cody',
-    'amazon-q', 'aws-q', 'crush',
-    // Fuzzy finders & selectors
-    'fzf', 'fzy', 'sk', 'peco', 'percol',
-    // Monitoring avec navigation
-    'htop', 'btop', 'top', 'atop', 'gtop', 'glances',
-    'nvtop', 'radeontop', 's-tui',
-    // File managers & navigation
-    'mc', 'ranger', 'nnn', 'lf', 'vifm', 'ncdu',
-    // Dialog & TUI menus
-    'dialog', 'whiptail', 'zenity',
-    // Pagers
-    'less', 'more', 'most',
-    // Éditeurs (navigation avec flèches)
-    'vim', 'vi', 'nvim', 'nano', 'emacs', 'micro',
-    // Git interactif
-    'tig', 'lazygit', 'gitui',
-    // Docker TUI
-    'lazydocker', 'ctop',
-    // Autres TUI
-    'k9s', 'bpytop', 'bashtop',
-  ];
-
   /// Liste des commandes qui lancent des process long-running
   static const _longRunningCommands = <String>[
     // AI Coding CLI (vibe coding tools)
@@ -765,24 +748,6 @@ class SSHNotifier extends Notifier<SSHState> {
     'black', 'flake8', 'mypy', 'ruff',
   ];
 
-  /// Vérifie si une commande a un menu interactif (nécessite flèches)
-  bool isInteractiveMenuCommand(String command) {
-    final trimmed = command.trim().toLowerCase();
-    if (trimmed.isEmpty) return false;
-
-    // Vérifier chaque commande dans un pipe
-    final pipedCommands = trimmed.split('|');
-    for (final pipeCmd in pipedCommands) {
-      final cmdTrimmed = pipeCmd.trim();
-      if (cmdTrimmed.isEmpty) continue;
-
-      final firstWord = cmdTrimmed.split(RegExp(r'\s+')).first;
-      if (_interactiveMenuCommands.contains(firstWord)) return true;
-    }
-
-    return false;
-  }
-
   /// Vérifie si une commande est "long-running"
   bool isLongRunningCommand(String command) {
     final trimmed = command.trim().toLowerCase();
@@ -833,20 +798,6 @@ class SSHNotifier extends Notifier<SSHState> {
       tabRunningState: newRunningState,
       tabCurrentCommand: newCommandState,
     );
-  }
-
-  /// Vérifie si l'onglet actif a un menu interactif en cours
-  bool get isCurrentTabInteractive {
-    final command = state.currentTabCommand;
-    if (command == null) return false;
-    return isInteractiveMenuCommand(command);
-  }
-
-  /// Envoie Ctrl+C (interrupt) à l'onglet actif et le marque comme libre
-  void sendInterrupt() {
-    // Envoie le caractère Ctrl+C (ASCII 3)
-    write('\x03');
-    setCurrentTabRunning(false);
   }
 
   /// Transfère un fichier vers le serveur SSH via SFTP.

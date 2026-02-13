@@ -65,14 +65,6 @@ class SSHKey {
 
   String get typeLabel => type == SSHKeyType.ed25519 ? 'ED25519' : 'RSA';
 
-  String get lastUsedLabel {
-    if (lastUsed == null) return 'Jamais utilisée';
-    final diff = DateTime.now().difference(lastUsed!);
-    if (diff.inDays == 0) return "Aujourd'hui";
-    if (diff.inDays == 1) return 'Hier';
-    return 'Il y a ${diff.inDays} jours';
-  }
-
   @override
   String toString() => 'SSHKey(id=$id, name=$name, type=${type.name})';
 }

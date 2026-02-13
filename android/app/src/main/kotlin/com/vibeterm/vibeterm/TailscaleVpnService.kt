@@ -185,6 +185,7 @@ class VPNServiceBuilderWrapper(
 ) : libtailscale.VPNServiceBuilder {
 
     override fun addAddress(addr: String, prefixLen: Int) {
+        Log.d("TailscaleVPN", "addAddress: $addr/$prefixLen")
         builder.addAddress(addr, prefixLen)
     }
 
@@ -193,6 +194,7 @@ class VPNServiceBuilderWrapper(
     }
 
     override fun addRoute(route: String, prefixLen: Int) {
+        Log.d("TailscaleVPN", "addRoute: $route/$prefixLen")
         builder.addRoute(route, prefixLen)
     }
 
@@ -201,6 +203,7 @@ class VPNServiceBuilderWrapper(
     }
 
     override fun excludeRoute(route: String, prefixLen: Int) {
+        Log.d("TailscaleVPN", "excludeRoute: $route/$prefixLen")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val prefix = android.net.IpPrefix(java.net.InetAddress.getByName(route), prefixLen)
             builder.excludeRoute(prefix)

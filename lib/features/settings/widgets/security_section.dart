@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
@@ -12,6 +11,7 @@ import '../../../services/screenshot_protection_service.dart';
 import '../../../models/audit_entry.dart';
 import '../../terminal/providers/terminal_provider.dart';
 import '../providers/settings_provider.dart';
+import '../../../shared/widgets/pin_widgets.dart';
 import 'section_header.dart';
 
 class SecuritySection extends ConsumerWidget {
@@ -289,7 +289,7 @@ class SecuritySection extends ConsumerWidget {
   Future<String?> _showCreatePinDialog(
     BuildContext context,
     VibeTermThemeData theme,
-    dynamic l10n,
+    AppLocalizations l10n,
   ) async {
     return showDialog<String>(
       context: context,
@@ -302,7 +302,7 @@ class SecuritySection extends ConsumerWidget {
   Future<bool> _showVerifyPinDialog(
     BuildContext context,
     VibeTermThemeData theme,
-    dynamic l10n,
+    AppLocalizations l10n,
   ) async {
     final result = await showDialog<bool>(
       context: context,
@@ -316,7 +316,7 @@ class SecuritySection extends ConsumerWidget {
 /// Dialog de création de PIN (étape 1: créer, étape 2: confirmer)
 class _CreatePinDialog extends StatefulWidget {
   final VibeTermThemeData theme;
-  final dynamic l10n;
+  final AppLocalizations l10n;
 
   const _CreatePinDialog({required this.theme, required this.l10n});
 
@@ -390,7 +390,7 @@ class _CreatePinDialogState extends State<_CreatePinDialog> {
         children: [
           const SizedBox(height: VibeTermSpacing.md),
           // 8 cercles indicateurs
-          _PinDots(length: _pin.length, total: _requiredPinLength, theme: theme),
+          PinDots(length: _pin.length, total: _requiredPinLength, theme: theme),
           if (_error != null) ...[
             const SizedBox(height: VibeTermSpacing.sm),
             Text(
@@ -400,10 +400,16 @@ class _CreatePinDialogState extends State<_CreatePinDialog> {
           ],
           const SizedBox(height: VibeTermSpacing.lg),
           // Clavier numérique
-          _PinKeypad(
+          PinKeypad(
             onDigit: _addDigit,
             onDelete: _removeDigit,
             theme: theme,
+            keyWidth: 64,
+            keyHeight: 52,
+            fontSize: 22,
+            iconSize: 22,
+            keyBorderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            keyColor: theme.bg,
           ),
         ],
       ),
@@ -420,7 +426,7 @@ class _CreatePinDialogState extends State<_CreatePinDialog> {
 /// Dialog de vérification de PIN (pour désactiver)
 class _VerifyPinDialog extends StatefulWidget {
   final VibeTermThemeData theme;
-  final dynamic l10n;
+  final AppLocalizations l10n;
 
   const _VerifyPinDialog({required this.theme, required this.l10n});
 
@@ -491,7 +497,7 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: VibeTermSpacing.md),
-          _PinDots(length: _pin.length, total: _storedPinLength, theme: theme),
+          PinDots(length: _pin.length, total: _storedPinLength, theme: theme),
           if (_error != null) ...[
             const SizedBox(height: VibeTermSpacing.sm),
             Text(
@@ -500,10 +506,16 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
             ),
           ],
           const SizedBox(height: VibeTermSpacing.lg),
-          _PinKeypad(
+          PinKeypad(
             onDigit: _addDigit,
             onDelete: _removeDigit,
             theme: theme,
+            keyWidth: 64,
+            keyHeight: 52,
+            fontSize: 22,
+            iconSize: 22,
+            keyBorderRadius: BorderRadius.circular(VibeTermRadius.sm),
+            keyColor: theme.bg,
           ),
         ],
       ),
@@ -513,136 +525,6 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
           child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
         ),
       ],
-    );
-  }
-}
-
-/// Cercles indicateurs de PIN (nombre configurable)
-class _PinDots extends StatelessWidget {
-  final int length;
-  final int total;
-  final VibeTermThemeData theme;
-
-  const _PinDots({required this.length, this.total = 8, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(total, (index) {
-        final isFilled = index < length;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isFilled ? theme.accent : Colors.transparent,
-            border: Border.all(
-              color: isFilled ? theme.accent : theme.textMuted,
-              width: 2,
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-/// Clavier numérique pour la saisie du PIN
-class _PinKeypad extends StatelessWidget {
-  final ValueChanged<String> onDigit;
-  final VoidCallback onDelete;
-  final VibeTermThemeData theme;
-
-  const _PinKeypad({
-    required this.onDigit,
-    required this.onDelete,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildRow(['1', '2', '3']),
-        const SizedBox(height: 8),
-        _buildRow(['4', '5', '6']),
-        const SizedBox(height: 8),
-        _buildRow(['7', '8', '9']),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Espace vide à gauche
-            const SizedBox(width: 64, height: 52),
-            const SizedBox(width: 12),
-            _buildKey('0'),
-            const SizedBox(width: 12),
-            // Bouton supprimer
-            SizedBox(
-              width: 64,
-              height: 52,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    onDelete();
-                  },
-                  child: Center(
-                    child: Icon(
-                      Icons.backspace_outlined,
-                      color: theme.textMuted,
-                      size: 22,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRow(List<String> digits) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: digits.map((d) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: _buildKey(d),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildKey(String digit) {
-    return SizedBox(
-      width: 64,
-      height: 52,
-      child: Material(
-        color: theme.bg,
-        borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onDigit(digit);
-          },
-          child: Center(
-            child: Text(
-              digit,
-              style: VibeTermTypography.appTitle.copyWith(
-                color: theme.text,
-                fontSize: 22,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

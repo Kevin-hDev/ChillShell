@@ -126,7 +126,7 @@ class SSHKeyTile extends ConsumerWidget {
             const SizedBox(height: VibeTermSpacing.sm),
             Text(l10n.sshKeyTypeLabel(sshKey.typeLabel), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
             Text(l10n.sshKeyHostLabel(sshKey.host), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
-            Text(l10n.sshKeyLastUsedLabel(sshKey.lastUsedLabel), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+            Text(l10n.sshKeyLastUsedLabel(_formatLastUsed(l10n, sshKey.lastUsed)), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
             const SizedBox(height: VibeTermSpacing.md),
             SizedBox(
               width: double.infinity,
@@ -191,6 +191,14 @@ class SSHKeyTile extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  String _formatLastUsed(AppLocalizations l10n, DateTime? lastUsed) {
+    if (lastUsed == null) return l10n.sshKeyNeverUsed;
+    final diff = DateTime.now().difference(lastUsed);
+    if (diff.inDays == 0) return l10n.sshKeyUsedToday;
+    if (diff.inDays == 1) return l10n.sshKeyUsedYesterday;
+    return l10n.sshKeyUsedDaysAgo(diff.inDays);
   }
 
   String _formatDate(DateTime date) {
