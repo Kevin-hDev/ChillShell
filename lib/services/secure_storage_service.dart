@@ -4,7 +4,7 @@ import '../models/models.dart';
 
 class SecureStorageService {
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
@@ -61,8 +61,13 @@ class SecureStorageService {
     await _storage.delete(key: 'hostkey_${host}_$port');
   }
 
-  /// Efface toutes les données
+  /// Efface les clés SSH et fingerprints (scopé, ne touche pas aux autres données)
   static Future<void> clearAll() async {
-    await _storage.deleteAll();
+    final all = await _storage.readAll();
+    for (final key in all.keys) {
+      if (key.startsWith(_privateKeyPrefix) || key.startsWith('hostkey_') || key == _keysKey) {
+        await _storage.delete(key: key);
+      }
+    }
   }
 }

@@ -9,6 +9,10 @@ import 'dart:typed_data';
 ///
 /// Limitation connue : le GC Dart peut copier les données avant le zeroing.
 /// Cette classe réduit la fenêtre d'exposition de minutes à millisecondes.
+///
+/// Note: pas de Dart [Finalizer] ici — le overhead du FinalizationRegistry
+/// et le timing incertain du GC rendraient le zeroing non déterministe.
+/// L'appelant doit toujours appeler [dispose] explicitement.
 class SecureBuffer {
   Uint8List _data;
   bool _disposed = false;

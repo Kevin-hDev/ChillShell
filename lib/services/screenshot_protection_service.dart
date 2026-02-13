@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Service pour activer/désactiver la protection contre les captures d'écran
@@ -10,8 +11,8 @@ class ScreenshotProtectionService {
   static Future<void> setEnabled(bool enabled) async {
     try {
       await _channel.invokeMethod('setScreenshotProtection', enabled);
-    } on PlatformException {
-      // Ignorer silencieusement si la plateforme ne supporte pas
+    } on PlatformException catch (e) {
+      if (kDebugMode) debugPrint('ScreenshotProtectionService: setEnabled failed: $e');
     }
   }
 
@@ -20,8 +21,8 @@ class ScreenshotProtectionService {
   static Future<void> clearClipboard() async {
     try {
       await _channel.invokeMethod('clearClipboard');
-    } on PlatformException {
-      // Ignorer silencieusement si la plateforme ne supporte pas
+    } on PlatformException catch (e) {
+      if (kDebugMode) debugPrint('ScreenshotProtectionService: clearClipboard failed: $e');
     }
   }
 }

@@ -173,6 +173,10 @@ class SSHIsolateWorker {
       return;
     }
 
+    // SECURITY NOTE: SecureBuffer.fromString() crée une copie Uint8List effaçable,
+    // mais la String source (de SecureStorage) et la String résultante (toUtf8String())
+    // restent dans le heap Dart. Limitation inhérente au GC de Dart.
+    // Le SecureBuffer réduit la fenêtre d'exposition mais ne l'élimine pas.
     final keyBuffer = SecureBuffer.fromString(privateKeyRaw);
     try {
       final service = SSHService();
@@ -268,7 +272,13 @@ class SSHIsolateWorker {
 
     if (kDebugMode) debugPrint('SSHWorker: Waiting for host key verification (requestId: $requestId)');
 
-    final accepted = await completer.future;
+    final accepted = await completer.future.timeout(
+      const Duration(seconds: 60),
+      onTimeout: () {
+        if (kDebugMode) debugPrint('SSH TOFU: Host key verification timed out after 60s, rejecting');
+        return false; // Fail-secure : rejeter si timeout
+      },
+    );
     _pendingHostKeyRequests.remove(requestId);
 
     if (kDebugMode) debugPrint('SSHWorker: Host key ${accepted ? "accepted" : "rejected"} (requestId: $requestId)');

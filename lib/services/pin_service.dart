@@ -17,10 +17,20 @@ class PinService {
   static const _currentVersion = '3';
 
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
   static final _pbkdf2 = Pbkdf2.hmacSha256(iterations: 100000, bits: 256);
+
+  /// Comparaison constant-time pour éviter les timing attacks sur les hash
+  static bool _constantTimeEquals(String a, String b) {
+    if (a.length != b.length) return false;
+    var result = 0;
+    for (var i = 0; i < a.length; i++) {
+      result |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return result == 0;
+  }
 
   /// Migre l'ancien PIN en clair vers le nouveau format hashé.
   /// Appelé automatiquement au démarrage de l'app.
@@ -94,7 +104,7 @@ class PinService {
     if (version != _currentVersion) {
       // Ancien format SHA-256 — vérifier avec l'ancien algo
       final legacyHash = await _legacyHashPin(pin, salt);
-      if (legacyHash == storedHash) {
+      if (_constantTimeEquals(legacyHash, storedHash)) {
         // Migration transparente vers PBKDF2
         await savePin(pin);
         return true;
@@ -104,13 +114,15 @@ class PinService {
 
     // Format actuel PBKDF2
     final hash = await _hashPin(pin, salt);
-    return hash == storedHash;
+    return _constantTimeEquals(hash, storedHash);
   }
 
-  /// Supprime le PIN stocké
+  /// Supprime le PIN stocké (hash, salt, version et longueur)
   static Future<void> deletePin() async {
     await _storage.delete(key: _hashKey);
     await _storage.delete(key: _saltKey);
+    await _storage.delete(key: _versionKey);
+    await _storage.delete(key: _pinLengthKey);
   }
 
   /// Vérifie si un PIN existe

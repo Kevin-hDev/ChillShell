@@ -37,6 +37,9 @@ class SSHIsolateClient {
   /// Requêtes en attente de réponse, identifiées par requestId.
   final Map<String, Completer<dynamic>> _pendingRequests = {};
 
+  /// Timers de timeout annulables pour les requêtes en attente.
+  final Map<String, Timer> _pendingTimers = {};
+
   bool _isSpawned = false;
 
   // ── Callbacks (définis par SSHNotifier avant connexion) ────────────────
@@ -156,6 +159,12 @@ class SSHIsolateClient {
       controller.close();
     }
     _stdoutControllers.clear();
+
+    // Annuler tous les timers de timeout.
+    for (final timer in _pendingTimers.values) {
+      timer.cancel();
+    }
+    _pendingTimers.clear();
 
     // Compléter toutes les requêtes en attente avec une erreur.
     for (final entry in _pendingRequests.entries) {
@@ -400,6 +409,12 @@ class SSHIsolateClient {
   Future<void> disconnect() async {
     if (kDebugMode) debugPrint('SSHClient: disconnect() — cancelling ${_pendingRequests.length} pending requests');
 
+    // Annuler tous les timers de timeout.
+    for (final timer in _pendingTimers.values) {
+      timer.cancel();
+    }
+    _pendingTimers.clear();
+
     // Annuler toutes les requêtes en attente (connect, createTab, etc.)
     // pour éviter qu'un ancien connect() ne timeout plus tard et
     // n'écrase l'état d'une nouvelle connexion.
@@ -560,6 +575,12 @@ class SSHIsolateClient {
     // Fermer tous les stdout controllers.
     _closeAllStdoutControllers();
 
+    // Annuler tous les timers de timeout.
+    for (final timer in _pendingTimers.values) {
+      timer.cancel();
+    }
+    _pendingTimers.clear();
+
     // Compléter toutes les requêtes en attente.
     for (final entry in _pendingRequests.entries) {
       if (!entry.value.isCompleted) {
@@ -645,10 +666,12 @@ class SSHIsolateClient {
     _stdoutControllers.clear();
   }
 
-  /// Crée un Completer pour une requête en attente avec timeout.
+  /// Crée un Completer pour une requête en attente avec timeout annulable.
   ///
   /// Le timeout par défaut est de 30 secondes pour les opérations courtes.
   /// Les opérations longues (connect avec TOFU) utilisent un timeout plus long.
+  /// Utilise un Timer annulable (au lieu de Future.delayed) pour permettre
+  /// l'annulation du timeout quand la requête est complétée.
   Completer<dynamic> _createPendingRequest(
     String requestId, {
     Duration timeout = const Duration(seconds: 30),
@@ -658,8 +681,9 @@ class SSHIsolateClient {
 
     _pendingRequests[requestId] = completer;
 
-    // Timeout : compléter avec une erreur si pas de réponse à temps.
-    Future.delayed(timeout, () {
+    // Timeout annulable : compléter avec une erreur si pas de réponse à temps.
+    _pendingTimers[requestId] = Timer(timeout, () {
+      _pendingTimers.remove(requestId);
       if (_pendingRequests.containsKey(requestId) && !completer.isCompleted) {
         if (kDebugMode) {
           debugPrint('SSHClient: request $requestId ($debugLabel) timed out after ${timeout.inSeconds}s');
@@ -683,6 +707,9 @@ class SSHIsolateClient {
     String? error,
   }) {
     if (requestId == null) return;
+
+    // Annuler le timer de timeout associé à cette requête.
+    _pendingTimers.remove(requestId)?.cancel();
 
     final completer = _pendingRequests.remove(requestId);
     if (completer == null || completer.isCompleted) return;

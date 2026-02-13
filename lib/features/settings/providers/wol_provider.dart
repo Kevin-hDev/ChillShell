@@ -34,7 +34,7 @@ class WolState {
 /// de manière sécurisée sur l'appareil.
 class WolNotifier extends Notifier<WolState> {
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
