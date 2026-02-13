@@ -10,6 +10,7 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../services/biometric_service.dart';
 import '../../../services/pin_service.dart';
+import '../../../shared/widgets/pin_widgets.dart';
 
 class LockScreen extends ConsumerStatefulWidget {
   final VoidCallback onUnlocked;
@@ -74,7 +75,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         widget.onUnlocked();
         return;
       }
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) {
+        setState(() => _errorMessage = context.l10n.biometricError);
+      }
+    }
 
     if (mounted) {
       setState(() => _isAuthenticating = false);
@@ -192,7 +197,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
                 // PIN entry (si PIN activé)
                 if (widget.pinEnabled) ...[
-                  _PinDots(length: _pin.length, total: _storedPinLength, theme: theme),
+                  PinDots(length: _pin.length, total: _storedPinLength, theme: theme),
 
                   // Erreur
                   if (_errorMessage != null) ...[
@@ -207,7 +212,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                   const SizedBox(height: VibeTermSpacing.lg),
 
                   // Clavier numérique
-                  _PinKeypad(
+                  PinKeypad(
                     onDigit: _addDigit,
                     onDelete: _removeDigit,
                     theme: theme,
@@ -254,134 +259,6 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                   ),
                 ],
               ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Cercles indicateurs de PIN (nombre configurable)
-class _PinDots extends StatelessWidget {
-  final int length;
-  final int total;
-  final VibeTermThemeData theme;
-
-  const _PinDots({required this.length, this.total = 8, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(total, (index) {
-        final isFilled = index < length;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8),
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isFilled ? theme.accent : Colors.transparent,
-            border: Border.all(
-              color: isFilled ? theme.accent : theme.textMuted,
-              width: 2,
-            ),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-/// Clavier numérique
-class _PinKeypad extends StatelessWidget {
-  final ValueChanged<String> onDigit;
-  final VoidCallback onDelete;
-  final VibeTermThemeData theme;
-
-  const _PinKeypad({
-    required this.onDigit,
-    required this.onDelete,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _buildRow(['1', '2', '3']),
-        const SizedBox(height: 8),
-        _buildRow(['4', '5', '6']),
-        const SizedBox(height: 8),
-        _buildRow(['7', '8', '9']),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(width: 72, height: 56),
-            const SizedBox(width: 12),
-            _buildKey('0'),
-            const SizedBox(width: 12),
-            SizedBox(
-              width: 72,
-              height: 56,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    onDelete();
-                  },
-                  child: Center(
-                    child: Icon(
-                      Icons.backspace_outlined,
-                      color: theme.textMuted,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRow(List<String> digits) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: digits.map((d) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: _buildKey(d),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildKey(String digit) {
-    return SizedBox(
-      width: 72,
-      height: 56,
-      child: Material(
-        color: theme.bgBlock,
-        borderRadius: BorderRadius.circular(VibeTermRadius.md),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(VibeTermRadius.md),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onDigit(digit);
-          },
-          child: Center(
-            child: Text(
-              digit,
-              style: VibeTermTypography.appTitle.copyWith(
-                color: theme.text,
-                fontSize: 24,
-              ),
             ),
           ),
         ),

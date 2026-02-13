@@ -24,14 +24,15 @@ class LocalShellService {
 
     if (kDebugMode) debugPrint('LocalShell: Starting shell: $shell');
 
-    _pty = Pty.start(
+    final pty = Pty.start(
       shell,
       columns: width,
       rows: height,
     );
+    _pty = pty;
 
     // Écouter la sortie du PTY
-    _ptySubscription = _pty!.output.listen(
+    _ptySubscription = pty.output.listen(
       (data) {
         _outputController.add(data);
       },
@@ -50,8 +51,9 @@ class LocalShellService {
 
   /// Écrit des données dans le shell
   void write(String data) {
-    if (_pty != null) {
-      _pty!.write(utf8.encode(data));
+    final pty = _pty;
+    if (pty != null) {
+      pty.write(utf8.encode(data));
     } else {
       if (kDebugMode) debugPrint('LocalShell: PTY is NULL, data not sent');
     }
@@ -59,8 +61,9 @@ class LocalShellService {
 
   /// Redimensionne le terminal
   void resize(int width, int height) {
-    if (_pty != null) {
-      _pty!.resize(height, width);
+    final pty = _pty;
+    if (pty != null) {
+      pty.resize(height, width);
     }
   }
 
@@ -68,8 +71,9 @@ class LocalShellService {
   Future<void> close() async {
     _ptySubscription?.cancel();
     _ptySubscription = null;
-    if (_pty != null) {
-      _pty!.kill();
+    final pty = _pty;
+    if (pty != null) {
+      pty.kill();
       _pty = null;
     }
     if (kDebugMode) debugPrint('LocalShell: Closed');

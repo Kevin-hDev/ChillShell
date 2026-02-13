@@ -226,5 +226,20 @@
   "tailscaleOnline": "Online",
   "tailscaleOffline": "Offline",
   "tailscaleIPCopied": "IP kopiert",
-  "tailscaleTab": "Tailscale"
+  "tailscaleTab": "Tailscale",
+  "sshKeyNeverUsed": "Nie verwendet",
+  "sshKeyUsedToday": "Heute",
+  "sshKeyUsedYesterday": "Gestern",
+  "sshKeyUsedDaysAgo": "Vor {days} Tagen",
+  "@sshKeyUsedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "biometricError": "Biometrische Authentifizierung fehlgeschlagen",
+  "folderNoResults": "Keine Ergebnisse",
+  "folderNoSubfolders": "Keine Unterordner",
+  "folderParent": "Übergeordnet"
 }

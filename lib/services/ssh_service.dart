@@ -54,10 +54,13 @@ class SSHService {
   }) async {
     try {
       // Parsing de la clé dans un ISOLATE SÉPARÉ (ne bloque pas le thread UI)
+      if (kDebugMode) debugPrint('SSHService: Parsing SSH key...');
       final keys = await compute(_parseSSHKeys, privateKey);
+      if (kDebugMode) debugPrint('SSHService: Key parsed OK, connecting TCP to $host:$port...');
 
       // Connexion TCP (async, ne bloque pas)
       final socket = await SSHSocket.connect(host, port);
+      if (kDebugMode) debugPrint('SSHService: TCP connected to $host:$port, starting SSH handshake...');
 
       // Handshake SSH + authentification (avec vérification TOFU de la clé d'hôte)
       _client = SSHClient(
@@ -112,8 +115,10 @@ class SSHService {
           }
         },
       );
+      if (kDebugMode) debugPrint('SSHService: Waiting for SSH authentication on $host:$port...');
       await _client!.authenticated;
       _isConnectionAlive = true;
+      if (kDebugMode) debugPrint('SSHService: SSH authenticated OK on $host:$port');
 
       // Écouter la fermeture de connexion
       _client!.done.then((_) {
@@ -129,6 +134,7 @@ class SSHService {
       return true;
     } catch (e) {
       _isConnectionAlive = false;
+      if (kDebugMode) debugPrint('SSHService: Connection FAILED to $host:$port — ${e.runtimeType}: $e');
       throw SSHException(
         SSHError.connectionFailed,
         'SSH Error: $e',

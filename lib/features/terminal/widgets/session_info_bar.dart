@@ -14,10 +14,10 @@ class SessionInfoBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(activeSessionProvider);
-    final terminalState = ref.watch(terminalProvider);
+    final lastExecutionTime = ref.watch(terminalProvider.select((s) => s.lastExecutionTime));
     final theme = ref.watch(vibeTermThemeProvider);
     final wolNotifier = ref.read(wolProvider.notifier);
-    final settings = ref.watch(settingsProvider);
+    final savedConnections = ref.watch(settingsProvider.select((s) => s.savedConnections));
 
     if (session == null) {
       return const SizedBox.shrink();
@@ -26,15 +26,15 @@ class SessionInfoBar extends ConsumerWidget {
     // Vérifier si une config WOL est associée à cette session
     // On cherche par host/username car session.id != savedConnection.id
     final wolConfig = wolNotifier.getConfigForSession(
-      settings.savedConnections,
+      savedConnections,
       session.host,
       session.username,
     );
 
     // Afficher le temps d'exécution de la dernière commande terminée
     String? executionTimeText;
-    if (terminalState.lastExecutionTime != null) {
-      executionTimeText = _formatDuration(terminalState.lastExecutionTime!);
+    if (lastExecutionTime != null) {
+      executionTimeText = _formatDuration(lastExecutionTime);
     }
 
     return Container(

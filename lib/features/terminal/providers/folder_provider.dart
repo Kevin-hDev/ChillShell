@@ -49,8 +49,6 @@ class FolderState {
     return folders.where((f) => f.toLowerCase().contains(query)).toList();
   }
 
-  /// Séparateur de chemin selon l'OS distant
-  String get pathSeparator => remoteOS == 'windows' ? r'\' : '/';
 }
 
 /// Callback type pour exécuter des commandes SSH silencieuses

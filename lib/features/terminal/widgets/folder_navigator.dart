@@ -286,7 +286,7 @@ class _FolderDropdownState extends ConsumerState<_FolderDropdown> {
                         // Parent directory
                         _FolderItem(
                           name: '..',
-                          displayName: 'Parent',
+                          displayName: context.l10n.folderParent,
                           icon: Icons.arrow_upward,
                           theme: theme,
                           onTap: () => widget.onNavigate('..'),
@@ -297,8 +297,8 @@ class _FolderDropdownState extends ConsumerState<_FolderDropdown> {
                             padding: const EdgeInsets.all(12),
                             child: Text(
                               folderState.searchQuery.isNotEmpty
-                                  ? 'Aucun résultat'
-                                  : 'Aucun sous-dossier',
+                                  ? context.l10n.folderNoResults
+                                  : context.l10n.folderNoSubfolders,
                               style: TextStyle(
                                 color: theme.textMuted,
                                 fontSize: 11,

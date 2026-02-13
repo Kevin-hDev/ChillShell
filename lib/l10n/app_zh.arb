@@ -226,5 +226,20 @@
   "tailscaleOnline": "在线",
   "tailscaleOffline": "离线",
   "tailscaleIPCopied": "IP已复制",
-  "tailscaleTab": "Tailscale"
+  "tailscaleTab": "Tailscale",
+  "sshKeyNeverUsed": "从未使用",
+  "sshKeyUsedToday": "今天",
+  "sshKeyUsedYesterday": "昨天",
+  "sshKeyUsedDaysAgo": "{days} 天前",
+  "@sshKeyUsedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "biometricError": "生物识别认证失败",
+  "folderNoResults": "无结果",
+  "folderNoSubfolders": "无子文件夹",
+  "folderParent": "上级"
 }

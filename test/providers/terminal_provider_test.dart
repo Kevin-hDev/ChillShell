@@ -131,59 +131,6 @@ void main() {
     });
   });
 
-  group('TerminalNotifier - Command Execution', () {
-    test('executeCommand adds to history and clears input', () {
-      notifier.setInput('git status');
-      notifier.executeCommand('git status');
-
-      final state = container.read(terminalProvider);
-      expect(state.currentInput, '');
-      expect(state.ghostText, null);
-      expect(state.commandHistory, contains('git status'));
-      expect(state.commands.length, 1);
-      expect(state.commands.first.command, 'git status');
-      expect(state.commands.first.isRunning, true);
-    });
-
-    test('executeCommand ignores empty input', () {
-      notifier.executeCommand('');
-      notifier.executeCommand('   ');
-      expect(container.read(terminalProvider).commands, isEmpty);
-    });
-
-    test('updateCommandOutput updates the right command', () {
-      notifier.executeCommand('ls');
-      final cmdId = container.read(terminalProvider).commands.first.id;
-
-      notifier.updateCommandOutput(cmdId, 'file.txt\ndir/',
-          isComplete: true,
-          executionTime: const Duration(milliseconds: 50));
-
-      final cmd = container.read(terminalProvider).commands.first;
-      expect(cmd.output, 'file.txt\ndir/');
-      expect(cmd.isRunning, false);
-      expect(cmd.executionTime, const Duration(milliseconds: 50));
-    });
-
-    test('clearHistory resets everything', () {
-      notifier.addToHistory('ls');
-      notifier.executeCommand('pwd');
-      notifier.clearHistory();
-
-      final state = container.read(terminalProvider);
-      expect(state.commands, isEmpty);
-      expect(state.commandHistory, isEmpty);
-      expect(state.currentInput, '');
-    });
-  });
-
-  group('TerminalNotifier - Path tracking', () {
-    test('updatePath sets current path', () {
-      notifier.updatePath('/home/user/projects');
-      expect(container.read(terminalProvider).currentPath, '/home/user/projects');
-    });
-  });
-
   group('TerminalScrolledUp provider', () {
     test('initial value is false', () {
       expect(container.read(terminalScrolledUpProvider), false);

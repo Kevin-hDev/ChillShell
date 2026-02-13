@@ -226,5 +226,20 @@
   "tailscaleOnline": "En ligne",
   "tailscaleOffline": "Hors ligne",
   "tailscaleIPCopied": "IP copiée",
-  "tailscaleTab": "Tailscale"
+  "tailscaleTab": "Tailscale",
+  "sshKeyNeverUsed": "Jamais utilisée",
+  "sshKeyUsedToday": "Aujourd'hui",
+  "sshKeyUsedYesterday": "Hier",
+  "sshKeyUsedDaysAgo": "Il y a {days} jours",
+  "@sshKeyUsedDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "biometricError": "Échec de l'authentification biométrique",
+  "folderNoResults": "Aucun résultat",
+  "folderNoSubfolders": "Aucun sous-dossier",
+  "folderParent": "Parent"
 }

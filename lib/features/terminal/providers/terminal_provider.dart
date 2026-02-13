@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 import '../../../models/models.dart';
 import '../../../services/storage_service.dart';
 import 'ghost_text_engine.dart';
@@ -56,7 +55,6 @@ class TerminalNotifier extends Notifier<TerminalState> {
     return const TerminalState();
   }
 
-  final _uuid = const Uuid();
   final _storage = StorageService();
 
   /// Timestamps parallèles à commandHistory (pour le TTL à la sauvegarde)
@@ -380,13 +378,6 @@ class TerminalNotifier extends Notifier<TerminalState> {
     }
   }
 
-  /// Annule la commande en attente
-  void cancelPendingCommand() {
-    _pendingCommand = null;
-    _pendingCommandTime = null;
-    _pendingCommandValidated = false;
-  }
-
   /// Navigue vers la commande précédente dans l'historique
   String? previousCommand() {
     if (state.commandHistory.isEmpty) return null;
@@ -416,46 +407,6 @@ class TerminalNotifier extends Notifier<TerminalState> {
     return state.commandHistory[newIndex];
   }
 
-  void executeCommand(String command) {
-    if (command.trim().isEmpty) return;
-
-    final cmd = Command(
-      id: _uuid.v4(),
-      command: command,
-      timestamp: DateTime.now(),
-      isRunning: true,
-    );
-
-    // Ajouter à l'historique
-    addToHistory(command);
-
-    state = state.copyWith(
-      commands: [...state.commands, cmd],
-      currentInput: '',
-      ghostText: null,
-      historyIndex: -1,
-    );
-  }
-
-  void updateCommandOutput(String commandId, String output, {bool isComplete = false, Duration? executionTime}) {
-    state = state.copyWith(
-      commands: state.commands.map((cmd) {
-        if (cmd.id == commandId) {
-          return cmd.copyWith(
-            output: output,
-            isRunning: !isComplete,
-            executionTime: executionTime ?? cmd.executionTime,
-          );
-        }
-        return cmd;
-      }).toList(),
-    );
-  }
-
-  void clearHistory() {
-    state = const TerminalState();
-  }
-
   /// Marque le début d'une commande (pour calculer le temps d'exécution)
   void startCommand() {
     // Capturer le temps d'exécution de la commande précédente
@@ -470,10 +421,6 @@ class TerminalNotifier extends Notifier<TerminalState> {
     );
   }
 
-  /// Met à jour le chemin courant
-  void updatePath(String path) {
-    state = state.copyWith(currentPath: path);
-  }
 }
 
 final terminalProvider = NotifierProvider<TerminalNotifier, TerminalState>(
