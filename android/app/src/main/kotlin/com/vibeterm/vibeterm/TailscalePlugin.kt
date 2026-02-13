@@ -21,6 +21,8 @@ import io.flutter.plugin.common.PluginRegistry
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
+import android.os.Handler
+import android.os.Looper
 import java.net.NetworkInterface
 import java.util.Collections
 
@@ -150,12 +152,18 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             // BrowseToURL — OAuth login URL from Go
             if (json.has("BrowseToURL") && !json.isNull("BrowseToURL")) {
                 val url = json.getString("BrowseToURL")
-                if (url.isNotEmpty() && url.startsWith("http")) {
-                    Log.d(TAG, "BrowseToURL received (${url.length} chars)")
-                    pendingBrowseURL = url
-                    openBrowserForAuth(url)
+                if (url.isNotEmpty() && url.startsWith("https://")) {
+                    val allowedDomains = listOf("login.tailscale.com", "controlplane.tailscale.com", "tailscale.com")
+                    val urlHost = try { java.net.URI(url).host } catch (e: Exception) { null }
+                    if (urlHost != null && allowedDomains.any { urlHost.endsWith(it) }) {
+                        Log.d(TAG, "BrowseToURL received (${url.length} chars)")
+                        pendingBrowseURL = url
+                        openBrowserForAuth(url)
+                    } else {
+                        Log.w(TAG, "BrowseToURL rejected: untrusted domain")
+                    }
                 } else {
-                    Log.d(TAG, "BrowseToURL ignored (empty or invalid)")
+                    Log.d(TAG, "BrowseToURL ignored (empty or not HTTPS)")
                 }
             }
 
@@ -320,6 +328,14 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
 
         pendingLoginResult = result
 
+        // Timeout: cancel login after 120 seconds if not completed
+        Handler(Looper.getMainLooper()).postDelayed({
+            pendingLoginResult?.let { r ->
+                r.error("TIMEOUT", "Login timed out after 120 seconds", null)
+                pendingLoginResult = null
+            }
+        }, 120_000)
+
         scope.launch {
             try {
                 // Call LocalAPI to start interactive login
@@ -469,6 +485,8 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 "ip" to ip,
                 "isOnline" to online,
                 "os" to os,
+                // Intentionally truncated to 16 chars: used as opaque peer ID,
+                // avoids exposing the full public key to the Flutter layer.
                 "id" to peer.optString("PublicKey", "").take(16)
             )
         } catch (e: Exception) {
@@ -602,19 +620,25 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         throw Exception("not supported")
     }
 
-    // --- Encrypted SharedPreferences ---
+    // --- Encrypted SharedPreferences (cached instance) ---
+
+    @Volatile
+    private var cachedEncryptedPrefs: SharedPreferences? = null
 
     private fun getEncryptedPrefs(): SharedPreferences {
+        cachedEncryptedPrefs?.let { return it }
         val ctx = context ?: throw IllegalStateException("No context")
         val masterKey = MasterKey.Builder(ctx)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
-        return EncryptedSharedPreferences.create(
+        val prefs = EncryptedSharedPreferences.create(
             ctx,
             ENCRYPTED_PREFS_NAME,
             masterKey,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
+        cachedEncryptedPrefs = prefs
+        return prefs
     }
 }

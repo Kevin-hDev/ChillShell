@@ -90,7 +90,7 @@ class TailscaleVpnService : VpnService(), libtailscale.IPNService {
     override fun updateVpnStatus(active: Boolean) {
         isRunning = active
         if (active) {
-            updateNotification("Tailscale actif")
+            updateNotification("Tailscale VPN active")
         }
         // Notify the Flutter plugin of state change
         TailscalePlugin.instance?.onVpnStateChanged(active)
@@ -116,14 +116,15 @@ class TailscaleVpnService : VpnService(), libtailscale.IPNService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
                 NOTIFICATION_ID,
-                buildNotification("Connexion en cours..."),
+                buildNotification("Connecting..."),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
         } else {
-            startForeground(NOTIFICATION_ID, buildNotification("Connexion en cours..."))
+            startForeground(NOTIFICATION_ID, buildNotification("Connecting..."))
         }
 
-        isRunning = true
+        // isRunning is set by updateVpnStatus(true) once Go confirms the tunnel is up.
+        // Do NOT set isRunning = true here prematurely.
 
         // Request VPN from Go backend — Go will call back newBuilder() + establish()
         libtailscale.Libtailscale.requestVPN(this)
@@ -207,11 +208,20 @@ class VPNServiceBuilderWrapper(
         builder.addSearchDomain(domain)
     }
 
+    /**
+     * Exclude a route from the VPN tunnel.
+     *
+     * SECURITY NOTE: excludeRoute() is silently ignored on API < 33 (Tiramisu).
+     * On those versions, ALL traffic goes through the VPN tunnel.
+     * minSdk=31, so only devices running API 31-32 are affected.
+     */
     override fun excludeRoute(route: String, prefixLen: Int) {
         Log.d("TailscaleVPN", "excludeRoute: $route/$prefixLen")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val prefix = android.net.IpPrefix(java.net.InetAddress.getByName(route), prefixLen)
             builder.excludeRoute(prefix)
+        } else {
+            Log.w("TailscaleVPN", "excludeRoute ignored: requires API 33+, current=${Build.VERSION.SDK_INT}")
         }
     }
 

@@ -4,10 +4,13 @@ import 'dart:math' show pow;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../models/audit_entry.dart';
+import '../../../services/audit_log_service.dart';
 import '../../../services/biometric_service.dart';
 import '../../../services/pin_service.dart';
 import '../../../shared/widgets/pin_widgets.dart';
@@ -29,6 +32,12 @@ class LockScreen extends ConsumerStatefulWidget {
 }
 
 class _LockScreenState extends ConsumerState<LockScreen> {
+  static const _rateLimitStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+  static const _failedAttemptsKey = 'pin_failed_attempts';
+  static const _lockoutUntilKey = 'pin_lockout_until';
+
   String _pin = '';
   String? _errorMessage;
   bool _isAuthenticating = false;
@@ -41,6 +50,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   void initState() {
     super.initState();
     _loadPinLength();
+    _loadRateLimitState();
     // Lancer l'empreinte automatiquement si activée (post-frame pour accès context.l10n)
     if (widget.fingerprintEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -52,6 +62,64 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   Future<void> _loadPinLength() async {
     final length = await PinService.getPinLength();
     if (mounted) setState(() => _storedPinLength = length);
+  }
+
+  /// Charge l'état du rate limiting depuis le storage persistant
+  Future<void> _loadRateLimitState() async {
+    final attemptsStr = await _rateLimitStorage.read(key: _failedAttemptsKey);
+    final lockoutStr = await _rateLimitStorage.read(key: _lockoutUntilKey);
+
+    if (attemptsStr != null) {
+      _failedAttempts = int.tryParse(attemptsStr) ?? 0;
+    }
+    if (lockoutStr != null) {
+      final lockoutMs = int.tryParse(lockoutStr);
+      if (lockoutMs != null) {
+        final lockout = DateTime.fromMillisecondsSinceEpoch(lockoutMs);
+        if (lockout.isAfter(DateTime.now())) {
+          _lockoutUntil = lockout;
+          _startLockoutTimer();
+        } else {
+          // Lockout expiré, mais garder le compteur de tentatives
+          _lockoutUntil = null;
+        }
+      }
+    }
+  }
+
+  /// Persiste l'état du rate limiting dans le storage
+  Future<void> _saveRateLimitState() async {
+    await _rateLimitStorage.write(
+      key: _failedAttemptsKey,
+      value: _failedAttempts.toString(),
+    );
+    if (_lockoutUntil != null) {
+      await _rateLimitStorage.write(
+        key: _lockoutUntilKey,
+        value: _lockoutUntil!.millisecondsSinceEpoch.toString(),
+      );
+    } else {
+      await _rateLimitStorage.delete(key: _lockoutUntilKey);
+    }
+  }
+
+  /// Réinitialise le rate limiting après un unlock réussi
+  Future<void> _clearRateLimitState() async {
+    await _rateLimitStorage.delete(key: _failedAttemptsKey);
+    await _rateLimitStorage.delete(key: _lockoutUntilKey);
+  }
+
+  void _startLockoutTimer() {
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_lockoutUntil != null && DateTime.now().isAfter(_lockoutUntil!)) {
+        _lockoutTimer?.cancel();
+        if (mounted) setState(() => _errorMessage = null);
+      } else if (mounted) {
+        final remaining = _lockoutUntil!.difference(DateTime.now()).inSeconds;
+        setState(() => _errorMessage = context.l10n.tryAgainIn(remaining));
+      }
+    });
   }
 
   @override
@@ -121,26 +189,25 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     final verified = await PinService.verifyPin(_pin);
     if (verified) {
       _failedAttempts = 0;
+      _lockoutUntil = null;
       _lockoutTimer?.cancel();
+      await _clearRateLimitState();
       widget.onUnlocked();
     } else {
       _failedAttempts++;
       HapticFeedback.heavyImpact();
 
+      // Logger l'échec PIN dans l'audit log
+      AuditLogService.log(AuditEventType.pinFail, success: false);
+
       if (_failedAttempts >= 5) {
         final delaySeconds = 30 * pow(2, _failedAttempts - 5).toInt();
         _lockoutUntil = DateTime.now().add(Duration(seconds: delaySeconds));
-        _lockoutTimer?.cancel();
-        _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-          if (_lockoutUntil != null && DateTime.now().isAfter(_lockoutUntil!)) {
-            _lockoutTimer?.cancel();
-            if (mounted) setState(() => _errorMessage = null);
-          } else if (mounted) {
-            final remaining = _lockoutUntil!.difference(DateTime.now()).inSeconds;
-            setState(() => _errorMessage = context.l10n.tryAgainIn(remaining));
-          }
-        });
+        _startLockoutTimer();
       }
+
+      // Persister le rate limiting
+      await _saveRateLimitState();
 
       setState(() {
         _pin = '';

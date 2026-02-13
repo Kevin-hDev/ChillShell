@@ -36,7 +36,7 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     result.success(null)
                 } else if (call.method == "setScreenshotProtection") {
-                    val enabled = call.arguments as Boolean
+                    val enabled = call.arguments as? Boolean ?: return@setMethodCallHandler
                     if (enabled) {
                         window.setFlags(
                             WindowManager.LayoutParams.FLAG_SECURE,

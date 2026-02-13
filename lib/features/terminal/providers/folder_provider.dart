@@ -146,7 +146,12 @@ class FolderNotifier extends Notifier<FolderState> {
     if (basePath == null) {
       return 'cd \$HOME && pwd && echo "___SEP___" && ls -1 -d --color=never */ 2>/dev/null';
     }
-    final safePath = basePath.replaceAll("'", r"'\''");
+    // Échapper tous les caractères spéciaux shell
+    final safePath = basePath.replaceAll(r'\', r'\\')
+        .replaceAll("'", r"'\''")
+        .replaceAll(r'$', r'\$')
+        .replaceAll('`', r'\`')
+        .replaceAll('!', r'\!');
     return "cd '$safePath' && pwd && echo '___SEP___' && ls -1 -d --color=never */ 2>/dev/null";
   }
 

@@ -17,7 +17,7 @@ class AuditLogService {
   static const _maxEntries = 500;
 
   static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
   /// Enregistre un événement de sécurité.
@@ -44,7 +44,7 @@ class AuditLogService {
 
       await _saveEntries(entries);
     } catch (e) {
-      if (kDebugMode) debugPrint('AuditLogService: Error logging event: $e');
+      if (kDebugMode) debugPrint('AuditLogService: CRITICAL — failed to log security event: $e');
     }
   }
 

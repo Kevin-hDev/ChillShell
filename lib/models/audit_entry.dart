@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Types d'événements de sécurité enregistrés dans l'audit log.
 enum AuditEventType {
   sshConnect,
@@ -11,6 +13,7 @@ enum AuditEventType {
   biometricFail,
   hostKeyMismatch,
   rootDetected,
+  pinFail,
 }
 
 /// Entrée d'audit log.
@@ -39,6 +42,9 @@ class AuditEntry {
 
   factory AuditEntry.fromJson(Map<String, dynamic> json) {
     final typeIndex = json['e'] as int;
+    if (typeIndex >= AuditEventType.values.length) {
+      if (kDebugMode) debugPrint('AuditEntry: unknown event type index $typeIndex, falling back to sshConnect');
+    }
     return AuditEntry(
       timestamp: json['t'] as int,
       type: typeIndex < AuditEventType.values.length

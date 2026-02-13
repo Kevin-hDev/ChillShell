@@ -88,14 +88,13 @@ class SSHService {
                 }
                 return accepted;
               }
-              // Pas de callback → accepter silencieusement (reconnexion, nouvel onglet)
-              await SecureStorageService.saveHostFingerprint(host, port, hexFingerprint);
-              if (kDebugMode) debugPrint('SSH TOFU: Auto-accepted host key for $host:$port ($type)');
-              return true;
+              // Pas de callback → rejeter par défaut (sécurité)
+              if (kDebugMode) debugPrint('SSH TOFU: No callback for first host key, rejecting by default');
+              return false;
             }
 
-            // Contact suivant → vérifier
-            final match = stored == hexFingerprint;
+            // Contact suivant → vérifier (constant-time pour éviter les timing attacks)
+            final match = _constantTimeEquals(stored, hexFingerprint);
             if (match) {
               if (kDebugMode) debugPrint('SSH TOFU: Host key OK for $host:$port');
               return true;
@@ -140,6 +139,17 @@ class SSHService {
         'SSH Error: $e',
       );
     }
+  }
+
+  /// Comparaison constant-time de deux strings pour éviter les timing attacks
+  /// sur les fingerprints de clés d'hôte.
+  static bool _constantTimeEquals(String a, String b) {
+    if (a.length != b.length) return false;
+    var result = 0;
+    for (var i = 0; i < a.length; i++) {
+      result |= a.codeUnitAt(i) ^ b.codeUnitAt(i);
+    }
+    return result == 0;
   }
 
   Future<SSHSession?> startShell({int width = 80, int height = 24}) async {
