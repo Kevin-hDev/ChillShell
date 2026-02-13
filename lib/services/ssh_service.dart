@@ -268,6 +268,12 @@ class SSHService {
     if (_client == null) return null;
 
     try {
+      // Sécurité : bloquer le path traversal
+      if (remotePath.contains('..')) {
+        if (kDebugMode) debugPrint('SSHService: SFTP upload blocked — path traversal detected in remotePath');
+        throw Exception('Remote path cannot contain ".." (path traversal protection)');
+      }
+
       final localFile = File(localPath);
 
       // Sécurité: vérifier la taille avant de lire (limite 30 MB)

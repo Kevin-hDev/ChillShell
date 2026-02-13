@@ -334,7 +334,6 @@ class SSHIsolateClient {
   Future<void> connect({
     required String host,
     required String username,
-    required String privateKey,
     required String keyId,
     required String sessionId,
     required String tabId,
@@ -345,7 +344,6 @@ class SSHIsolateClient {
     final message = buildConnectMessage(
       host: host,
       username: username,
-      privateKey: privateKey,
       keyId: keyId,
       sessionId: sessionId,
       port: port,
@@ -497,7 +495,7 @@ class SSHIsolateClient {
   Future<bool> testConnect({
     required String host,
     required String username,
-    required String privateKey,
+    required String keyId,
     required int port,
   }) async {
     await _ensureSpawned();
@@ -505,7 +503,7 @@ class SSHIsolateClient {
     final message = buildTestConnectMessage(
       host: host,
       username: username,
-      privateKey: privateKey,
+      keyId: keyId,
       port: port,
     );
     final requestId = message['requestId'] as String;

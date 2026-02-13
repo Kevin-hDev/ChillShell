@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -9,6 +10,8 @@ import 'features/settings/screens/settings_screen.dart';
 import 'features/auth/screens/lock_screen.dart';
 import 'features/settings/providers/settings_provider.dart';
 import 'features/terminal/providers/providers.dart';
+import 'models/audit_entry.dart';
+import 'services/audit_log_service.dart';
 import 'services/biometric_service.dart';
 import 'services/device_security_service.dart';
 import 'services/foreground_ssh_service.dart';
@@ -83,6 +86,7 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
     final status = await DeviceSecurityService.checkDeviceSecurity();
     if (mounted && status == DeviceSecurityStatus.rooted) {
       setState(() => _deviceRooted = true);
+      AuditLogService.log(AuditEventType.rootDetected, success: true, details: {'platform': Platform.isAndroid ? 'android' : 'ios'});
     }
   }
 
@@ -227,7 +231,7 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
               TextButton(
                 onPressed: () => setState(() => _rootWarningDismissed = true),
                 child: Text(
-                  MaterialLocalizations.of(context).okButtonLabel,
+                  context.l10n.understood,
                   style: const TextStyle(color: Colors.white),
                 ),
               ),

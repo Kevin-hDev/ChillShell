@@ -12,7 +12,6 @@ import '../../../models/models.dart';
 import '../../../models/wol_config.dart';
 import '../../../shared/widgets/app_header.dart';
 import '../../../shared/widgets/chillshell_loader.dart';
-import '../../../services/secure_storage_service.dart';
 import '../../../services/storage_service.dart';
 import '../../../features/settings/providers/settings_provider.dart';
 import '../../../features/settings/providers/wol_provider.dart';
@@ -292,9 +291,6 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     final lastConnection = autoConnection;
 
-    final privateKey = await SecureStorageService.getPrivateKey(lastConnection.keyId);
-    if (privateKey == null || privateKey.isEmpty) return;
-
     // Vérifier si WOL auto doit être déclenché
     // Conditions: WOL activé ET config WOL existe pour la dernière connexion
     if (settings.appSettings.wolEnabled) {
@@ -319,7 +315,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     }
 
     // Comportement standard: tentative SSH directe
-    await _performDirectSshConnect(lastConnection, privateKey);
+    await _performDirectSshConnect(lastConnection);
   }
 
   /// Lance WolStartScreen automatiquement au démarrage de l'app.
@@ -349,7 +345,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   }
 
   /// Effectue une connexion SSH directe (comportement standard).
-  Future<void> _performDirectSshConnect(SavedConnection connection, String privateKey) async {
+  Future<void> _performDirectSshConnect(SavedConnection connection) async {
     final l10n = context.l10n;
     // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
@@ -366,7 +362,6 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final success = await ref.read(sshProvider.notifier).connect(
       host: connection.host,
       username: connection.username,
-      privateKey: privateKey,
       keyId: connection.keyId,
       sessionId: sessionId,
       port: connection.port,
@@ -843,16 +838,12 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   Future<bool> _tryConnectForWol(SavedConnection connection) async {
     if (_wolCancelled) return false;
 
-    final privateKey = await SecureStorageService.getPrivateKey(connection.keyId);
-    if (privateKey == null || privateKey.isEmpty) return false;
-    if (_wolCancelled) return false;
-
-    // Test de connectivité via le background isolate (aucun blocage UI)
+    // SECURITY: keyId only — worker reads private key from SecureStorage
     final sshNotifier = ref.read(sshProvider.notifier);
     final success = await sshNotifier.testSshConnectivity(
       host: connection.host,
       username: connection.username,
-      privateKey: privateKey,
+      keyId: connection.keyId,
       port: connection.port,
     );
     return success && !_wolCancelled;
@@ -860,9 +851,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   /// Établit la vraie connexion SSH après un WOL réussi.
   Future<void> _connectAfterWol(SavedConnection connection) async {
-    final privateKey = await SecureStorageService.getPrivateKey(connection.keyId);
-    if (privateKey == null || privateKey.isEmpty || !mounted) return;
-    await _performDirectSshConnect(connection, privateKey);
+    if (!mounted) return;
+    await _performDirectSshConnect(connection);
   }
 
   /// Affiche une SnackBar d'erreur WOL
@@ -1107,16 +1097,6 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   Future<void> _connect(ConnectionInfo info) async {
     final l10n = context.l10n;
-    final privateKey = await SecureStorageService.getPrivateKey(info.keyId);
-
-    if (privateKey == null || privateKey.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.privateKeyNotFound)),
-        );
-      }
-      return;
-    }
 
     // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
@@ -1130,10 +1110,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final sessions = ref.read(sessionsProvider);
     final sessionId = sessions.last.id;
 
+    // SECURITY: Only pass keyId — worker reads private key from SecureStorage
     final success = await ref.read(sshProvider.notifier).connect(
       host: info.host,
       username: info.username,
-      privateKey: privateKey,
       keyId: info.keyId,
       sessionId: sessionId,
       port: info.port,

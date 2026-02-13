@@ -146,7 +146,6 @@ class SSHIsolateWorker {
   Future<void> _handleConnect(Map<String, dynamic> message) async {
     final host = message['host'] as String;
     final username = message['username'] as String;
-    final privateKey = message['privateKey'] as String;
     final keyId = message['keyId'] as String;
     final port = message['port'] as int? ?? 22;
     final tabId = message['tabId'] as String;
@@ -161,13 +160,27 @@ class SSHIsolateWorker {
 
     if (kDebugMode) debugPrint('SSHWorker: Connecting to $host:$port as $username (tab: $tabId)');
 
+    // SECURITY: Read private key directly from SecureStorage in the worker
+    // to avoid transmitting it via SendPort (which creates non-erasable copies)
+    final privateKeyRaw = await SecureStorageService.getPrivateKey(keyId);
+    if (privateKeyRaw == null || privateKeyRaw.isEmpty) {
+      _mainSendPort.send({
+        'type': IsolateEvent.connectionFailed,
+        'requestId': requestId,
+        'error': 'SSH key not found in secure storage',
+        'tabId': tabId,
+      });
+      return;
+    }
+
+    final keyBuffer = SecureBuffer.fromString(privateKeyRaw);
     try {
       final service = SSHService();
 
       final success = await service.connect(
         host: host,
         username: username,
-        privateKey: privateKey,
+        privateKey: keyBuffer.toUtf8String(),
         port: port,
         onFirstHostKey: (host, port, keyType, fingerprint) async {
           return _requestHostKeyVerification(
@@ -220,6 +233,8 @@ class SSHIsolateWorker {
         'error': errorMsg.contains('timeout') ? 'ssh:timeout' : 'ssh:connectionFailed',
         'tabId': tabId,
       });
+    } finally {
+      keyBuffer.dispose();
     }
   }
 
@@ -941,18 +956,30 @@ class SSHIsolateWorker {
   Future<void> _handleTestConnect(Map<String, dynamic> message) async {
     final host = message['host'] as String;
     final username = message['username'] as String;
-    final privateKey = message['privateKey'] as String;
+    final keyId = message['keyId'] as String;
     final port = message['port'] as int;
     final requestId = message['requestId'] as String?;
 
     if (kDebugMode) debugPrint('SSHWorker: Test connect to $host:$port as $username');
 
+    // SECURITY: Read private key directly from SecureStorage
+    final privateKeyRaw = await SecureStorageService.getPrivateKey(keyId);
+    if (privateKeyRaw == null || privateKeyRaw.isEmpty) {
+      _mainSendPort.send({
+        'type': IsolateEvent.testConnectResult,
+        'requestId': requestId,
+        'success': false,
+      });
+      return;
+    }
+
+    final keyBuffer = SecureBuffer.fromString(privateKeyRaw);
     final testService = SSHService();
     try {
       final success = await testService.connect(
         host: host,
         username: username,
-        privateKey: privateKey,
+        privateKey: keyBuffer.toUtf8String(),
         port: port,
         onFirstHostKey: (host, port, keyType, fingerprint) =>
             _requestHostKeyVerification(
@@ -990,6 +1017,8 @@ class SSHIsolateWorker {
         'requestId': requestId,
         'success': false,
       });
+    } finally {
+      keyBuffer.dispose();
     }
   }
 
