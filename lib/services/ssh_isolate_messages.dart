@@ -67,7 +67,6 @@ abstract final class IsolateEvent {
 Map<String, dynamic> buildConnectMessage({
   required String host,
   required String username,
-  required String privateKey,
   required String keyId,
   required String sessionId,
   required int port,
@@ -78,7 +77,6 @@ Map<String, dynamic> buildConnectMessage({
     'requestId': generateRequestId(),
     'host': host,
     'username': username,
-    'privateKey': privateKey,
     'keyId': keyId,
     'sessionId': sessionId,
     'port': port,
@@ -212,7 +210,7 @@ Map<String, dynamic> buildResumeMonitorMessage() {
 Map<String, dynamic> buildTestConnectMessage({
   required String host,
   required String username,
-  required String privateKey,
+  required String keyId,
   required int port,
 }) {
   return {
@@ -220,7 +218,7 @@ Map<String, dynamic> buildTestConnectMessage({
     'requestId': generateRequestId(),
     'host': host,
     'username': username,
-    'privateKey': privateKey,
+    'keyId': keyId,
     'port': port,
   };
 }

@@ -255,7 +255,6 @@ class SSHNotifier extends Notifier<SSHState> {
   Future<bool> connect({
     required String host,
     required String username,
-    required String privateKey,
     required String keyId,
     required String sessionId,
     int port = 22,
@@ -297,7 +296,6 @@ class SSHNotifier extends Notifier<SSHState> {
       await client.connect(
         host: host,
         username: username,
-        privateKey: privateKey,
         keyId: keyId,
         sessionId: sessionId,
         tabId: tabId,
@@ -573,14 +571,14 @@ class SSHNotifier extends Notifier<SSHState> {
   Future<bool> testSshConnectivity({
     required String host,
     required String username,
-    required String privateKey,
+    required String keyId,
     required int port,
   }) async {
     final client = _getOrCreateClient();
     return client.testConnect(
       host: host,
       username: username,
-      privateKey: privateKey,
+      keyId: keyId,
       port: port,
     );
   }

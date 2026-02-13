@@ -42,12 +42,17 @@ class TailscaleVpnService : VpnService(), libtailscale.IPNService {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
+        if (intent == null) {
+            Log.w(TAG, "Service restarted with null intent, stopping")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+        when (intent.action) {
             ACTION_START -> startVpn()
             ACTION_STOP -> stopVpn()
-            else -> Log.w(TAG, "Unknown action: ${intent?.action}")
+            else -> Log.w(TAG, "Unknown action: ${intent.action}")
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     override fun onDestroy() {

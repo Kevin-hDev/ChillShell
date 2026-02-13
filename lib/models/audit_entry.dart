@@ -10,6 +10,7 @@ enum AuditEventType {
   pinDeleted,
   biometricFail,
   hostKeyMismatch,
+  rootDetected,
 }
 
 /// Entrée d'audit log.

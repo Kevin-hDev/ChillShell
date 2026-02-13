@@ -1,6 +1,7 @@
 package com.vibeterm.vibeterm
 
 import android.app.Activity
+import com.vibeterm.vibeterm.BuildConfig
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -45,6 +46,7 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         private const val ENCRYPTED_PREFS_NAME = "tailscale_encrypted_prefs"
 
         /** Singleton for VPN service callbacks. */
+        @Volatile
         var instance: TailscalePlugin? = null
             private set
     }
@@ -52,6 +54,7 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private lateinit var channel: MethodChannel
     private var context: Context? = null
     private var activity: Activity? = null
+    @Volatile
     private var pendingLoginResult: Result? = null
     private var tailscaleApp: libtailscale.Application? = null
     private var notificationManager: libtailscale.NotificationManager? = null
@@ -309,6 +312,12 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             return
         }
 
+        // Reject if a login is already in progress
+        if (pendingLoginResult != null) {
+            result.error("LOGIN_IN_PROGRESS", "A login is already in progress", null)
+            return
+        }
+
         pendingLoginResult = result
 
         scope.launch {
@@ -491,7 +500,7 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     // ========================================================
 
     override fun log(tag: String, msg: String) {
-        Log.d("TS-$tag", msg)
+        if (BuildConfig.DEBUG) Log.d("TS-$tag", msg)
     }
 
     override fun encryptToPref(key: String, value: String) {

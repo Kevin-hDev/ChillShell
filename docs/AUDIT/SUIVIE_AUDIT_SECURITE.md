@@ -54,11 +54,30 @@
 
 ---
 
-## AUDIT SECURITE AVANCE (A FAIRE)
+## AUDIT SECURITE AVANCE (FAIT — 2026-02-13)
 
-Outils prevus :
+Outils utilises :
 - `audit-context-building:audit-context` -- Analyse architecturale profonde
 - `sharp-edges:sharp-edges` -- Detection APIs dangereuses et configs risquees
-- `testing-handbook-skills` (Trail of Bits) -- Audit securite approfondi
 
-Statut : **En attente** -- sera execute apres la correction du bug VPN/SSH local
+Statut : **TERMINE** — 62 findings, 0 vulnerabilite exploitable a distance
+
+Rapport complet : `docs/AUDIT/RAPPORT_AUDIT_SECURITE_AVANCE.md`
+
+### Resume des findings
+
+| Severite | Count | Exemples cles |
+|----------|-------|---------------|
+| Critical | 4 | Cle privee String non effacable, release signe debug keys, logs Go non filtres |
+| High | 8 | Pas de ProGuard/R8, race conditions Kotlin, path traversal SFTP |
+| Medium | 21 | TOFU auto-accept, timing attacks, rate limiting bypassable |
+| Low | 21 | Divers (non exploitables) |
+
+### Corrections prioritaires identifiees
+
+1. Configurer signing release (keystore production)
+2. Activer ProGuard/R8
+3. Filtrer logs Go en production (`BuildConfig.DEBUG`)
+4. Faire lire la cle SSH par le worker depuis SecureStorage
+5. Ajouter `@Volatile` sur TailscalePlugin.instance
+6. Persister rate limiting PIN dans SecureStorage

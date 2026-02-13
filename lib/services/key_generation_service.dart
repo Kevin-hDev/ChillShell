@@ -5,6 +5,11 @@ import 'package:cryptography/cryptography.dart';
 import 'package:pointycastle/export.dart' as pc;
 
 class KeyGenerationService {
+  // SECURITY NOTE: Les clés Ed25519 sont générées sans chiffrement par passphrase
+  // (cipher=none, kdf=none). Acceptable car elles ne quittent jamais le secure
+  // storage (Android Keystore / iOS Keychain). Si export utilisateur ajouté,
+  // implémenter chiffrement AES-256-CTR + bcrypt KDF (RFC 4880).
+
   /// Génère une paire de clés Ed25519
   static Future<Map<String, String>> generateEd25519(String comment) async {
     final algorithm = Ed25519();
@@ -16,6 +21,12 @@ class KeyGenerationService {
     // Formatter en format OpenSSH
     final privateKeyPem = _formatEd25519PrivateKey(privateKeyBytes, publicKey.bytes);
     final publicKeyOpenSSH = _formatEd25519PublicKey(publicKey.bytes, comment);
+
+    // SECURITY NOTE: Zero out private key bytes after formatting to PEM.
+    // Prevents sensitive key material from lingering in memory.
+    for (var i = 0; i < privateKeyBytes.length; i++) {
+      privateKeyBytes[i] = 0;
+    }
 
     return {
       'privateKey': privateKeyPem,
