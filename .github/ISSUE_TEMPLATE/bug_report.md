@@ -1,0 +1,54 @@
+---
+name: 🐛 Bug Report
+about: Signaler un bug dans ChillShell
+title: '[BUG] '
+labels: bug
+assignees: ''
+---
+
+## 📝 Description du Bug
+
+<!-- Description claire et concise du bug -->
+
+## 🔄 Étapes pour Reproduire
+
+1. Aller sur '...'
+2. Cliquer sur '...'
+3. Voir l'erreur
+
+## ✅ Comportement Attendu
+
+<!-- Ce qui devrait se passer -->
+
+## ❌ Comportement Observé
+
+<!-- Ce qui se passe réellement -->
+
+## 📸 Screenshots
+
+<!-- Si applicable, ajoutez des screenshots -->
+
+## 📱 Environnement
+
+- **ChillShell version** : [ex: v0.1.0-alpha]
+- **Android version** : [ex: Android 12]
+- **Device** : [ex: Pixel 6]
+- **Chill Desktop version** : [ex: v0.1.0]
+- **PC OS** : [ex: Ubuntu 22.04]
+
+## 📋 Logs
+
+<!-- Si applicable, collez les logs ici -->
+
+<details>
+<summary>Logs</summary>
+
+```
+[Collez les logs ici]
+```
+
+</details>
+
+## ℹ️ Informations Additionnelles
+
+<!-- Tout autre contexte utile -->
