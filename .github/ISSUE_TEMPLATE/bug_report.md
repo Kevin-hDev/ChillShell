@@ -30,11 +30,11 @@ assignees: ''
 
 ## 📱 Environnement
 
-- **ChillShell version** : [ex: v0.1.0-alpha]
-- **Android version** : [ex: Android 12]
-- **Device** : [ex: Pixel 6]
-- **Chill Desktop version** : [ex: v0.1.0]
-- **PC OS** : [ex: Ubuntu 22.04]
+- **ChillShell version** : [ex: v1.5.2]
+- **Android version** : [ex: Android 13]
+- **Device** : [ex: Pixel 7]
+- **Chill Desktop version** : [ex: v0.1.0] (si applicable)
+- **PC OS** : [ex: Ubuntu 22.04] (si applicable)
 
 ## 📋 Logs
 
