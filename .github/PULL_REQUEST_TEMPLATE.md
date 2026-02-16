@@ -21,6 +21,7 @@ Closes #(issue number)
 - [ ] CHANGELOG.md mis à jour
 - [ ] Pas de secrets/clés dans le code
 - [ ] Screenshots ajoutés (si changement UI)
+- [ ] **Si changement sécurité** : SECURITY.md mis à jour si nécessaire
 
 ## 📸 Screenshots (si applicable)
 
