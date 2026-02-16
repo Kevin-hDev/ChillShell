@@ -1,418 +1,417 @@
-# Gitleaks
+# ChillShell 🚀📱
+
+> ⚠️ **AVERTISSEMENT IMPORTANT** : Ce projet est en phase **ALPHA**. Il a été entièrement développé avec l'assistance de l'IA Claude Code. **Aucun audit de sécurité externe par des professionnels n'a été réalisé**. L'utilisation de ce logiciel se fait entièrement à vos risques et périls.
+
+## 📱 Qu'est-ce que ChillShell ?
+
+**ChillShell** est une application mobile Android qui vous permet d'accéder au terminal SSH de votre ordinateur depuis n'importe où dans le monde, de manière sécurisée et sans ouvrir de ports sur votre réseau.
+
+**Comment ça marche :**
+- 🔐 Connexion sécurisée via réseau mesh Tailscale
+- 🔑 Authentification SSH par clés cryptographiques (ED25519)
+- ⚡ Réveil automatique de votre PC (Wake-on-LAN)
+- 🚫 Aucun port forwarding nécessaire
+- 🌐 Accès depuis n'importe où avec une connexion Internet
+- 🖥️ Nécessite l'application desktop **Chill** sur votre PC
+
+## 🏗️ Architecture du Projet
+
+**ChillShell fait partie d'un écosystème en 2 parties :**
 
 ```
-┌─○───┐
-│ │╲  │
-│ │ ○ │
-│ ○ ░ │
-└─░───┘
+┌─────────────────────┐         SSH         ┌─────────────────────┐
+│   ChillShell        │ ◄──────────────────► │   Chill Desktop     │
+│   (Mobile Android)  │   via Tailscale      │   (Application PC)  │
+│                     │                      │                     │
+│   - Interface SSH   │                      │   Package intégré : │
+│   - Gestion clés    │                      │   • Tailscale       │
+│   - Wake-on-LAN     │                      │   • SSH Server      │
+│   - Terminal xterm  │                      │   • Wake-on-LAN     │
+└─────────────────────┘                      └─────────────────────┘
+     Ce repository                           Repository séparé
 ```
 
-<p align="left">
-  <p align="left">
-	  <a href="https://github.com/zricethezav/gitleaks/actions/workflows/test.yml">
-		  <img alt="Github Test" src="https://github.com/zricethezav/gitleaks/actions/workflows/test.yml/badge.svg">
-	  </a>
-	  <a href="https://hub.docker.com/r/zricethezav/gitleaks">
-		  <img src="https://img.shields.io/docker/pulls/zricethezav/gitleaks.svg" />
-	  </a>
-	  <a href="https://github.com/zricethezav/gitleaks-action">
-        	<img alt="gitleaks badge" src="https://img.shields.io/badge/protected%20by-gitleaks-blue">
-    	 </a>
-	  <a href="https://twitter.com/intent/follow?screen_name=zricethezav">
-		  <img src="https://img.shields.io/twitter/follow/zricethezav?label=Follow%20zricethezav&style=social&color=blue" alt="Follow @zricethezav" />
-	  </a>
-  </p>
-</p>
+**Ce repository contient :**
+- 📱 L'application mobile Android **ChillShell** (Flutter/Dart)
 
-### Join our Discord! [![Discord](https://img.shields.io/discord/1102689410522284044.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/sydS6AHTUP)
+**Ce repository NE contient PAS :**
+- ❌ L'application desktop **Chill** (voir repository séparé)
+- ❌ Un backend/API cloud
+- ❌ Une base de données
 
-Gitleaks is a SAST tool for **detecting** and **preventing** hardcoded secrets like passwords, api keys, and tokens in git repos. Gitleaks is an **easy-to-use, all-in-one solution** for detecting secrets, past or present, in your code.
+## ✨ Fonctionnalités
 
+- 🔐 **Sécurité renforcée** : Utilise Tailscale (VPN mesh) + SSH (clés ED25519)
+- 📱 **Interface terminal mobile** : Terminal complet (xterm) sur votre téléphone
+- ⚡ **Wake-on-LAN intégré** : Réveillez votre PC à distance
+- 🗂️ **Navigateur de dossiers** : Parcourez les répertoires de votre PC
+- 🚫 **Zéro port forwarding** : Pas besoin d'ouvrir votre routeur
+- 🔓 **100% Open Source** : Code auditable et modifiable
+- 💰 **Gratuit à vie** : Pas d'abonnement, pas de frais cachés
+- 🌍 **Multilingue** : Français, Anglais, Espagnol, Allemand, Chinois
+
+## ⚠️ AVERTISSEMENTS DE SÉCURITÉ - À LIRE ABSOLUMENT
+
+**AVANT D'UTILISER CE LOGICIEL, VOUS DEVEZ COMPRENDRE :**
+
+### État du Projet
+
+- ❌ **Aucun audit de sécurité professionnel** n'a été effectué
+- 🤖 **Développé avec assistance IA** (Claude Code) - Je ne suis pas un développeur professionnel
+- 🔍 **Analyse de sécurité interne uniquement** :
+  - Modélisation des menaces STRIDE
+  - Analyse avec Trail of Bits Security Skills (62 findings corrigés)
+  - Tests automatisés de vulnérabilités
+  - Analyse statique du code
+- 🐛 **Peut contenir des vulnérabilités** non découvertes
+- 📢 **Logiciel ALPHA** : bugs, changements majeurs et instabilités possibles
+
+### Risques Potentiels
+
+Cette application donne un **accès SSH complet** à votre ordinateur. Une faille de sécurité pourrait permettre à un attaquant de :
+- 💀 Accéder à tous vos fichiers
+- 🔓 Voler vos mots de passe et données sensibles
+- 💳 Accéder à vos informations bancaires
+- 🎥 Activer votre webcam/micro
+- 💾 Chiffrer vos données (ransomware)
+- 🗑️ Supprimer vos fichiers
+
+### Responsabilité
+
+**CE LOGICIEL EST FOURNI "TEL QUEL", SANS AUCUNE GARANTIE.**
+
+- 🛡️ **VOUS êtes responsable** de la sécurité de vos systèmes
+- ⚖️ Les auteurs ne peuvent être tenus responsables des dommages
+- 🚨 Utilisation entièrement à vos propres risques
+
+## 🔒 Recommandations de Sécurité ESSENTIELLES
+
+Si vous décidez malgré tout d'utiliser ce logiciel :
+
+### Avant d'installer
+
+1. ✅ **Examinez le code source** vous-même ou faites-le examiner par quelqu'un de compétent
+2. ✅ **Comprenez les risques** - lisez TOUTE cette documentation
+3. ✅ **Testez d'abord sur un système non-critique** (pas votre PC principal)
+
+### Configuration sécurisée
+
+4. ✅ **Utilisez des clés SSH ED25519** (jamais de mots de passe !)
+5. ✅ **Activez les ACL Tailscale** pour restreindre l'accès
+6. ✅ **Gardez tout à jour** : Tailscale, SSH, Android, ChillShell, Chill Desktop
+7. ✅ **Configurez un utilisateur dédié** (non-root) pour SSH
+8. ✅ **Désactivez l'accès root SSH** (`PermitRootLogin no`)
+
+### Surveillance
+
+9. ✅ **Surveillez vos logs** régulièrement (`/var/log/auth.log`)
+10. ✅ **Vérifiez les connexions actives** (`who`, `last`)
+11. ✅ **Mettez en place des alertes** pour connexions inhabituelles
+
+### Sauvegarde
+
+12. ✅ **SAUVEGARDEZ TOUT** avant d'installer
+13. ✅ **Testez vos sauvegardes** régulièrement
+
+### Ce qu'il ne faut JAMAIS faire
+
+- ❌ **JAMAIS exposer SSH directement** sur Internet (port forwarding)
+- ❌ **JAMAIS utiliser des mots de passe** SSH (uniquement clés)
+- ❌ **JAMAIS donner accès root** via SSH
+- ❌ **JAMAIS utiliser sur un système de production** (entreprise, serveur important)
+
+## 📋 Prérequis
+
+### Sur votre téléphone Android
+- **Android 12 (API 31) ou supérieur**
+- ~50 MB d'espace libre
+- Connexion Internet (WiFi ou données mobiles)
+
+### Sur votre PC
+- Système d'exploitation : Linux, macOS, ou Windows
+- **Application desktop Chill** installée (voir repository séparé)
+- Réseau supportant Wake-on-LAN (optionnel)
+
+## 🛠️ Installation
+
+### 📱 Étape 1 : Installer ChillShell (Application Mobile)
+
+#### Option 1 : APK pré-compilé (Recommandé - Plus simple)
+
+1. **Téléchargez l'APK** depuis [Releases GitHub](https://github.com/Kevin-hdev/ChillShell/releases)
+2. **Vérifiez le checksum SHA256** (sécurité) :
+   ```bash
+   # Sur PC
+   sha256sum ChillShell-vX.X.X.apk
+   # Comparez avec le checksum affiché sur la page Release
+   ```
+3. **Activez "Sources inconnues"** dans les paramètres Android :
+   - Paramètres → Sécurité → Sources inconnues (ou Applications inconnues)
+4. **Transférez l'APK** sur votre téléphone (USB, email, ou cloud)
+5. **Installez l'APK** en cliquant dessus
+6. ⚠️ **Vous installez à vos risques et périls**
+
+#### Option 2 : Compiler vous-même (Plus sûr - Avancé)
+
+**Prérequis :**
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) installé (version 3.x)
+- [Android SDK](https://developer.android.com/studio) installé
+- Git installé
+
+**Étapes :**
+```bash
+# 1. Cloner le repository
+git clone https://github.com/Kevin-hdev/ChillShell.git
+cd ChillShell
+
+# 2. Installer les dépendances Flutter
+flutter pub get
+
+# 3. Compiler l'APK en mode release
+flutter build apk --release
+
+# 4. L'APK se trouve dans :
+# build/app/outputs/flutter-apk/app-release.apk
+
+# 5. Transférer sur votre téléphone et installer
 ```
-➜  ~/code(master) gitleaks detect --source . -v
 
-    ○
-    │╲
-    │ ○
-    ○ ░
-    ░    gitleaks
+---
 
+### 🖥️ Étape 2 : Installer Chill Desktop (Application PC)
 
-Finding:     "export BUNDLE_ENTERPRISE__CONTRIBSYS__COM=cafebabe:deadbeef",
-Secret:      cafebabe:deadbeef
-RuleID:      sidekiq-secret
-Entropy:     2.609850
-File:        cmd/generate/config/rules/sidekiq.go
-Line:        23
-Commit:      cd5226711335c68be1e720b318b7bc3135a30eb2
-Author:      John
-Email:       john@users.noreply.github.com
-Date:        2022-08-03T12:31:40Z
-Fingerprint: cd5226711335c68be1e720b318b7bc3135a30eb2:cmd/generate/config/rules/sidekiq.go:sidekiq-secret:23
-```
+**⚠️ ChillShell nécessite l'application desktop Chill pour fonctionner.**
 
-## Getting Started
+**Chill Desktop package tout ce dont vous avez besoin :**
+- ✅ Tailscale (réseau mesh sécurisé)
+- ✅ Serveur SSH (OpenSSH)
+- ✅ Support Wake-on-LAN
 
-Gitleaks can be installed using Homebrew, Docker, or Go. Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page](https://github.com/zricethezav/gitleaks/releases). In addition, Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action using [Gitleaks-Action](https://github.com/gitleaks/gitleaks-action).
+**Configuration en 3 clics - Aucune connaissance technique requise !**
 
-### Installing
+**Pour installer Chill Desktop :**
+1. Rendez-vous sur le repository [Chill Desktop](https://github.com/Kevin-hdev/Chill)
+2. Suivez les instructions d'installation pour votre OS
+3. Lancez Chill Desktop et suivez le setup initial (3 clics)
+4. Notez l'IP Tailscale de votre PC (affichée dans l'interface Chill)
+
+> **Note :** Si vous préférez configurer manuellement Tailscale + SSH + WOL sans Chill Desktop, c'est possible mais plus complexe. Voir la section "Installation manuelle" ci-dessous.
+
+---
+
+### 🔧 Étape 3 : Configurer ChillShell
+
+1. **Ouvrez ChillShell** sur votre téléphone
+2. **Appuyez sur "Nouvelle connexion"**
+3. **Entrez les informations** :
+   - Nom de la connexion : `Mon PC` (ou ce que vous voulez)
+   - Hôte : `100.x.x.x` (IP Tailscale de votre PC, fournie par Chill Desktop)
+   - Port : `22`
+   - Nom d'utilisateur : `votre-username` (fourni par Chill Desktop)
+4. **Générez ou importez une clé SSH ED25519** :
+   - ChillShell peut générer une paire de clés pour vous
+   - Ou importez une clé existante
+5. **Ajoutez la clé publique** dans Chill Desktop (copier-coller)
+6. **Connectez-vous !**
+
+### ⚡ Wake-on-LAN (Optionnel)
+
+Si vous voulez réveiller votre PC à distance :
+
+**Dans Chill Desktop :**
+1. Activez Wake-on-LAN dans les paramètres
+2. Notez l'adresse MAC de votre carte réseau
+
+**Dans ChillShell :**
+1. Ajoutez la configuration WOL à votre connexion :
+   - Adresse MAC : `XX:XX:XX:XX:XX:XX`
+   - Adresse de broadcast : `255.255.255.255` (par défaut)
+
+**Dans le BIOS de votre PC :**
+- Activez "Wake on LAN"
+- Activez "EuP 2013" ou options similaires
+
+---
+
+## 📖 Installation Manuelle (Sans Chill Desktop)
+
+**⚠️ Réservé aux utilisateurs avancés**
+
+Si vous ne voulez pas utiliser Chill Desktop et préférez tout configurer manuellement :
+
+### 1. Installer et configurer Tailscale
 
 ```bash
-# MacOS
-brew install gitleaks
+# Sur votre PC (Linux/macOS)
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
 
-# Docker (DockerHub)
-docker pull zricethezav/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path zricethezav/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
-
-# Docker (ghcr.io)
-docker pull ghcr.io/gitleaks/gitleaks:latest
-docker run -v ${path_to_host_folder_to_scan}:/path ghcr.io/gitleaks/gitleaks:latest [COMMAND] --source="/path" [OPTIONS]
-
-# From Source
-git clone https://github.com/gitleaks/gitleaks.git
-cd gitleaks
-make build
+# Notez votre IP Tailscale
+tailscale ip -4
+# Exemple : 100.64.1.2
 ```
 
-### GitHub Action
+### 2. Installer et sécuriser SSH
 
-Check out the official [Gitleaks GitHub Action](https://github.com/gitleaks/gitleaks-action)
-
-```
-name: gitleaks
-on: [pull_request, push, workflow_dispatch]
-jobs:
-  scan:
-    name: gitleaks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}} # Only required for Organizations, not personal accounts.
+```bash
+# Ubuntu/Debian
+sudo apt install openssh-server
+sudo systemctl enable ssh
+sudo systemctl start ssh
 ```
 
-### Pre-Commit
-
-1. Install pre-commit from https://pre-commit.com/#install
-2. Create a `.pre-commit-config.yaml` file at the root of your repository with the following content:
-
-   ```
-   repos:
-     - repo: https://github.com/gitleaks/gitleaks
-       rev: v8.16.1
-       hooks:
-         - id: gitleaks
-   ```
-
-   for a [native execution of GitLeaks](https://github.com/zricethezav/gitleaks/releases) or use the [`gitleaks-docker` pre-commit ID](https://github.com/zricethezav/gitleaks/blob/master/.pre-commit-hooks.yaml) for executing GitLeaks using the [official Docker images](#docker)
-
-3. Auto-update the config to the latest repos' versions by executing `pre-commit autoupdate`
-4. Install with `pre-commit install`
-5. Now you're all set!
-
-```
-➜ git commit -m "this commit contains a secret"
-Detect hardcoded secrets.................................................Failed
+**Éditez `/etc/ssh/sshd_config` pour durcir la sécurité :**
+```bash
+# Configuration sécurisée recommandée
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+ChallengeResponseAuthentication no
+UsePAM yes
+X11Forwarding no
+MaxAuthTries 3
+LoginGraceTime 30
 ```
 
-Note: to disable the gitleaks pre-commit hook you can prepend `SKIP=gitleaks` to the commit command
-and it will skip running gitleaks
-
-```
-➜ SKIP=gitleaks git commit -m "skip gitleaks check"
-Detect hardcoded secrets................................................Skipped
+**Redémarrez SSH :**
+```bash
+sudo systemctl restart ssh
 ```
 
-## Usage
+### 3. Générer des clés SSH ED25519
 
-```
-Usage:
-  gitleaks [command]
+```bash
+# Sur votre PC ou depuis ChillShell
+ssh-keygen -t ed25519 -C "ChillShell"
 
-Available Commands:
-  completion  generate the autocompletion script for the specified shell
-  detect      detect secrets in code
-  help        Help about any command
-  protect     protect secrets in code
-  version     display gitleaks version
-
-Flags:
-  -b, --baseline-path string       path to baseline with issues that can be ignored
-  -c, --config string              config file path
-                                   order of precedence:
-                                   1. --config/-c
-                                   2. env var GITLEAKS_CONFIG
-                                   3. (--source/-s)/.gitleaks.toml
-                                   If none of the three options are used, then gitleaks will use the default config
-      --exit-code int              exit code when leaks have been encountered (default 1)
-  -h, --help                       help for gitleaks
-  -l, --log-level string           log level (trace, debug, info, warn, error, fatal) (default "info")
-      --max-target-megabytes int   files larger than this will be skipped
-      --no-color                   turn off color for verbose output
-      --no-banner                  suppress banner
-      --redact                     redact secrets from logs and stdout
-  -f, --report-format string       output format (json, csv, junit, sarif) (default "json")
-  -r, --report-path string         report file
-  -s, --source string              path to source (default ".")
-  -v, --verbose                    show verbose output from scan
-
-Use "gitleaks [command] --help" for more information about a command.
+# Ajoutez la clé publique à authorized_keys
+cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
 ```
 
-### Commands
+### 4. Configurer Wake-on-LAN (Optionnel)
 
-There are two commands you will use to detect secrets; `detect` and `protect`.
+```bash
+# Vérifier si WOL est supporté
+sudo ethtool [interface-réseau] | grep Wake-on
+# Devrait afficher "Wake-on: g"
 
-#### Detect
-
-The `detect` command is used to scan repos, directories, and files. This command can be used on developer machines and in CI environments.
-
-When running `detect` on a git repository, gitleaks will parse the output of a `git log -p` command (you can see how this executed
-[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L17-L25)).
-[`git log -p` generates patches](https://git-scm.com/docs/git-log#_generating_patch_text_with_p) which gitleaks will use to detect secrets.
-You can configure what commits `git log` will range over by using the `--log-opts` flag. `--log-opts` accepts any option for `git log -p`.
-For example, if you wanted to run gitleaks on a range of commits you could use the following command: `gitleaks detect --source . --log-opts="--all commitA..commitB"`.
-See the `git log` [documentation](https://git-scm.com/docs/git-log) for more information.
-
-You can scan files and directories by using the `--no-git` option.
-
-#### Protect
-
-The `protect` command is used to scan uncommitted changes in a git repo. This command should be used on developer machines in accordance with
-[shifting left on security](https://cloud.google.com/architecture/devops/devops-tech-shifting-left-on-security).
-When running `protect` on a git repository, gitleaks will parse the output of a `git diff` command (you can see how this executed
-[here](https://github.com/zricethezav/gitleaks/blob/7240e16769b92d2a1b137c17d6bf9d55a8562899/git/git.go#L48-L49)). You can set the
-`--staged` flag to check for changes in commits that have been `git add`ed. The `--staged` flag should be used when running Gitleaks
-as a pre-commit.
-
-**NOTE**: the `protect` command can only be used on git repos, running `protect` on files or directories will result in an error message.
-
-### Creating a baseline
-
-When scanning large repositories or repositories with a long history, it can be convenient to use a baseline. When using a baseline,
-gitleaks will ignore any old findings that are present in the baseline. A baseline can be any gitleaks report. To create a gitleaks report, run gitleaks with the `--report-path` parameter.
-
-```
-gitleaks detect --report-path gitleaks-report.json # This will save the report in a file called gitleaks-report.json
+# Activer WOL si désactivé
+sudo ethtool -s [interface-réseau] wol g
 ```
 
-Once as baseline is created it can be applied when running the detect command again:
+---
 
-```
-gitleaks detect --baseline-path gitleaks-report.json --report-path findings.json
-```
+## 🐛 Problèmes Connus
 
-After running the detect command with the --baseline-path parameter, report output (findings.json) will only contain new issues.
+- [ ] Wake-on-LAN peut ne pas fonctionner sur certains réseaux
+- [ ] Première connexion SSH peut être lente (chargement shell)
+- [ ] Terminal peut avoir des problèmes d'affichage avec certains prompts complexes
+- [ ] Reconnexion automatique parfois instable
 
-### Verify Findings
+Consultez les [Issues GitHub](https://github.com/Kevin-hdev/ChillShell/issues) pour la liste complète et les solutions.
 
-You can verify a finding found by gitleaks using a `git log` command.
-Example output:
+## 🤝 Contribuer
 
-```
-Finding:     aws_secret="AKIAIMNOJVGFDXXXE4OA"
-RuleID:      aws-access-token
-Secret       AKIAIMNOJVGFDXXXE4OA
-Entropy:     3.65
-File:        checks_test.go
-Line:        37
-Commit:      ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
-Author:      Zachary Rice
-Email:       z@email.com
-Date:        2018-01-28T17:39:00Z
-Fingerprint: ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29:checks_test.go:aws-access-token:37
-```
+**Les contributions sont les bienvenues, SURTOUT pour la sécurité !**
 
-We can use the following format to verify the leak:
+### Vous pouvez contribuer en :
 
-```
-git log -L {StartLine,EndLine}:{File} {Commit}
-```
+- 🔍 Auditant le code pour trouver des vulnérabilités (voir [SECURITY.md](SECURITY.md))
+- 🐛 Signalant des bugs
+- 💡 Proposant des améliorations
+- 📝 Améliorant la documentation
+- 🧪 Ajoutant des tests
+- 🌍 Traduisant l'interface (5 langues supportées)
 
-So in this example it would look like:
+### Comment contribuer
 
-```
-git log -L 37,37:checks_test.go ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
-```
+1. Forkez le projet
+2. Créez une branche (`git checkout -b feature/amelioration`)
+3. Committez vos changements (`git commit -m 'Ajout amélioration'`)
+4. Pushez (`git push origin feature/amelioration`)
+5. Ouvrez une Pull Request
 
-Which gives us:
+**Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les détails complets.**
 
-```
-commit ec2fc9d6cb0954fb3b57201cf6133c48d8ca0d29
-Author: zricethezav <thisispublicanyways@gmail.com>
-Date:   Sun Jan 28 17:39:00 2018 -0500
+## 🔒 Sécurité
 
-    [update] entropy check
+**Vous avez trouvé une vulnérabilité ?**
 
-diff --git a/checks_test.go b/checks_test.go
---- a/checks_test.go
-+++ b/checks_test.go
-@@ -28,0 +37,1 @@
-+               "aws_secret= \"AKIAIMNOJVGFDXXXE4OA\"":          true,
+🚨 **N'OUVREZ PAS d'issue publique** - cela mettrait les utilisateurs en danger.
 
-```
+**Procédure de divulgation responsable :**
+1. Envoyez un email à : **Chill_app@outlook.fr**
+2. Incluez les détails de la vulnérabilité (reproduction, impact, PoC)
+3. Réponse sous 48-72h (meilleur effort)
+4. Nous coordonnerons la divulgation et le correctif
 
-## Pre-Commit hook
+**Crédit :** Votre nom sera mentionné publiquement dans le Hall of Fame (si vous le souhaitez).
 
-You can run Gitleaks as a pre-commit hook by copying the example `pre-commit.py` script into
-your `.git/hooks/` directory.
+**Voir [SECURITY.md](SECURITY.md) pour tous les détails.**
 
-## Configuration
+## 📄 Licence
 
-Gitleaks offers a configuration format you can follow to write your own secret detection rules:
+Ce projet est sous licence **GPL v3** (GNU General Public License v3.0).
 
-```toml
-# Title for the gitleaks configuration file.
-title = "Gitleaks title"
+**Ce que cela signifie :**
+- ✅ Vous pouvez utiliser ce code gratuitement
+- ✅ Vous pouvez le modifier
+- ✅ Vous pouvez le redistribuer
+- ⚠️ **MAIS vous DEVEZ garder le code open source**
+- ⚠️ **Toute modification DOIT être partagée sous GPL v3**
+- ❌ **Vous ne pouvez PAS le rendre propriétaire/fermé**
 
-# Extend the base (this) configuration. When you extend a configuration
-# the base rules take precedence over the extended rules. I.e., if there are
-# duplicate rules in both the base configuration and the extended configuration
-# the base rules will override the extended rules.
-# Another thing to know with extending configurations is you can chain together
-# multiple configuration files to a depth of 2. Allowlist arrays are appended
-# and can contain duplicates.
-# useDefault and path can NOT be used at the same time. Choose one.
-[extend]
-# useDefault will extend the base configuration with the default gitleaks config:
-# https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml
-useDefault = true
-# or you can supply a path to a configuration. Path is relative to where gitleaks
-# was invoked, not the location of the base config.
-path = "common_config.toml"
+Voir le fichier [LICENSE](LICENSE) pour le texte complet.
 
-# An array of tables that contain information that define instructions
-# on how to detect secrets
-[[rules]]
+## 🙏 Remerciements
 
-# Unique identifier for this rule
-id = "awesome-rule-1"
+- 🤖 Développé avec [Claude Code](https://code.claude.com) (Anthropic)
+- 🔒 Analyse de sécurité : Trail of Bits Skills + STRIDE (62 findings corrigés)
+- 🌐 Utilise [Tailscale](https://tailscale.com) pour le réseau mesh sécurisé
+- 🔑 Utilise OpenSSH pour les connexions sécurisées
+- 🖥️ Utilise [xterm.js](https://xtermjs.org/) pour le rendu terminal
+- 📦 Construit avec [Flutter](https://flutter.dev)
 
-# Short human readable description of the rule.
-description = "awesome rule 1"
+## 🏆 Hall of Fame - Chercheurs en Sécurité
 
-# Golang regular expression used to detect secrets. Note Golang's regex engine
-# does not support lookaheads.
-regex = '''one-go-style-regex-for-this-rule'''
+Ces personnes ont contribué à améliorer la sécurité du projet :
 
-# Golang regular expression used to match paths. This can be used as a standalone rule or it can be used
-# in conjunction with a valid `regex` entry.
-path = '''a-file-path-regex'''
+*(Aucune contribution pour le moment - soyez le premier !)*
 
-# Array of strings used for metadata and reporting purposes.
-tags = ["tag","another tag"]
+**Format :** Nom/Pseudo - Description de la vulnérabilité - Gravité - Date
 
-# Int used to extract secret from regex match and used as the group that will have
-# its entropy checked if `entropy` is set.
-secretGroup = 3
+## 📞 Contact & Support
 
-# Float representing the minimum shannon entropy a regex group must have to be considered a secret.
-entropy = 3.5
+- 🐛 **Bugs et problèmes** : [GitHub Issues](https://github.com/Kevin-hdev/ChillShell/issues)
+- 💬 **Discussions générales** : [GitHub Discussions](https://github.com/Kevin-hdev/ChillShell/discussions)
+- 🔒 **Sécurité** : Chill_app@outlook.fr
+- 📧 **Autre** : Chill_app@outlook.fr
 
-# Keywords are used for pre-regex check filtering. Rules that contain
-# keywords will perform a quick string compare check to make sure the
-# keyword(s) are in the content being scanned. Ideally these values should
-# either be part of the idenitifer or unique strings specific to the rule's regex
-# (introduced in v8.6.0)
-keywords = [
-  "auth",
-  "password",
-  "token",
-]
+## 🔗 Liens Utiles
 
-# You can include an allowlist table for a single rule to reduce false positives or ignore commits
-# with known/rotated secrets
-[rules.allowlist]
-description = "ignore commit A"
-commits = [ "commit-A", "commit-B"]
-paths = [
-  '''go\.mod''',
-  '''go\.sum'''
-]
-# note: (rule) regexTarget defaults to check the _Secret_ in the finding.
-# if regexTarget is not specified then _Secret_ will be used.
-# Acceptable values for regexTarget are "match" and "line"
-regexTarget = "match"
-regexes = [
-  '''process''',
-  '''getenv''',
-]
-# note: stopwords targets the extracted secret, not the entire regex match
-# like 'regexes' does. (stopwords introduced in 8.8.0)
-stopwords = [
-  '''client''',
-  '''endpoint''',
-]
+- 📱 [ChillShell (Application Mobile)](https://github.com/Kevin-hdev/ChillShell) - Ce repository
+- 🖥️ [Chill Desktop (Application PC)](https://github.com/Kevin-hdev/Chill) - Repository séparé
+- 🌐 [Site Web](https://chillshell.app) - En construction
+- 📖 [Documentation complète](https://github.com/Kevin-hdev/ChillShell/wiki)
 
+## ⚠️ Clause de Non-Responsabilité Finale
 
-# This is a global allowlist which has a higher order of precedence than rule-specific allowlists.
-# If a commit listed in the `commits` field below is encountered then that commit will be skipped and no
-# secrets will be detected for said commit. The same logic applies for regexes and paths.
-[allowlist]
-description = "global allow list"
-commits = [ "commit-A", "commit-B", "commit-C"]
-paths = [
-  '''gitleaks\.toml''',
-  '''(.*?)(jpg|gif|doc)'''
-]
+**EN UTILISANT CE LOGICIEL, VOUS RECONNAISSEZ ET ACCEPTEZ QUE :**
 
-# note: (global) regexTarget defaults to check the _Secret_ in the finding.
-# if regexTarget is not specified then _Secret_ will be used.
-# Acceptable values for regexTarget are "match" and "line"
-regexTarget = "match"
+1. Ce logiciel est fourni "TEL QUEL" sans aucune garantie
+2. Les auteurs ne sont PAS responsables des dommages, pertes de données, failles de sécurité ou tout autre problème
+3. Vous utilisez ce logiciel entièrement à vos propres risques
+4. Vous êtes seul responsable de la sécurité de vos systèmes
+5. Ce logiciel n'a PAS été audité par des professionnels de la sécurité
+6. Il peut contenir des vulnérabilités critiques non découvertes
 
-regexes = [
-  '''219-09-9999''',
-  '''078-05-1120''',
-  '''(9[0-9]{2}|666)-\d{2}-\d{4}''',
-]
-# note: stopwords targets the extracted secret, not the entire regex match
-# like 'regexes' does. (stopwords introduced in 8.8.0)
-stopwords = [
-  '''client''',
-  '''endpoint''',
-]
-```
+**SI VOUS N'ACCEPTEZ PAS CES CONDITIONS, N'UTILISEZ PAS CE LOGICIEL.**
 
-Refer to the default [gitleaks config](https://github.com/zricethezav/gitleaks/blob/master/config/gitleaks.toml) for examples or follow the [contributing guidelines](https://github.com/zricethezav/gitleaks/blob/master/README.md) if you would like to contribute to the default configuration. Additionally, you can check out [this gitleaks blog post](https://blog.gitleaks.io/stop-leaking-secrets-configuration-2-3-aeed293b1fbf) which covers advanced configuration setups.
+---
 
-### Additional Configuration
+⭐ **Si ce projet vous est utile, mettez une étoile sur GitHub !**
 
-#### gitleaks:allow
+🚨 **Rappel : Logiciel ALPHA non audité - Utilisation à vos risques**
 
-If you are knowingly committing a test secret that gitleaks will catch you can add a `gitleaks:allow` comment to that line which will instruct gitleaks
-to ignore that secret. Ex:
-
-```
-class CustomClass:
-    discord_client_secret = '8dyfuiRyq=vVc3RRr_edRk-fK__JItpZ'  #gitleaks:allow
-
-```
-
-#### .gitleaksignore
-
-You can ignore specific findings by creating a `.gitleaksignore` file at the root of your repo. In release v8.10.0 Gitleaks added a `Fingerprint` value to the Gitleaks report. Each leak, or finding, has a Fingerprint that uniquely identifies a secret. Add this fingerprint to the `.gitleaksignore` file to ignore that specific secret. See Gitleaks' [.gitleaksignore](https://github.com/zricethezav/gitleaks/blob/master/.gitleaksignore) for an example. Note: this feature is experimental and is subject to change in the future.
-
-## Sponsorships
-
-<p align="left">
-	  <a href="https://www.tines.com/?utm_source=oss&utm_medium=sponsorship&utm_campaign=gitleaks">
-		  <img alt="Tines Sponsorship" src="https://user-images.githubusercontent.com/15034943/146411864-4878f936-b4f7-49a0-b625-f9f40c704bfa.png" width=200>
-	  </a>
-  </p>
-
-## Exit Codes
-
-You can always set the exit code when leaks are encountered with the --exit-code flag. Default exit codes below:
-
-```
-0 - no leaks present
-1 - leaks or error encountered
-126 - unknown flag
-```
+💬 **Questions ? Ouvrez une Discussion sur GitHub !**
