@@ -28,9 +28,15 @@ En contribuant, vous acceptez de respecter notre [Code de Conduite](CODE_OF_COND
 
 **N'OUVREZ PAS d'issue publique !**
 
+⚠️ **LISEZ D'ABORD** : [⚠️\_READ\_THIS\_FIRST.md](⚠️_READ_THIS_FIRST.md) pour comprendre le contexte sécurité
+
 Suivez la procédure dans [SECURITY.md](SECURITY.md) :
 - Email à : Chill_app@outlook.fr
 - Sujet : `[SECURITY] Vulnérabilité dans ChillShell`
+
+**Documentation sécurité complète** :
+- [SECURITY.md](SECURITY.md) - Mesures implémentées, audits réalisés, procédure de signalement
+- [⚠️\_READ\_THIS\_FIRST.md](⚠️_READ_THIS_FIRST.md) - Avertissements, surface d'attaque, bonnes pratiques
 
 ## 🛠️ Contribuer du Code
 
@@ -106,6 +112,7 @@ Utilisez les préfixes :
 - [ ] CHANGELOG.md mis à jour
 - [ ] Pas de secrets/clés dans le code
 - [ ] Screenshots ajoutés si changement UI
+- [ ] **Si changement sécurité** : SECURITY.md mis à jour si nécessaire
 
 ## 🌍 Traduction (i18n)
 

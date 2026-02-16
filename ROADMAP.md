@@ -4,7 +4,7 @@
 
 ---
 
-## ✅ V1.0 - Core (Complété)
+## ✅ V1.0 - Core (Complété - Jan 2026)
 
 ### Fonctionnalités de base
 - [x] Connexion SSH avec dartssh2 (Ed25519/RSA)
@@ -440,9 +440,16 @@ Chaque requête-réponse utilise un `requestId` UUID unique avec timeout configu
 
 ---
 
-## 🚀 V1.6 - Navigation & Productivité (Futur)
+## ✅ VERSION ACTUELLE : V1.5.2 (11 Février 2026)
+
+**Migration SSH Isolate** : Animation fluide à 60fps, toutes opérations SSH dans background isolate.
+
+---
+
+## 🚀 V1.6 - Navigation & Productivité (En développement)
 
 ### Navigation & Productivité
+- [x] **Settings avancés** - Plus d'options de personnalisation
 - [ ] **Bouton Snippets** - Commandes favorites en accordéon (style Warp)
 - [ ] **Complétion avancée** - Analyse de chemin (ls silencieux), TAB chaîné, suggestions multiples
 
@@ -455,7 +462,6 @@ Chaque requête-réponse utilise un `requestId` UUID unique avec timeout configu
 
 ### Features avancées
 - [ ] **Sync cross-device** - Synchronisation des connexions/snippets
-- [ ] **Settings avancés** - Plus d'options de personnalisation
 
 ### Monétisation
 *À définir - en cours de réflexion*
@@ -518,4 +524,4 @@ flutter build apk --release
 
 ---
 
-*Dernière mise à jour: 11 Février 2026 (V1.5.2 - Migration SSH Isolate : animation fluide, 0 saccades)*
+*Dernière mise à jour: 16 Février 2026 (V1.5.2 - Migration SSH Isolate + Documentation sécurité complète)*

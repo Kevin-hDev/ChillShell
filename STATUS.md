@@ -1,6 +1,6 @@
 # ChillShell - Status de développement
 
-> Dernière mise à jour: 6 Février 2026
+> Dernière mise à jour: 16 Février 2026
 
 ---
 
@@ -31,7 +31,40 @@
 
 ---
 
-## État de la V1 — APK debug terminé
+## 📖 Préparation Publication GitHub (16 Février 2026)
+
+### Documentation Sécurité Complète
+
+**Fichiers créés/mis à jour** :
+- ✅ **SECURITY.md** (EN) - Mesures de sécurité, 3 audits + qualité, procédure de signalement
+- ✅ **SECURITE.md** (FR) - Version française complète
+- ✅ **⚠️\_READ\_THIS\_FIRST.md** (EN) - Avertissements, surface d'attaque, bonnes pratiques
+- ✅ **⚠️\_LISEZ\_CECI\_AVANT\_INSTALLATION.md** (FR) - Version française
+- ✅ **README.md** - Corrigé (contenait README Gitleaks par erreur)
+- ✅ **CHANGELOG.md** - Historique complet v0.1.0-alpha → v1.5.2
+- ✅ **ROADMAP.md** - Version actuelle corrigée (V1.5.2, pas V1.0)
+- ✅ **CONTRIBUTING.md** - Ajout références documentation sécurité
+
+**Travail de sécurité documenté** :
+- 3 audits internes successifs (white-box, STRIDE, Trail of Bits méthodologie)
+- 1 audit qualité (83 fichiers, 24 000 lignes)
+- Score sécurité amélioré : 6.5 → 8.5/10 (auto-évalué)
+- 62 findings corrigés (4 Critiques, 8 Élevés, 21 Moyens, 21 Faibles)
+- 0 vulnérabilité exploitable à distance identifiée
+- 97 tests unitaires passent
+
+**Nettoyage docs** :
+- 📁 `docs/archives/plans/` - 18 plans implémentation (260K)
+- 📁 `docs/archives/docs_obsoletes/` - 4 documents obsolètes (32K)
+  - VibeTerm_Architecture.md
+  - VibeTerm_SSH_Guide.md
+  - Vision Technique Ghost Text.md
+  - VibeTerm_2026_Specifications_v2.md (document de conception initial)
+- 📁 `docs/archives/TEST_HACK/` - Audit offensif à refaire plus tard (12K)
+
+---
+
+## État de la V1.5.2 — Stable (11 Février 2026)
 
 **Build debug Android** : ✅ Fonctionnel et testé sur téléphone Android physique.
 
@@ -906,9 +939,3 @@ Boutons intelligents (selon contexte):
 - [Escape] Si vim ouvert
 ```
 
-### Prochaines étapes
-1. Créer le design document détaillé
-2. Implémenter la navigation dossiers
-3. Implémenter Ctrl+D
-4. Implémenter le mode édition
-5. Corriger le copier/coller
