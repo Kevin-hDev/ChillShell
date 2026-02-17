@@ -215,6 +215,34 @@ class SettingsNotifier extends Notifier<SettingsState> {
     _saveSettings();
   }
 
+  void toggleRasp(bool enabled) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(raspEnabled: enabled),
+    );
+    _saveSettings();
+  }
+
+  void setRaspBlockMode(bool blockMode) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(raspBlockMode: blockMode),
+    );
+    _saveSettings();
+  }
+
+  void toggleClipboardAutoClear(bool enabled) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(clipboardAutoClear: enabled),
+    );
+    _saveSettings();
+  }
+
+  void setClipboardClearSeconds(int seconds) {
+    state = state.copyWith(
+      appSettings: state.appSettings.copyWith(clipboardClearSeconds: seconds),
+    );
+    _saveSettings();
+  }
+
   void updateTailscaleSettings({
     bool? enabled,
     String? deviceName,

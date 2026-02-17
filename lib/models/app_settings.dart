@@ -49,6 +49,12 @@ class AppSettings {
   // Tailscale
   final bool tailscaleEnabled;
   final String? tailscaleDeviceName;
+  // freeRASP protection
+  final bool raspEnabled;
+  final bool raspBlockMode;
+  // Clipboard auto-clear
+  final bool clipboardAutoClear;
+  final int clipboardClearSeconds;
 
   const AppSettings({
     this.theme = AppTheme.warpDark,
@@ -66,6 +72,10 @@ class AppSettings {
     this.terminalFontSize = TerminalFontSize.m,
     this.tailscaleEnabled = false,
     this.tailscaleDeviceName,
+    this.raspEnabled = true,
+    this.raspBlockMode = false,
+    this.clipboardAutoClear = true,
+    this.clipboardClearSeconds = 5,
   });
 
   AppSettings copyWith({
@@ -86,6 +96,10 @@ class AppSettings {
     bool? tailscaleEnabled,
     String? tailscaleDeviceName,
     bool clearTailscaleDeviceName = false,
+    bool? raspEnabled,
+    bool? raspBlockMode,
+    bool? clipboardAutoClear,
+    int? clipboardClearSeconds,
   }) {
     return AppSettings(
       theme: theme ?? this.theme,
@@ -108,6 +122,11 @@ class AppSettings {
       tailscaleDeviceName: clearTailscaleDeviceName
           ? null
           : (tailscaleDeviceName ?? this.tailscaleDeviceName),
+      raspEnabled: raspEnabled ?? this.raspEnabled,
+      raspBlockMode: raspBlockMode ?? this.raspBlockMode,
+      clipboardAutoClear: clipboardAutoClear ?? this.clipboardAutoClear,
+      clipboardClearSeconds:
+          clipboardClearSeconds ?? this.clipboardClearSeconds,
     );
   }
 
@@ -127,6 +146,10 @@ class AppSettings {
     'terminalFontSize': terminalFontSize.name,
     'tailscaleEnabled': tailscaleEnabled,
     'tailscaleDeviceName': tailscaleDeviceName,
+    'raspEnabled': raspEnabled,
+    'raspBlockMode': raspBlockMode,
+    'clipboardAutoClear': clipboardAutoClear,
+    'clipboardClearSeconds': clipboardClearSeconds,
   };
 
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
@@ -147,5 +170,9 @@ class AppSettings {
     ),
     tailscaleEnabled: json['tailscaleEnabled'] as bool? ?? false,
     tailscaleDeviceName: json['tailscaleDeviceName'] as String?,
+    raspEnabled: json['raspEnabled'] as bool? ?? true,
+    raspBlockMode: json['raspBlockMode'] as bool? ?? false,
+    clipboardAutoClear: json['clipboardAutoClear'] as bool? ?? true,
+    clipboardClearSeconds: json['clipboardClearSeconds'] as int? ?? 5,
   );
 }

@@ -17,6 +17,10 @@ void main() {
       expect(settings.wolEnabled, false);
       expect(settings.languageCode, null);
       expect(settings.terminalFontSize, TerminalFontSize.m);
+      expect(settings.raspEnabled, true);
+      expect(settings.raspBlockMode, false);
+      expect(settings.clipboardAutoClear, true);
+      expect(settings.clipboardClearSeconds, 5);
     });
 
     test('toJson/fromJson round-trip preserves all fields', () {
@@ -33,6 +37,10 @@ void main() {
         wolEnabled: true,
         languageCode: 'fr',
         terminalFontSize: TerminalFontSize.xl,
+        raspEnabled: false,
+        raspBlockMode: true,
+        clipboardAutoClear: false,
+        clipboardClearSeconds: 15,
       );
 
       final json = original.toJson();
@@ -50,6 +58,10 @@ void main() {
       expect(restored.wolEnabled, original.wolEnabled);
       expect(restored.languageCode, original.languageCode);
       expect(restored.terminalFontSize, original.terminalFontSize);
+      expect(restored.raspEnabled, original.raspEnabled);
+      expect(restored.raspBlockMode, original.raspBlockMode);
+      expect(restored.clipboardAutoClear, original.clipboardAutoClear);
+      expect(restored.clipboardClearSeconds, original.clipboardClearSeconds);
     });
 
     test('fromJson handles missing fields with defaults', () {
@@ -61,6 +73,10 @@ void main() {
       expect(settings.autoLockMinutes, 10);
       expect(settings.languageCode, null);
       expect(settings.terminalFontSize, TerminalFontSize.m);
+      expect(settings.raspEnabled, true);
+      expect(settings.raspBlockMode, false);
+      expect(settings.clipboardAutoClear, true);
+      expect(settings.clipboardClearSeconds, 5);
     });
 
     test('fromJson handles null languageCode', () {
@@ -82,6 +98,24 @@ void main() {
       // unchanged fields
       expect(modified.autoConnectOnStart, true);
       expect(modified.wolEnabled, false);
+    });
+
+    test('copyWith updates RASP and clipboard fields', () {
+      const original = AppSettings();
+      final modified = original.copyWith(
+        raspEnabled: false,
+        raspBlockMode: true,
+        clipboardAutoClear: false,
+        clipboardClearSeconds: 30,
+      );
+
+      expect(modified.raspEnabled, false);
+      expect(modified.raspBlockMode, true);
+      expect(modified.clipboardAutoClear, false);
+      expect(modified.clipboardClearSeconds, 30);
+      // unchanged fields
+      expect(modified.theme, AppTheme.warpDark);
+      expect(modified.autoConnectOnStart, true);
     });
 
     test('copyWith clearLanguageCode resets to null', () {

@@ -14,6 +14,7 @@ enum AuditEventType {
   hostKeyMismatch,
   rootDetected,
   pinFail,
+  raspThreatDetected,
 }
 
 /// Entrée d'audit log.
