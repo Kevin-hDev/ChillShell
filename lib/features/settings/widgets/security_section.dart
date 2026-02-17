@@ -26,7 +26,32 @@ class SecuritySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Déverrouillage
+        _buildUnlockSection(context, ref, l10n, settings, theme),
+        const SizedBox(height: VibeTermSpacing.lg),
+        _buildAutoLockSection(ref, l10n, settings, theme),
+        const SizedBox(height: VibeTermSpacing.lg),
+        _buildDeviceProtectionSection(ref, l10n, settings, theme),
+        const SizedBox(height: VibeTermSpacing.lg),
+        _buildClipboardSection(ref, l10n, settings, theme),
+        const SizedBox(height: VibeTermSpacing.lg),
+        _buildHistorySection(context, ref, l10n, theme),
+        const SizedBox(height: VibeTermSpacing.lg),
+        _buildScreenshotSection(ref, l10n, settings, theme),
+      ],
+    );
+  }
+
+  /// Section Déverrouillage : PIN + empreinte digitale
+  Widget _buildUnlockSection(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    SettingsState settings,
+    VibeTermThemeData theme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SectionHeader(title: l10n.unlock.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
@@ -112,8 +137,20 @@ class SecuritySection extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.lg),
-        // Section Verrouillage automatique
+      ],
+    );
+  }
+
+  /// Section Verrouillage automatique : toggle + sélecteur de temps
+  Widget _buildAutoLockSection(
+    WidgetRef ref,
+    AppLocalizations l10n,
+    SettingsState settings,
+    VibeTermThemeData theme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SectionHeader(title: l10n.autoLock.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
@@ -164,8 +201,20 @@ class SecuritySection extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.lg),
-        // Section Protection de l'appareil (freeRASP)
+      ],
+    );
+  }
+
+  /// Section Protection de l'appareil (freeRASP) : toggle + mode
+  Widget _buildDeviceProtectionSection(
+    WidgetRef ref,
+    AppLocalizations l10n,
+    SettingsState settings,
+    VibeTermThemeData theme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SectionHeader(title: l10n.deviceProtection.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
@@ -217,8 +266,20 @@ class SecuritySection extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.lg),
-        // Section Presse-papier sécurisé
+      ],
+    );
+  }
+
+  /// Section Presse-papier sécurisé : auto-clear + délai
+  Widget _buildClipboardSection(
+    WidgetRef ref,
+    AppLocalizations l10n,
+    SettingsState settings,
+    VibeTermThemeData theme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SectionHeader(title: l10n.clipboardAutoClear.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
@@ -271,8 +332,20 @@ class SecuritySection extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.lg),
-        // Section Historique des commandes
+      ],
+    );
+  }
+
+  /// Section Historique des commandes : bouton de suppression
+  Widget _buildHistorySection(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    VibeTermThemeData theme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SectionHeader(title: l10n.clearHistory.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
@@ -367,8 +440,20 @@ class SecuritySection extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.lg),
-        // Section Capture d'écran
+      ],
+    );
+  }
+
+  /// Section Capture d'écran : toggle + avertissement
+  Widget _buildScreenshotSection(
+    WidgetRef ref,
+    AppLocalizations l10n,
+    SettingsState settings,
+    VibeTermThemeData theme,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         SectionHeader(title: l10n.allowScreenshots.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
