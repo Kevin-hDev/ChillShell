@@ -172,6 +172,30 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
     }
   }
 
+  bool _isLockingEnabled(SettingsState settings) {
+    return settings.appSettings.pinLockEnabled ||
+        settings.appSettings.fingerprintEnabled;
+  }
+
+  void _setLockState({required bool isLocked, bool? pinEnabled, bool? fingerprintEnabled}) {
+    if (mounted) {
+      setState(() {
+        _isLocked = isLocked;
+        if (pinEnabled != null) _pinEnabled = pinEnabled;
+        if (fingerprintEnabled != null) _fingerprintEnabled = fingerprintEnabled;
+        _lockStatusReady = true;
+      });
+    }
+  }
+
+  Future<void> _initializeLockScreen(SettingsState settings) async {
+    final pinEnabled = settings.appSettings.pinLockEnabled;
+    final fingerprintAvailable = settings.appSettings.fingerprintEnabled
+        ? await BiometricService.isAvailable()
+        : false;
+    _setLockState(isLocked: true, pinEnabled: pinEnabled, fingerprintEnabled: fingerprintAvailable);
+  }
+
   /// Vérifie le verrouillage une fois les paramètres chargés
   Future<void> _checkLockStatus(SettingsState settings) async {
     if (_checkingLock) return;
@@ -182,33 +206,12 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
       !settings.appSettings.allowScreenshots,
     );
 
-    final pinEnabled = settings.appSettings.pinLockEnabled;
-    final fingerprintEnabled = settings.appSettings.fingerprintEnabled;
-
-    if (pinEnabled || fingerprintEnabled) {
-      // Vérifier si l'empreinte est dispo sur l'appareil
-      bool fingerprintAvailable = false;
-      if (fingerprintEnabled) {
-        fingerprintAvailable = await BiometricService.isAvailable();
-      }
-
-      if (mounted) {
-        setState(() {
-          _isLocked = true;
-          _pinEnabled = pinEnabled;
-          _fingerprintEnabled = fingerprintAvailable;
-          _lockStatusReady = true;
-        });
-      }
-    } else {
-      // Aucun verrouillage activé, déverrouiller directement
-      if (mounted) {
-        setState(() {
-          _isLocked = false;
-          _lockStatusReady = true;
-        });
-      }
+    if (!_isLockingEnabled(settings)) {
+      _setLockState(isLocked: false);
+      return;
     }
+
+    await _initializeLockScreen(settings);
   }
 
   void _unlock() {
