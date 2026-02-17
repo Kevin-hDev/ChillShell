@@ -209,10 +209,14 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
   /// Envoie une touche flèche avec le bon code selon le mode du terminal
   /// En mode normal: \x1b[A (CSI)
   /// En mode application: \x1bOA (SS3) - utilisé par alsamixer, pulsemixer, etc.
-  void _sendArrowKey(String direction) {
+  String _getArrowKeyPrefix() {
     final isAppMode =
         terminalViewKey.currentState?.isApplicationCursorMode ?? false;
-    final prefix = isAppMode ? '\x1bO' : '\x1b[';
+    return isAppMode ? '\x1bO' : '\x1b[';
+  }
+
+  void _sendArrowKey(String direction) {
+    final prefix = _getArrowKeyPrefix();
     ref.read(sshProvider.notifier).write('$prefix$direction');
   }
 

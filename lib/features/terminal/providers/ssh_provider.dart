@@ -812,17 +812,27 @@ class SSHNotifier extends Notifier<SSHState> {
     final trimmed = command.trim().toLowerCase();
     if (trimmed.isEmpty) return false;
 
+    if (_isSpecialCaseLongRunning(trimmed)) return true;
+    if (_isInteractiveCommand(trimmed)) return true;
+    return _containsLongRunningInPipe(trimmed);
+  }
+
+  bool _isSpecialCaseLongRunning(String trimmed) {
     // Cas spéciaux avec arguments
     if (trimmed.startsWith('tail ') && trimmed.contains('-f')) return true;
     if (trimmed.startsWith('docker build')) return true;
     if (trimmed.startsWith('docker-compose') ||
         trimmed.startsWith('docker compose'))
       return true;
+    return false;
+  }
 
+  bool _isInteractiveCommand(String trimmed) {
     // Commandes interactives avec -i (demandent confirmation y/n)
-    if (trimmed.contains(' -i') || trimmed.contains(' --interactive'))
-      return true;
+    return trimmed.contains(' -i') || trimmed.contains(' --interactive');
+  }
 
+  bool _containsLongRunningInPipe(String trimmed) {
     // Vérifier chaque commande dans un pipe (cmd1 | cmd2 | cmd3)
     final pipedCommands = trimmed.split('|');
     for (final pipeCmd in pipedCommands) {
@@ -840,7 +850,6 @@ class SSHNotifier extends Notifier<SSHState> {
 
       if (_longRunningCommands.contains(firstWord)) return true;
     }
-
     return false;
   }
 

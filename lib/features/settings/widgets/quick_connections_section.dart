@@ -276,22 +276,33 @@ class _ConnectionItem extends StatelessWidget {
     if (isSelectionMode) {
       return _buildTile(context, isActive, isDisabled);
     }
+    return _buildSwipeableItem(context, isActive, isDisabled);
+  }
 
+  Widget _buildSwipeableItem(
+    BuildContext context,
+    bool isActive,
+    bool isDisabled,
+  ) {
     return GestureDetector(
       onLongPress: onLongPress,
       child: Dismissible(
         key: Key(connection.id),
         direction: DismissDirection.endToStart,
-        background: Container(
-          color: theme.danger,
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: VibeTermSpacing.md),
-          child: const Icon(Icons.delete, color: Colors.white),
-        ),
+        background: _buildDismissBackground(),
         confirmDismiss: (direction) => _confirmDelete(context),
         onDismissed: (direction) => onDelete(),
         child: _buildTile(context, isActive, isDisabled),
       ),
+    );
+  }
+
+  Widget _buildDismissBackground() {
+    return Container(
+      color: theme.danger,
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: VibeTermSpacing.md),
+      child: const Icon(Icons.delete, color: Colors.white),
     );
   }
 
