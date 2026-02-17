@@ -140,24 +140,21 @@ class _LoginPrompt extends StatelessWidget {
           ),
         ),
         const SizedBox(height: VibeTermSpacing.md),
-        Row(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: _ActionButton(
-                icon: Icons.person_add,
-                label: l10n.tailscaleCreateAccount,
-                theme: theme,
-                onTap: () => ref.read(tailscaleProvider.notifier).login(),
-              ),
+            _ActionButton(
+              icon: Icons.person_add,
+              label: l10n.tailscaleCreateAccount,
+              theme: theme,
+              onTap: () => ref.read(tailscaleProvider.notifier).login(),
             ),
-            const SizedBox(width: VibeTermSpacing.sm),
-            Expanded(
-              child: _ActionButton(
-                icon: Icons.login,
-                label: l10n.tailscaleLogin,
-                theme: theme,
-                onTap: () => ref.read(tailscaleProvider.notifier).login(),
-              ),
+            const SizedBox(height: VibeTermSpacing.sm),
+            _ActionButton(
+              icon: Icons.login,
+              label: l10n.tailscaleLogin,
+              theme: theme,
+              onTap: () => ref.read(tailscaleProvider.notifier).login(),
             ),
           ],
         ),
@@ -207,7 +204,6 @@ class _ActionButton extends StatelessWidget {
                   color: theme.accent,
                   fontWeight: FontWeight.w600,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
