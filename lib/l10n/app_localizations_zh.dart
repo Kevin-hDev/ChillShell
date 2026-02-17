@@ -36,12 +36,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tailscaleDescription => '从世界任何地方连接到您的电脑';
 
   @override
-  String get playStore => 'Play Store';
-
-  @override
-  String get appStore => 'App Store';
-
-  @override
   String get website => '网站';
 
   @override

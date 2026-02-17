@@ -9,8 +9,6 @@
   "wol": "WOL",
   "remoteAccess": "Fernzugriff",
   "tailscaleDescription": "Verbinden Sie sich von überall auf der Welt mit Ihrem PC",
-  "playStore": "Play Store",
-  "appStore": "App Store",
   "website": "Webseite",
   "noSshKeys": "Keine SSH-Schlüssel. Erstellen Sie einen, um sich zu verbinden.",
   "theme": "Thema",
