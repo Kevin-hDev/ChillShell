@@ -104,10 +104,12 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
             children: [
               Icon(Icons.check_circle, color: theme.success),
               const SizedBox(width: VibeTermSpacing.sm),
-              Text(
-                l10n.keyCopied,
-                style: VibeTermTypography.sectionLabel.copyWith(
-                  color: theme.text,
+              Flexible(
+                child: Text(
+                  l10n.keyCopied,
+                  style: VibeTermTypography.sectionLabel.copyWith(
+                    color: theme.text,
+                  ),
                 ),
               ),
             ],
@@ -573,6 +575,7 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
         host: '*',
         type: keyType,
         privateKey: '',
+        publicKey: keyPair['publicKey'],
         createdAt: DateTime.now(),
       );
 

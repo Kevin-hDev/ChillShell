@@ -136,8 +136,10 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
       // App en arrière-plan - enregistrer le moment
       _backgroundTime = DateTime.now();
 
-      // Nettoyer le clipboard silencieusement (via API native pour éviter le toast "Copié")
-      ScreenshotProtectionService.clearClipboard();
+      // Nettoyer le clipboard seulement si la fonctionnalité est activée
+      if (settings.appSettings.clipboardAutoClear) {
+        ScreenshotProtectionService.clearClipboard();
+      }
 
       // Pause le timer de vérification SSH (économie batterie)
       ref.read(sshProvider.notifier).pauseConnectionMonitor();

@@ -9,6 +9,7 @@ class SSHKey {
   final String host;
   final SSHKeyType type;
   final String privateKey;
+  final String? publicKey;
   final DateTime createdAt;
   final DateTime? lastUsed;
 
@@ -18,6 +19,7 @@ class SSHKey {
     required this.host,
     required this.type,
     required this.privateKey,
+    this.publicKey,
     required this.createdAt,
     this.lastUsed,
   });
@@ -28,6 +30,7 @@ class SSHKey {
     String? host,
     SSHKeyType? type,
     String? privateKey,
+    String? publicKey,
     DateTime? createdAt,
     DateTime? lastUsed,
   }) {
@@ -37,6 +40,7 @@ class SSHKey {
       host: host ?? this.host,
       type: type ?? this.type,
       privateKey: privateKey ?? this.privateKey,
+      publicKey: publicKey ?? this.publicKey,
       createdAt: createdAt ?? this.createdAt,
       lastUsed: lastUsed ?? this.lastUsed,
     );
@@ -47,6 +51,7 @@ class SSHKey {
     'name': name,
     'host': host,
     'type': type.name,
+    if (publicKey != null) 'publicKey': publicKey,
     'createdAt': createdAt.toIso8601String(),
     'lastUsed': lastUsed?.toIso8601String(),
   };
@@ -57,6 +62,7 @@ class SSHKey {
     host: json['host'] as String,
     type: SSHKeyType.values.byName(json['type'] as String),
     privateKey: (json['privateKey'] as String?) ?? '',
+    publicKey: json['publicKey'] as String?,
     createdAt: DateTime.parse(json['createdAt'] as String),
     lastUsed: json['lastUsed'] != null
         ? DateTime.parse(json['lastUsed'] as String)

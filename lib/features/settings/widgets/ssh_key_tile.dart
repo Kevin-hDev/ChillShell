@@ -5,6 +5,7 @@ import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
+import '../../../services/clipboard_security_service.dart';
 import '../providers/settings_provider.dart';
 
 class SSHKeyTile extends ConsumerWidget {
@@ -95,8 +96,29 @@ class SSHKeyTile extends ConsumerWidget {
           color: theme.textMuted,
         ),
       ),
+      trailing: sshKey.publicKey != null && sshKey.publicKey!.isNotEmpty
+          ? IconButton(
+              icon: Icon(Icons.copy, size: 18, color: theme.textMuted),
+              tooltip: context.l10n.copy,
+              onPressed: () => _copyPublicKey(context, ref),
+            )
+          : null,
       onTap: () => _showKeyDetails(context, ref),
     );
+  }
+
+  Future<void> _copyPublicKey(BuildContext context, WidgetRef ref) async {
+    final settings = ref.read(settingsProvider);
+    await ClipboardSecurityService.copyWithAutoClear(
+      text: sshKey.publicKey!,
+      autoClearEnabled: settings.appSettings.clipboardAutoClear,
+      clearAfterSeconds: settings.appSettings.clipboardClearSeconds,
+    );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.keyCopied)),
+      );
+    }
   }
 
   Future<bool?> _confirmDelete(BuildContext context, WidgetRef ref) {
