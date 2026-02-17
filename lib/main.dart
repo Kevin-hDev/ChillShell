@@ -17,6 +17,7 @@ import 'services/device_security_service.dart';
 import 'services/foreground_ssh_service.dart';
 import 'services/screenshot_protection_service.dart';
 import 'services/pin_service.dart';
+import 'services/rasp_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -72,6 +73,7 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
   bool _fingerprintEnabled = false;
   bool _deviceRooted = false;
   bool _rootWarningDismissed = false;
+  bool _raspBlocked = false;
   Timer? _autoLockTimer;
   DateTime? _backgroundTime;
 
@@ -92,6 +94,25 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
         details: {'platform': Platform.isAndroid ? 'android' : 'ios'},
       );
     }
+
+    // Initialize freeRASP if enabled
+    final settings = ref.read(settingsProvider);
+    if (settings.appSettings.raspEnabled) {
+      await RaspService.initialize(
+        onThreatDetected: (threat) => _handleRaspThreat(threat),
+      );
+    }
+  }
+
+  void _handleRaspThreat(RaspThreatType threat) {
+    final settings = ref.read(settingsProvider);
+    if (settings.appSettings.raspBlockMode) {
+      // Block mode: show blocking screen
+      if (mounted) setState(() => _raspBlocked = true);
+    }
+    // Warn mode: the audit log is already written by RaspService,
+    // and a snackbar can be shown if we have a context.
+    // For now, warn mode just logs (visible in audit trail).
   }
 
   @override
@@ -212,6 +233,39 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
         backgroundColor: Color(0xFF0F0F0F),
         body: Center(
           child: CircularProgressIndicator(color: Color(0xFF10B981)),
+        ),
+      );
+    }
+
+    // RASP blocked screen (before lock screen)
+    if (_raspBlocked) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF0F0F0F),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.shield, color: Color(0xFFB91C1C), size: 64),
+                const SizedBox(height: 24),
+                Text(
+                  context.l10n.raspBlockedTitle,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  context.l10n.raspBlockedMessage,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }

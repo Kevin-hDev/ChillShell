@@ -165,6 +165,113 @@ class SecuritySection extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: VibeTermSpacing.lg),
+        // Section Protection de l'appareil (freeRASP)
+        SectionHeader(title: l10n.deviceProtection.toUpperCase()),
+        const SizedBox(height: VibeTermSpacing.sm),
+        Container(
+          decoration: BoxDecoration(
+            color: theme.bgBlock,
+            borderRadius: BorderRadius.circular(VibeTermRadius.md),
+            border: Border.all(color: theme.border),
+          ),
+          child: Column(
+            children: [
+              _SecurityToggle(
+                title: l10n.deviceProtection,
+                subtitle: l10n.deviceProtectionDesc,
+                value: settings.appSettings.raspEnabled,
+                onChanged: (value) {
+                  ref.read(settingsProvider.notifier).toggleRasp(value);
+                },
+                theme: theme,
+              ),
+              if (settings.appSettings.raspEnabled) ...[
+                Divider(color: theme.border.withValues(alpha: 0.5), height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(VibeTermSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.raspModeDesc,
+                        style: VibeTermTypography.itemDescription.copyWith(
+                          color: theme.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: VibeTermSpacing.sm),
+                      _RaspModeSelector(
+                        isBlockMode: settings.appSettings.raspBlockMode,
+                        onChanged: (blockMode) {
+                          ref
+                              .read(settingsProvider.notifier)
+                              .setRaspBlockMode(blockMode);
+                        },
+                        theme: theme,
+                        warnLabel: l10n.raspModeWarn,
+                        blockLabel: l10n.raspModeBlock,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: VibeTermSpacing.lg),
+        // Section Presse-papier sécurisé
+        SectionHeader(title: l10n.clipboardAutoClear.toUpperCase()),
+        const SizedBox(height: VibeTermSpacing.sm),
+        Container(
+          decoration: BoxDecoration(
+            color: theme.bgBlock,
+            borderRadius: BorderRadius.circular(VibeTermRadius.md),
+            border: Border.all(color: theme.border),
+          ),
+          child: Column(
+            children: [
+              _SecurityToggle(
+                title: l10n.clipboardAutoClear,
+                subtitle: l10n.clipboardAutoClearDesc,
+                value: settings.appSettings.clipboardAutoClear,
+                onChanged: (value) {
+                  ref
+                      .read(settingsProvider.notifier)
+                      .toggleClipboardAutoClear(value);
+                },
+                theme: theme,
+              ),
+              if (settings.appSettings.clipboardAutoClear) ...[
+                Divider(color: theme.border.withValues(alpha: 0.5), height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(VibeTermSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.clipboardClearDelay,
+                        style: VibeTermTypography.itemDescription.copyWith(
+                          color: theme.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: VibeTermSpacing.sm),
+                      _ClipboardDelaySelector(
+                        selectedSeconds:
+                            settings.appSettings.clipboardClearSeconds,
+                        onChanged: (seconds) {
+                          ref
+                              .read(settingsProvider.notifier)
+                              .setClipboardClearSeconds(seconds);
+                        },
+                        theme: theme,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: VibeTermSpacing.lg),
         // Section Historique des commandes
         SectionHeader(title: l10n.clearHistory.toUpperCase()),
         const SizedBox(height: VibeTermSpacing.sm),
@@ -685,6 +792,142 @@ class _AutoLockTimeSelector extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '$minutes min',
+                    style: VibeTermTypography.itemTitle.copyWith(
+                      color: isSelected ? theme.bg : theme.text,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+/// Selector for RASP mode: Warn or Block
+class _RaspModeSelector extends StatelessWidget {
+  final bool isBlockMode;
+  final ValueChanged<bool> onChanged;
+  final VibeTermThemeData theme;
+  final String warnLabel;
+  final String blockLabel;
+
+  const _RaspModeSelector({
+    required this.isBlockMode,
+    required this.onChanged,
+    required this.theme,
+    required this.warnLabel,
+    required this.blockLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => onChanged(false),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: VibeTermSpacing.sm),
+              decoration: BoxDecoration(
+                color: !isBlockMode ? theme.accent : theme.bg,
+                borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+                border: Border.all(
+                  color: !isBlockMode ? theme.accent : theme.border,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  warnLabel,
+                  style: VibeTermTypography.itemTitle.copyWith(
+                    color: !isBlockMode ? theme.bg : theme.text,
+                    fontWeight: !isBlockMode
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: VibeTermSpacing.xs),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => onChanged(true),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: VibeTermSpacing.sm),
+              decoration: BoxDecoration(
+                color: isBlockMode ? theme.danger : theme.bg,
+                borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+                border: Border.all(
+                  color: isBlockMode ? theme.danger : theme.border,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  blockLabel,
+                  style: VibeTermTypography.itemTitle.copyWith(
+                    color: isBlockMode ? Colors.white : theme.text,
+                    fontWeight: isBlockMode ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Selector for clipboard auto-clear delay: 3s / 5s / 10s / 15s
+class _ClipboardDelaySelector extends StatelessWidget {
+  final int selectedSeconds;
+  final ValueChanged<int> onChanged;
+  final VibeTermThemeData theme;
+
+  const _ClipboardDelaySelector({
+    required this.selectedSeconds,
+    required this.onChanged,
+    required this.theme,
+  });
+
+  static const List<int> _options = [3, 5, 10, 15];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: _options.map((seconds) {
+        final isSelected = selectedSeconds == seconds;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: seconds != _options.last ? VibeTermSpacing.xs : 0,
+            ),
+            child: GestureDetector(
+              onTap: () => onChanged(seconds),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: VibeTermSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? theme.accent : theme.bg,
+                  borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+                  border: Border.all(
+                    color: isSelected ? theme.accent : theme.border,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    '${seconds}s',
                     style: VibeTermTypography.itemTitle.copyWith(
                       color: isSelected ? theme.bg : theme.text,
                       fontWeight: isSelected
