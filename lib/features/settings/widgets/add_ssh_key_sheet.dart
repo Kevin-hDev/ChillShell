@@ -269,30 +269,46 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
   }
 
   Widget _buildImportForm(BuildContext context, VibeTermThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildImportNameField(theme),
+        const SizedBox(height: VibeTermSpacing.md),
+        _buildImportFileSection(theme),
+        const SizedBox(height: VibeTermSpacing.sm),
+        _buildImportKeyField(theme),
+        const SizedBox(height: VibeTermSpacing.md),
+        _buildImportActions(context, theme),
+      ],
+    );
+  }
+
+  Widget _buildImportNameField(VibeTermThemeData theme) {
+    final l10n = context.l10n;
+    return TextField(
+      controller: _importNameController,
+      style: VibeTermTypography.input.copyWith(color: theme.text),
+      enabled: !_isImporting,
+      decoration: InputDecoration(
+        labelText: l10n.keyName,
+        labelStyle: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: theme.border),
+          borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: theme.accent),
+          borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImportFileSection(VibeTermThemeData theme) {
     final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextField(
-          controller: _importNameController,
-          style: VibeTermTypography.input.copyWith(color: theme.text),
-          enabled: !_isImporting,
-          decoration: InputDecoration(
-            labelText: l10n.keyName,
-            labelStyle: VibeTermTypography.caption.copyWith(
-              color: theme.textMuted,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.border),
-              borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: theme.accent),
-              borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-            ),
-          ),
-        ),
-        const SizedBox(height: VibeTermSpacing.md),
         Text(
           l10n.privateKey,
           style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
@@ -313,7 +329,15 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
             ),
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.sm),
+      ],
+    );
+  }
+
+  Widget _buildImportKeyField(VibeTermThemeData theme) {
+    final l10n = context.l10n;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         Text(
           l10n.orPasteKey,
           style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
@@ -345,34 +369,37 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
             ),
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.md),
-        Row(
-          children: [
-            TextButton(
-              onPressed: _isImporting
-                  ? null
-                  : () => setState(() => _showImportForm = false),
-              child: Text(l10n.cancel, style: TextStyle(color: theme.accent)),
-            ),
-            const Spacer(),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.accent,
-                foregroundColor: theme.bg,
-              ),
-              onPressed: _isImporting ? null : _doImportKey,
-              child: _isImporting
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: theme.bg,
-                      ),
-                    )
-                  : Text(l10n.importKey),
-            ),
-          ],
+      ],
+    );
+  }
+
+  Widget _buildImportActions(BuildContext context, VibeTermThemeData theme) {
+    final l10n = context.l10n;
+    return Row(
+      children: [
+        TextButton(
+          onPressed: _isImporting
+              ? null
+              : () => setState(() => _showImportForm = false),
+          child: Text(l10n.cancel, style: TextStyle(color: theme.accent)),
+        ),
+        const Spacer(),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: theme.accent,
+            foregroundColor: theme.bg,
+          ),
+          onPressed: _isImporting ? null : _doImportKey,
+          child: _isImporting
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.bg,
+                  ),
+                )
+              : Text(l10n.importKey),
         ),
       ],
     );
