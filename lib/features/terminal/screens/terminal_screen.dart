@@ -676,7 +676,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
                 'assets/images/icons_github.png',
-                height: 59,
+                height: 70,
               ),
             ),
           ],
