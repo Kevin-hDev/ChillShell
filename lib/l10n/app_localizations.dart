@@ -158,18 +158,6 @@ abstract class AppLocalizations {
   /// **'Connect to your PC from anywhere in the world'**
   String get tailscaleDescription;
 
-  /// No description provided for @playStore.
-  ///
-  /// In en, this message translates to:
-  /// **'Play Store'**
-  String get playStore;
-
-  /// No description provided for @appStore.
-  ///
-  /// In en, this message translates to:
-  /// **'App Store'**
-  String get appStore;
-
   /// No description provided for @website.
   ///
   /// In en, this message translates to:

@@ -37,12 +37,6 @@ class AppLocalizationsEs extends AppLocalizations {
       'Conéctate a tu PC desde cualquier parte del mundo';
 
   @override
-  String get playStore => 'Play Store';
-
-  @override
-  String get appStore => 'App Store';
-
-  @override
   String get website => 'Sitio web';
 
   @override

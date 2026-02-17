@@ -9,8 +9,6 @@
   "wol": "WOL",
   "remoteAccess": "远程访问",
   "tailscaleDescription": "从世界任何地方连接到您的电脑",
-  "playStore": "Play Store",
-  "appStore": "App Store",
   "website": "网站",
   "noSshKeys": "没有SSH密钥。创建一个以连接。",
   "theme": "主题",
