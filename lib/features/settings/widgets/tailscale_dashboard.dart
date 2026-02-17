@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../models/tailscale_device.dart';
+import '../../../services/clipboard_security_service.dart';
 import '../providers/tailscale_provider.dart';
 import 'section_header.dart';
 
@@ -165,18 +165,20 @@ class _StatusCard extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: ip!));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.tailscaleIPCopied),
-                        duration: const Duration(seconds: 2),
-                      ),
+                  onPressed: () async {
+                    await ClipboardSecurityService.copyWithAutoClear(
+                      text: ip!,
+                      autoClearEnabled: true,
+                      clearAfterSeconds: 5,
                     );
-                    // Nettoyer le presse-papier après 30 secondes
-                    Future.delayed(const Duration(seconds: 30), () {
-                      Clipboard.setData(const ClipboardData(text: ''));
-                    });
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.tailscaleIPCopied),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                   icon: Icon(Icons.copy, color: theme.textMuted, size: 16),
                   tooltip: l10n.tailscaleCopyIP,
@@ -265,18 +267,20 @@ class _DeviceCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 IconButton(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: device.ip));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.tailscaleIPCopied),
-                        duration: const Duration(seconds: 2),
-                      ),
+                  onPressed: () async {
+                    await ClipboardSecurityService.copyWithAutoClear(
+                      text: device.ip,
+                      autoClearEnabled: true,
+                      clearAfterSeconds: 5,
                     );
-                    // Nettoyer le presse-papier après 30 secondes
-                    Future.delayed(const Duration(seconds: 30), () {
-                      Clipboard.setData(const ClipboardData(text: ''));
-                    });
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(l10n.tailscaleIPCopied),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                   icon: Icon(Icons.copy, color: theme.textMuted, size: 16),
                   tooltip: l10n.tailscaleCopyIP,

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/theme/typography.dart';
@@ -8,6 +7,7 @@ import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../models/models.dart';
+import '../../../services/clipboard_security_service.dart';
 import '../../../services/key_generation_service.dart';
 import '../../../services/secure_storage_service.dart';
 import '../providers/settings_provider.dart';
@@ -139,17 +139,19 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
                 ),
                 const SizedBox(height: VibeTermSpacing.sm),
                 GestureDetector(
-                  onTap: () {
-                    Clipboard.setData(
-                      ClipboardData(text: _generatedPublicKey!),
+                  onTap: () async {
+                    final settings = ref.read(settingsProvider);
+                    await ClipboardSecurityService.copyWithAutoClear(
+                      text: _generatedPublicKey!,
+                      autoClearEnabled: settings.appSettings.clipboardAutoClear,
+                      clearAfterSeconds:
+                          settings.appSettings.clipboardClearSeconds,
                     );
-                    // Sécurité: nettoyer le clipboard après 30 secondes
-                    Future.delayed(const Duration(seconds: 30), () {
-                      Clipboard.setData(const ClipboardData(text: ''));
-                    });
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text(l10n.keyCopied)));
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(l10n.keyCopied)));
+                    }
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

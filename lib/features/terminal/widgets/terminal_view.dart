@@ -7,6 +7,7 @@ import 'package:xterm/xterm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../services/clipboard_security_service.dart';
 import '../../settings/providers/settings_provider.dart';
 import '../providers/ssh_provider.dart';
 import '../providers/terminal_provider.dart';
@@ -694,11 +695,12 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     if (selection == null) return;
 
     final text = terminal.buffer.getText(selection);
-    await Clipboard.setData(ClipboardData(text: text));
-    // Sécurité: nettoyer le clipboard après 30 secondes
-    Future.delayed(const Duration(seconds: 30), () {
-      Clipboard.setData(const ClipboardData(text: ''));
-    });
+    final settings = ref.read(settingsProvider);
+    await ClipboardSecurityService.copyWithAutoClear(
+      text: text,
+      autoClearEnabled: settings.appSettings.clipboardAutoClear,
+      clearAfterSeconds: settings.appSettings.clipboardClearSeconds,
+    );
     terminalController.clearSelection();
     // Pas de notification - le mobile en affiche déjà une native
   }
@@ -757,11 +759,12 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         case 'copy':
           if (selection != null) {
             final text = terminal.buffer.getText(selection);
-            await Clipboard.setData(ClipboardData(text: text));
-            // Sécurité: nettoyer le clipboard après 30 secondes
-            Future.delayed(const Duration(seconds: 30), () {
-              Clipboard.setData(const ClipboardData(text: ''));
-            });
+            final settings = ref.read(settingsProvider);
+            await ClipboardSecurityService.copyWithAutoClear(
+              text: text,
+              autoClearEnabled: settings.appSettings.clipboardAutoClear,
+              clearAfterSeconds: settings.appSettings.clipboardClearSeconds,
+            );
             terminalController.clearSelection();
           }
           break;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
+import '../../../services/clipboard_security_service.dart';
 import '../providers/settings_provider.dart';
 import '../../../models/wol_config.dart';
 import '../providers/wol_provider.dart';
@@ -599,20 +599,24 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
 
             // Lien vers guide complet
             GestureDetector(
-              onTap: () {
-                Clipboard.setData(
-                  const ClipboardData(text: 'https://chillshell.app/wol'),
+              onTap: () async {
+                await ClipboardSecurityService.copyWithAutoClear(
+                  text: 'https://chillshell.app/wol',
+                  autoClearEnabled: true,
+                  clearAfterSeconds: 5,
                 );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n.linkCopied,
-                      style: TextStyle(color: theme.text),
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        l10n.linkCopied,
+                        style: TextStyle(color: theme.text),
+                      ),
+                      backgroundColor: theme.bgElevated,
+                      behavior: SnackBarBehavior.floating,
                     ),
-                    backgroundColor: theme.bgElevated,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
+                  );
+                }
               },
               child: Row(
                 children: [
