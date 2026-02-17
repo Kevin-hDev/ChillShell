@@ -1222,7 +1222,6 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           .read(sessionsProvider.notifier)
           .updateSessionStatus(sessionId, ConnectionStatus.connected);
 
-      final storage = StorageService();
       if (info.isNewConnection) {
         final savedConnection = SavedConnection(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -1233,8 +1232,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           keyId: info.keyId,
           lastConnected: DateTime.now(),
         );
-        await storage.saveConnection(savedConnection);
+        await ref.read(settingsProvider.notifier).addSavedConnection(savedConnection);
       } else if (info.savedConnectionId != null) {
+        final storage = StorageService();
         await storage.updateConnectionLastConnected(info.savedConnectionId!);
       }
     } else {

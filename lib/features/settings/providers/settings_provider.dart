@@ -272,6 +272,19 @@ class SettingsNotifier extends Notifier<SettingsState> {
     }
   }
 
+  /// Ajoute ou met à jour une connexion sauvegardée dans l'état ET le stockage.
+  Future<void> addSavedConnection(SavedConnection connection) async {
+    final connections = List<SavedConnection>.from(state.savedConnections);
+    final existingIndex = connections.indexWhere((c) => c.id == connection.id);
+    if (existingIndex >= 0) {
+      connections[existingIndex] = connection;
+    } else {
+      connections.add(connection);
+    }
+    state = state.copyWith(savedConnections: connections);
+    await _storage.saveConnection(connection);
+  }
+
   void deleteSavedConnection(String id) {
     final wasSelected = state.savedConnections
         .firstWhere(
