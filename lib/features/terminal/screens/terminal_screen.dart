@@ -365,6 +365,16 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   /// Effectue une connexion SSH directe (comportement standard).
   Future<void> _performDirectSshConnect(SavedConnection connection) async {
+    final sessionId = _createSessionForConnection(connection);
+    final success = await _connectSSH(connection, sessionId);
+    if (success) {
+      await _handleConnectionSuccess(sessionId, connection);
+    } else {
+      _handleConnectionFailure(sessionId);
+    }
+  }
+
+  String _createSessionForConnection(SavedConnection connection) {
     final l10n = context.l10n;
     // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
@@ -378,9 +388,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         );
 
     final sessions = ref.read(sessionsProvider);
-    final sessionId = sessions.last.id;
+    return sessions.last.id;
+  }
 
-    final success = await ref
+  Future<bool> _connectSSH(SavedConnection connection, String sessionId) {
+    return ref
         .read(sshProvider.notifier)
         .connect(
           host: connection.host,
@@ -391,15 +403,20 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           onFirstHostKey: _showHostKeyDialog,
           onHostKeyMismatch: _showHostKeyMismatchDialog,
         );
+  }
 
-    if (success) {
-      ref
-          .read(sessionsProvider.notifier)
-          .updateSessionStatus(sessionId, ConnectionStatus.connected);
-      await StorageService().updateConnectionLastConnected(connection.id);
-    } else {
-      ref.read(sessionsProvider.notifier).removeSession(sessionId);
-    }
+  Future<void> _handleConnectionSuccess(
+    String sessionId,
+    SavedConnection connection,
+  ) async {
+    ref
+        .read(sessionsProvider.notifier)
+        .updateSessionStatus(sessionId, ConnectionStatus.connected);
+    await StorageService().updateConnectionLastConnected(connection.id);
+  }
+
+  void _handleConnectionFailure(String sessionId) {
+    ref.read(sessionsProvider.notifier).removeSession(sessionId);
   }
 
   /// Gère le changement d'onglet (par index UI)
@@ -930,26 +947,44 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   /// Ajoute un nouvel onglet (nouvelle connexion SSH avec mêmes credentials)
   Future<void> _addNewTab() async {
-    final l10n = context.l10n;
-    final sshNotifier = ref.read(sshProvider.notifier);
+    if (!_canCreateNewTab()) return;
+
+    final sessions = ref.read(sessionsProvider);
+    if (sessions.isEmpty) return;
+
+    final newSessionId = _createTabSession(sessions.first);
+
+    // 3. Créer la connexion SSH (l'event loop Flutter continue de peindre
+    //    les frames pendant l'await, donc l'onglet reste visible)
+    final tabId = await ref.read(sshProvider.notifier).createNewTab();
+
+    if (tabId == null) {
+      _handleTabCreationFailure(newSessionId);
+    } else {
+      _handleTabCreationSuccess(newSessionId);
+    }
+  }
+
+  bool _canCreateNewTab() {
     final sshState = ref.read(sshProvider);
 
     // Si pas connecté, ouvrir le dialog de connexion
     if (sshState.connectionState != SSHConnectionState.connected) {
       _showConnectionDialog();
-      return;
+      return false;
     }
 
     // Ignorer silencieusement si une création est déjà en cours (clics rapides)
-    if (sshNotifier.isCreatingTab) {
-      return;
+    if (ref.read(sshProvider.notifier).isCreatingTab) {
+      return false;
     }
 
-    // 1. Ajouter l'onglet dans l'UI IMMÉDIATEMENT (feedback instantané)
-    final sessions = ref.read(sessionsProvider);
-    if (sessions.isEmpty) return;
+    return true;
+  }
 
-    final firstSession = sessions.first;
+  String _createTabSession(Session firstSession) {
+    final l10n = context.l10n;
+    // 1. Ajouter l'onglet dans l'UI IMMÉDIATEMENT (feedback instantané)
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
 
     ref
@@ -972,43 +1007,40 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     // 2. Sélectionner le nouvel onglet immédiatement
     ref.read(activeSessionIndexProvider.notifier).set(newSessions.length - 1);
 
-    // 3. Créer la connexion SSH (l'event loop Flutter continue de peindre
-    //    les frames pendant l'await, donc l'onglet reste visible)
-    final tabId = await sshNotifier.createNewTab();
+    return newSessionId;
+  }
 
-    if (tabId == null) {
-      // Échec : retirer l'onglet et restaurer la sélection
-      if (mounted) {
-        ref.read(sessionsProvider.notifier).removeSession(newSessionId);
-        final updatedSessions = ref.read(sessionsProvider);
-        if (updatedSessions.isNotEmpty) {
-          ref
-              .read(activeSessionIndexProvider.notifier)
-              .set(
-                (updatedSessions.length - 1).clamp(
-                  0,
-                  updatedSessions.length - 1,
-                ),
-              );
-        }
-        final theme = ref.read(vibeTermThemeProvider);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.unableToCreateTab),
-            backgroundColor: theme.danger,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      return;
-    }
-
+  void _handleTabCreationSuccess(String newSessionId) {
     // 4. Connexion réussie → point vert
     if (mounted) {
       ref
           .read(sessionsProvider.notifier)
           .updateSessionStatus(newSessionId, ConnectionStatus.connected);
     }
+  }
+
+  void _handleTabCreationFailure(String newSessionId) {
+    // Échec : retirer l'onglet et restaurer la sélection
+    if (!mounted) return;
+    final l10n = context.l10n;
+
+    ref.read(sessionsProvider.notifier).removeSession(newSessionId);
+    final updatedSessions = ref.read(sessionsProvider);
+    if (updatedSessions.isNotEmpty) {
+      ref
+          .read(activeSessionIndexProvider.notifier)
+          .set(
+            (updatedSessions.length - 1).clamp(0, updatedSessions.length - 1),
+          );
+    }
+    final theme = ref.read(vibeTermThemeProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.unableToCreateTab),
+        backgroundColor: theme.danger,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   /// Gère l'import d'une image pour les agents IA CLI
