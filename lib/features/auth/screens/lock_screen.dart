@@ -32,9 +32,7 @@ class LockScreen extends ConsumerStatefulWidget {
 }
 
 class _LockScreenState extends ConsumerState<LockScreen> {
-  static const _rateLimitStorage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  static const _rateLimitStorage = FlutterSecureStorage();
   static const _failedAttemptsKey = 'pin_failed_attempts';
   static const _lockoutUntilKey = 'pin_lockout_until';
 

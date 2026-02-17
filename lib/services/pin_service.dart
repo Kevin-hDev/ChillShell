@@ -16,9 +16,7 @@ class PinService {
   static const _versionKey = 'vibeterm_pin_version';
   static const _currentVersion = '3';
 
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  static const _storage = FlutterSecureStorage();
 
   static final _pbkdf2 = Pbkdf2.hmacSha256(iterations: 100000, bits: 256);
 

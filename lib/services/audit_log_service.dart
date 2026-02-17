@@ -16,9 +16,7 @@ class AuditLogService {
   static const _storageKey = 'vibeterm_audit_log';
   static const _maxEntries = 500;
 
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
+  static const _storage = FlutterSecureStorage();
 
   /// Enregistre un événement de sécurité.
   static Future<void> log(

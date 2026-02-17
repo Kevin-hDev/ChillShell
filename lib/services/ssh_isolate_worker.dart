@@ -31,6 +31,8 @@ void sshIsolateEntry(List<dynamic> args) {
 /// SendPort/ReceivePort using the message protocol defined in
 /// [ssh_isolate_messages.dart].
 class SSHIsolateWorker {
+  static const _privateKeyNotFoundError = 'Private key not found';
+
   final SendPort _mainSendPort;
   late final ReceivePort _receivePort;
 
@@ -428,7 +430,7 @@ class SSHIsolateWorker {
           'type': IsolateEvent.tabCreateFailed,
           'requestId': requestId,
           'tabId': tabId,
-          'error': 'Private key not found',
+          'error': _privateKeyNotFoundError,
         });
         return;
       }
@@ -824,7 +826,7 @@ class SSHIsolateWorker {
       if (privateKey == null || privateKey.isEmpty) {
         _mainSendPort.send({
           'type': IsolateEvent.connectionFailed,
-          'error': 'Private key not found',
+          'error': _privateKeyNotFoundError,
           'tabId': tabId,
         });
         return;
@@ -919,10 +921,10 @@ class SSHIsolateWorker {
       );
       if (privateKey == null || privateKey.isEmpty) {
         if (kDebugMode)
-          debugPrint('SSHWorker: Private key not found for reconnection');
+          debugPrint('SSHWorker: $_privateKeyNotFoundError for reconnection');
         _mainSendPort.send({
           'type': IsolateEvent.connectionFailed,
-          'error': 'Private key not found',
+          'error': _privateKeyNotFoundError,
         });
         return;
       }

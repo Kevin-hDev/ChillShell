@@ -149,7 +149,7 @@ class WolService {
 
     // Étape 1: Tenter d'abord une connexion SSH (PC peut-être déjà allumé)
     onProgress(
-      WolProgress(
+      const WolProgress(
         attempt: 0,
         maxAttempts: _maxAttempts,
         elapsed: Duration.zero,

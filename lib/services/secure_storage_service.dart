@@ -3,10 +3,7 @@ import 'dart:convert';
 import '../models/models.dart';
 
 class SecureStorageService {
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
+  static const _storage = FlutterSecureStorage();
 
   static const _keysKey = 'ssh_keys';
   static const _privateKeyPrefix = 'private_key_';

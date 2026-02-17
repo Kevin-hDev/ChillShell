@@ -27,10 +27,7 @@ class WolState {
 /// Utilise flutter_secure_storage pour stocker les configurations
 /// de manière sécurisée sur l'appareil.
 class WolNotifier extends Notifier<WolState> {
-  static const _storage = FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
+  static const _storage = FlutterSecureStorage();
 
   static const _wolConfigsKey = 'wol_configs';
 

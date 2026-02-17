@@ -5,6 +5,8 @@ import 'package:cryptography/cryptography.dart';
 import 'package:pointycastle/export.dart' as pc;
 
 class KeyGenerationService {
+  static const _sshEd25519KeyType = 'ssh-ed25519';
+
   // SECURITY NOTE: Les clés Ed25519 sont générées sans chiffrement par passphrase
   // (cipher=none, kdf=none). Acceptable car elles ne quittent jamais le secure
   // storage (Android Keystore / iOS Keychain). Si export utilisateur ajouté,
@@ -82,7 +84,7 @@ class KeyGenerationService {
 
     // public key
     final pubKeyBuffer = BytesBuilder();
-    _writeString(pubKeyBuffer, 'ssh-ed25519');
+    _writeString(pubKeyBuffer, _sshEd25519KeyType);
     _writeBytes(pubKeyBuffer, Uint8List.fromList(publicBytes));
     _writeBytes(buffer, pubKeyBuffer.toBytes());
 
@@ -91,7 +93,7 @@ class KeyGenerationService {
     final checkInt = Random.secure().nextInt(0xFFFFFFFF);
     _writeInt32(privKeyBuffer, checkInt);
     _writeInt32(privKeyBuffer, checkInt);
-    _writeString(privKeyBuffer, 'ssh-ed25519');
+    _writeString(privKeyBuffer, _sshEd25519KeyType);
     _writeBytes(privKeyBuffer, Uint8List.fromList(publicBytes));
     _writeBytes(
       privKeyBuffer,
@@ -125,9 +127,9 @@ class KeyGenerationService {
 
   static String _formatEd25519PublicKey(List<int> publicBytes, String comment) {
     final buffer = BytesBuilder();
-    _writeString(buffer, 'ssh-ed25519');
+    _writeString(buffer, _sshEd25519KeyType);
     _writeBytes(buffer, Uint8List.fromList(publicBytes));
-    return 'ssh-ed25519 ${base64.encode(buffer.toBytes())} $comment';
+    return '$_sshEd25519KeyType ${base64.encode(buffer.toBytes())} $comment';
   }
 
   static String _formatRSAPrivateKey(pc.RSAPrivateKey privateKey) {

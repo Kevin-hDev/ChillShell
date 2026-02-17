@@ -444,7 +444,7 @@ class _WolConfigItem extends StatelessWidget {
           style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
         ),
         content: Text(
-          '${config.name}',
+          config.name,
           style: VibeTermTypography.itemDescription.copyWith(
             color: theme.textMuted,
           ),
