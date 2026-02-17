@@ -108,8 +108,11 @@ void main() {
       for (final size in TerminalFontSize.values) {
         final settings = AppSettings(terminalFontSize: size);
         final restored = AppSettings.fromJson(settings.toJson());
-        expect(restored.terminalFontSize, size,
-            reason: 'Font size $size failed round-trip');
+        expect(
+          restored.terminalFontSize,
+          size,
+          reason: 'Font size $size failed round-trip',
+        );
       }
     });
   });

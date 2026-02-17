@@ -8,12 +8,12 @@ void setupSecureStorageMock() {
   const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-    // Simuler un stockage vide
-    if (methodCall.method == 'read') return null;
-    if (methodCall.method == 'write') return null;
-    if (methodCall.method == 'delete') return null;
-    return null;
-  });
+        // Simuler un stockage vide
+        if (methodCall.method == 'read') return null;
+        if (methodCall.method == 'write') return null;
+        if (methodCall.method == 'delete') return null;
+        return null;
+      });
 }
 
 void main() {
@@ -74,7 +74,9 @@ void main() {
     });
 
     test('api_key commands are never added to history', () {
-      notifier.addToHistory('curl -H "api_key: abc123" https://api.example.com');
+      notifier.addToHistory(
+        'curl -H "api_key: abc123" https://api.example.com',
+      );
       expect(container.read(terminalProvider).commandHistory, isEmpty);
     });
 
@@ -111,7 +113,11 @@ void main() {
       notifier.addToHistory('ls');
       notifier.addToHistory('pwd');
       notifier.addToHistory('ls');
-      expect(container.read(terminalProvider).commandHistory, ['ls', 'pwd', 'ls']);
+      expect(container.read(terminalProvider).commandHistory, [
+        'ls',
+        'pwd',
+        'ls',
+      ]);
     });
 
     test('history is limited to 200 commands', () {
@@ -179,7 +185,9 @@ void main() {
 
     test('no such file prevents history addition', () {
       notifier.setPendingCommand('cat nonexistent.txt');
-      notifier.onTerminalOutput('cat: nonexistent.txt: No such file or directory');
+      notifier.onTerminalOutput(
+        'cat: nonexistent.txt: No such file or directory',
+      );
       notifier.validatePendingCommandAfterDelay();
       expect(container.read(terminalProvider).commandHistory, isEmpty);
     });

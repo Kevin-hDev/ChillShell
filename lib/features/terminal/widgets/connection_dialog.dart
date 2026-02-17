@@ -25,7 +25,8 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
   String? _selectedKeyId;
   List<SavedConnection> _savedConnections = [];
   bool _showSavedConnections = true;
-  bool _isLoading = true; // Empêche le flash du formulaire pendant le chargement
+  bool _isLoading =
+      true; // Empêche le flash du formulaire pendant le chargement
 
   @override
   void initState() {
@@ -61,9 +62,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
 
     return Dialog(
       backgroundColor: theme.bgBlock,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(VibeTermSpacing.md),
         child: SingleChildScrollView(
@@ -93,7 +92,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     );
   }
 
-  Widget _buildSavedConnectionsList(BuildContext context, VibeTermThemeData theme) {
+  Widget _buildSavedConnectionsList(
+    BuildContext context,
+    VibeTermThemeData theme,
+  ) {
     final l10n = context.l10n;
     // Hauteur max pour ~4 connexions (chaque tuile ~85px)
     const maxListHeight = 340.0;
@@ -101,7 +103,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.savedConnections, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+        Text(
+          l10n.savedConnections,
+          style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
+        ),
         const SizedBox(height: VibeTermSpacing.sm),
         // Liste scrollable si plus de 4 connexions
         ConstrainedBox(
@@ -137,13 +142,20 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     );
   }
 
-  Widget _buildNewConnectionForm(BuildContext context, List<SSHKey> sshKeys, VibeTermThemeData theme) {
+  Widget _buildNewConnectionForm(
+    BuildContext context,
+    List<SSHKey> sshKeys,
+    VibeTermThemeData theme,
+  ) {
     final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Titre
-        Text(l10n.newConnection, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        Text(
+          l10n.newConnection,
+          style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+        ),
         const SizedBox(height: VibeTermSpacing.md),
         // Host
         _buildTextField(
@@ -174,7 +186,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
         const SizedBox(height: VibeTermSpacing.sm),
 
         // SSH Key selector
-        Text(l10n.sshKeys, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+        Text(
+          l10n.sshKeys,
+          style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
+        ),
         const SizedBox(height: VibeTermSpacing.xs),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.sm),
@@ -188,13 +203,20 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
               value: _selectedKeyId,
               isExpanded: true,
               dropdownColor: theme.bgBlock,
-              hint: Text(l10n.selectKey, style: VibeTermTypography.caption.copyWith(color: theme.textMuted)),
+              hint: Text(
+                l10n.selectKey,
+                style: VibeTermTypography.caption.copyWith(
+                  color: theme.textMuted,
+                ),
+              ),
               items: sshKeys.map((key) {
                 return DropdownMenuItem(
                   value: key.id,
                   child: Text(
                     '${key.name} (${key.typeLabel})',
-                    style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                    style: VibeTermTypography.itemTitle.copyWith(
+                      color: theme.text,
+                    ),
                   ),
                 );
               }).toList(),
@@ -221,7 +243,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           children: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
+              child: Text(
+                l10n.cancel,
+                style: TextStyle(color: theme.textMuted),
+              ),
             ),
             const SizedBox(width: VibeTermSpacing.sm),
             ElevatedButton(
@@ -252,7 +277,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+        Text(
+          label,
+          style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
+        ),
         const SizedBox(height: VibeTermSpacing.xs),
         TextField(
           controller: controller,
@@ -260,7 +288,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+            hintStyle: VibeTermTypography.caption.copyWith(
+              color: theme.textMuted,
+            ),
             filled: true,
             fillColor: theme.bg,
             contentPadding: const EdgeInsets.symmetric(
@@ -285,14 +315,17 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
     if (host.isEmpty) return false;
     // Vérifier IPv4 avec validation des octets 0-255
     final parts = host.split('.');
-    if (parts.length == 4 && parts.every((p) {
-      final n = int.tryParse(p);
-      return n != null && n >= 0 && n <= 255;
-    })) {
+    if (parts.length == 4 &&
+        parts.every((p) {
+          final n = int.tryParse(p);
+          return n != null && n >= 0 && n <= 255;
+        })) {
       return true;
     }
     // Accepter hostname valide
-    final hostnameRegex = RegExp(r'^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$');
+    final hostnameRegex = RegExp(
+      r'^[a-zA-Z0-9]([a-zA-Z0-9\-\.]*[a-zA-Z0-9])?$',
+    );
     return hostnameRegex.hasMatch(host);
   }
 
@@ -356,10 +389,7 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       child: OutlinedButton.icon(
         onPressed: _onLocalShellPressed,
         icon: Icon(Icons.computer, color: theme.accent),
-        label: Text(
-          l10n.localShell,
-          style: TextStyle(color: theme.accent),
-        ),
+        label: Text(l10n.localShell, style: TextStyle(color: theme.accent)),
         style: OutlinedButton.styleFrom(
           side: BorderSide(color: theme.accent),
           padding: const EdgeInsets.symmetric(
@@ -393,7 +423,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
             Expanded(
               child: Text(
                 l10n.localShellNotAvailable,
-                style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+                style: VibeTermTypography.settingsTitle.copyWith(
+                  color: theme.text,
+                ),
               ),
             ),
           ],
@@ -404,7 +436,9 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
           children: [
             Text(
               l10n.localShellIOSMessage,
-              style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+              style: VibeTermTypography.caption.copyWith(
+                color: theme.textMuted,
+              ),
             ),
           ],
         ),
@@ -429,7 +463,10 @@ class _ConnectionDialogState extends ConsumerState<ConnectionDialog> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgBlock,
-        title: Text(l10n.deleteConnection, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        title: Text(
+          l10n.deleteConnection,
+          style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+        ),
         content: Text(
           connection.name,
           style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
@@ -492,11 +529,7 @@ class _SavedConnectionTile extends StatelessWidget {
                     color: theme.accent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(VibeTermRadius.xs),
                   ),
-                  child: Icon(
-                    Icons.computer,
-                    color: theme.accent,
-                    size: 20,
-                  ),
+                  child: Icon(Icons.computer, color: theme.accent, size: 20),
                 ),
                 const SizedBox(width: VibeTermSpacing.sm),
                 Expanded(
@@ -505,11 +538,15 @@ class _SavedConnectionTile extends StatelessWidget {
                     children: [
                       Text(
                         connection.name,
-                        style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                        style: VibeTermTypography.itemTitle.copyWith(
+                          color: theme.text,
+                        ),
                       ),
                       Text(
                         '${connection.username}@${connection.host}:${connection.port}',
-                        style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+                        style: VibeTermTypography.caption.copyWith(
+                          color: theme.textMuted,
+                        ),
                       ),
                     ],
                   ),

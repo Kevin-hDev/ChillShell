@@ -31,7 +31,7 @@ class SessionTabBar extends ConsumerWidget {
     final isScrolledUp = ref.watch(terminalScrolledUpProvider);
 
     return Container(
-      height: 32,  // Réduit de 44 → 32 (~30%)
+      height: 32, // Réduit de 44 → 32 (~30%)
       padding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.sm),
       child: Row(
         children: [
@@ -41,7 +41,8 @@ class SessionTabBar extends ConsumerWidget {
                 : ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: sessions.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: VibeTermSpacing.xs),
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(width: VibeTermSpacing.xs),
                     itemBuilder: (context, index) {
                       final session = sessions[index];
                       final isActive = index == activeIndex;
@@ -49,19 +50,28 @@ class SessionTabBar extends ConsumerWidget {
                         session: session,
                         isActive: isActive,
                         theme: theme,
-                        onTap: () => ref.read(activeSessionIndexProvider.notifier).set(index),
+                        onTap: () => ref
+                            .read(activeSessionIndexProvider.notifier)
+                            .set(index),
                         onClose: sessions.length > 1
                             ? () async {
                                 // IMPORTANT: Fermer d'abord la connexion SSH par index
                                 // AVANT de modifier l'état UI
-                                await ref.read(sshProvider.notifier).closeTabByIndex(index);
+                                await ref
+                                    .read(sshProvider.notifier)
+                                    .closeTabByIndex(index);
 
                                 // Ensuite supprimer la session UI
-                                ref.read(sessionsProvider.notifier).removeSession(session.id);
+                                ref
+                                    .read(sessionsProvider.notifier)
+                                    .removeSession(session.id);
 
                                 // Ajuster l'index actif si nécessaire
-                                if (activeIndex >= sessions.length - 1 && activeIndex > 0) {
-                                  ref.read(activeSessionIndexProvider.notifier).set(activeIndex - 1);
+                                if (activeIndex >= sessions.length - 1 &&
+                                    activeIndex > 0) {
+                                  ref
+                                      .read(activeSessionIndexProvider.notifier)
+                                      .set(activeIndex - 1);
                                 }
                               }
                             : null,
@@ -74,17 +84,10 @@ class SessionTabBar extends ConsumerWidget {
             const SizedBox(width: VibeTermSpacing.xs),
             // Bouton scroll to bottom (intelligent - apparaît seulement si scrollé vers le haut)
             if (isScrolledUp)
-              _ScrollToBottomButton(
-                onTap: onScrollToBottom,
-                theme: theme,
-              ),
-            if (isScrolledUp)
-              const SizedBox(width: VibeTermSpacing.xs),
+              _ScrollToBottomButton(onTap: onScrollToBottom, theme: theme),
+            if (isScrolledUp) const SizedBox(width: VibeTermSpacing.xs),
             // Bouton import image
-            _ImageImportButton(
-              onTap: onImageImport,
-              theme: theme,
-            ),
+            _ImageImportButton(onTap: onImageImport, theme: theme),
             const SizedBox(width: VibeTermSpacing.xs),
             // Bouton navigation dossiers
             const FolderNavigator(),
@@ -122,28 +125,26 @@ class _SessionTab extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.only(
-          left: 6,   // Réduit de 8 → 6
-          right: 4,  // Réduit de 4 → 4
-          top: 2,    // Réduit de 4 → 2
+          left: 6, // Réduit de 8 → 6
+          right: 4, // Réduit de 4 → 4
+          top: 2, // Réduit de 4 → 2
           bottom: 2, // Réduit de 4 → 2
         ),
         decoration: BoxDecoration(
           color: isActive ? theme.accent : theme.bgBlock,
           borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-          border: Border.all(
-            color: isActive ? theme.accent : theme.border,
-          ),
+          border: Border.all(color: isActive ? theme.accent : theme.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             _StatusDot(status: session.status, theme: theme),
-            const SizedBox(width: 4),  // Réduit de 4 → 4
+            const SizedBox(width: 4), // Réduit de 4 → 4
             Text(
               session.name,
               style: VibeTermTypography.tabText.copyWith(
                 color: isActive ? theme.bg : theme.text,
-                fontSize: 12,  // Réduit de 14 → 12
+                fontSize: 12, // Réduit de 14 → 12
               ),
             ),
             if (onClose != null) ...[
@@ -152,8 +153,10 @@ class _SessionTab extends StatelessWidget {
                 onTap: onClose,
                 child: Icon(
                   Icons.close,
-                  size: 12,  // Réduit de 14 → 12
-                  color: isActive ? theme.bg.withValues(alpha: 0.7) : theme.textMuted,
+                  size: 12, // Réduit de 14 → 12
+                  color: isActive
+                      ? theme.bg.withValues(alpha: 0.7)
+                      : theme.textMuted,
                 ),
               ),
             ],
@@ -189,12 +192,9 @@ class _StatusDot extends StatelessWidget {
     }
 
     return Container(
-      width: 5,  // Réduit de 6 → 5
+      width: 5, // Réduit de 6 → 5
       height: 5,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
@@ -212,8 +212,8 @@ class _AddSessionButton extends StatelessWidget {
       onTap: onTap,
       onLongPress: onLongPress,
       child: Container(
-        width: 26,   // Réduit de 36 → 26
-        height: 26,  // Réduit de 36 → 26
+        width: 26, // Réduit de 36 → 26
+        height: 26, // Réduit de 36 → 26
         decoration: BoxDecoration(
           color: theme.bgBlock,
           borderRadius: BorderRadius.circular(VibeTermRadius.sm),
@@ -222,7 +222,7 @@ class _AddSessionButton extends StatelessWidget {
         child: Icon(
           Icons.add,
           color: theme.textMuted,
-          size: 16,  // Réduit de 20 → 16
+          size: 16, // Réduit de 20 → 16
         ),
       ),
     );
@@ -252,16 +252,8 @@ class _ScrollToBottomButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.arrow_downward,
-              color: theme.textMuted,
-              size: 12,
-            ),
-            Container(
-              width: 10,
-              height: 2,
-              color: theme.textMuted,
-            ),
+            Icon(Icons.arrow_downward, color: theme.textMuted, size: 12),
+            Container(width: 10, height: 2, color: theme.textMuted),
           ],
         ),
       ),

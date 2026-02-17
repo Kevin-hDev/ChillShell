@@ -32,7 +32,9 @@ class WolProgress {
     if (attempt == 0) return Duration(seconds: maxAttempts * 10);
     final avgSecondsPerAttempt = elapsed.inSeconds / attempt;
     final remainingAttempts = maxAttempts - attempt;
-    return Duration(seconds: (avgSecondsPerAttempt * remainingAttempts).round());
+    return Duration(
+      seconds: (avgSecondsPerAttempt * remainingAttempts).round(),
+    );
   }
 }
 
@@ -73,7 +75,8 @@ class WolService {
   Completer<void>? _cancelCompleter;
 
   /// Indique si un processus de wake est en cours
-  bool get isWaking => _cancelCompleter != null && !_cancelCompleter!.isCompleted;
+  bool get isWaking =>
+      _cancelCompleter != null && !_cancelCompleter!.isCompleted;
 
   /// Envoie un magic packet Wake-on-LAN.
   ///
@@ -102,11 +105,7 @@ class WolService {
       final ipAddress = IPAddress(config.broadcastAddress);
 
       // Créer l'instance WakeOnLAN avec le port configuré
-      final wakeOnLan = WakeOnLAN(
-        ipAddress,
-        macAddress,
-        port: config.port,
-      );
+      final wakeOnLan = WakeOnLAN(ipAddress, macAddress, port: config.port);
 
       // Envoyer le magic packet (3 fois pour plus de fiabilité)
       await wakeOnLan.wake(
@@ -149,11 +148,13 @@ class WolService {
     final startTime = DateTime.now();
 
     // Étape 1: Tenter d'abord une connexion SSH (PC peut-être déjà allumé)
-    onProgress(WolProgress(
-      attempt: 0,
-      maxAttempts: _maxAttempts,
-      elapsed: Duration.zero,
-    ));
+    onProgress(
+      WolProgress(
+        attempt: 0,
+        maxAttempts: _maxAttempts,
+        elapsed: Duration.zero,
+      ),
+    );
 
     try {
       final connected = await tryConnect();
@@ -194,11 +195,13 @@ class WolService {
       final elapsed = DateTime.now().difference(startTime);
 
       // Notifier la progression
-      onProgress(WolProgress(
-        attempt: attempt,
-        maxAttempts: _maxAttempts,
-        elapsed: elapsed,
-      ));
+      onProgress(
+        WolProgress(
+          attempt: attempt,
+          maxAttempts: _maxAttempts,
+          elapsed: elapsed,
+        ),
+      );
 
       // Attendre l'intervalle de polling (ou annulation)
       try {

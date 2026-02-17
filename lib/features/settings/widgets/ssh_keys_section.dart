@@ -34,7 +34,9 @@ class _SSHKeysSectionState extends ConsumerState<SSHKeysSection>
         ),
         content: Text(
           l10n.actionIrreversible,
-          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+          style: VibeTermTypography.itemDescription.copyWith(
+            color: theme.textMuted,
+          ),
         ),
         actions: [
           TextButton(
@@ -87,7 +89,9 @@ class _SSHKeysSectionState extends ConsumerState<SSHKeysSection>
                   padding: const EdgeInsets.all(VibeTermSpacing.md),
                   child: Text(
                     l10n.noSshKeys,
-                    style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.textMuted,
+                    ),
                   ),
                 )
               : Column(

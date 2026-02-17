@@ -86,7 +86,11 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
     final status = await DeviceSecurityService.checkDeviceSecurity();
     if (mounted && status == DeviceSecurityStatus.rooted) {
       setState(() => _deviceRooted = true);
-      AuditLogService.log(AuditEventType.rootDetected, success: true, details: {'platform': Platform.isAndroid ? 'android' : 'ios'});
+      AuditLogService.log(
+        AuditEventType.rootDetected,
+        success: true,
+        details: {'platform': Platform.isAndroid ? 'android' : 'ios'},
+      );
     }
   }
 
@@ -100,9 +104,12 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final settings = ref.read(settingsProvider);
-    final lockEnabled = settings.appSettings.pinLockEnabled ||
+    final lockEnabled =
+        settings.appSettings.pinLockEnabled ||
         settings.appSettings.fingerprintEnabled;
-    final autoLockDuration = Duration(minutes: settings.appSettings.autoLockMinutes);
+    final autoLockDuration = Duration(
+      minutes: settings.appSettings.autoLockMinutes,
+    );
 
     if (state == AppLifecycleState.paused) {
       // App en arrière-plan - enregistrer le moment
@@ -150,7 +157,9 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
     _checkingLock = true;
 
     // Appliquer la protection screenshot selon le setting utilisateur
-    ScreenshotProtectionService.setEnabled(!settings.appSettings.allowScreenshots);
+    ScreenshotProtectionService.setEnabled(
+      !settings.appSettings.allowScreenshots,
+    );
 
     final pinEnabled = settings.appSettings.pinLockEnabled;
     final fingerprintEnabled = settings.appSettings.fingerprintEnabled;
@@ -202,9 +211,7 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
       return const Scaffold(
         backgroundColor: Color(0xFF0F0F0F),
         body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF10B981),
-          ),
+          child: CircularProgressIndicator(color: Color(0xFF10B981)),
         ),
       );
     }
@@ -226,7 +233,10 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
               context.l10n.rootedDeviceWarning,
               style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
-            leading: const Icon(Icons.warning_amber_rounded, color: Colors.white),
+            leading: const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.white,
+            ),
             actions: [
               TextButton(
                 onPressed: () => setState(() => _rootWarningDismissed = true),
@@ -255,6 +265,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+
   /// Historique de navigation pour le bouton retour (comme un navigateur web)
   final List<int> _history = [];
 
@@ -277,12 +288,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: IndexedStack(
         index: _currentIndex,
         children: [
-          TerminalScreen(
-            onSettingsTap: () => _navigateTo(1),
-          ),
-          SettingsScreen(
-            onTerminalTap: () => _navigateTo(0),
-          ),
+          TerminalScreen(onSettingsTap: () => _navigateTo(1)),
+          SettingsScreen(onTerminalTap: () => _navigateTo(0)),
         ],
       ),
     );

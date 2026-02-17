@@ -105,7 +105,9 @@ class SSHIsolateClient {
           completer.complete(message);
         } else {
           completer.completeError(
-            Exception('SSHClient: expected SendPort, got ${message.runtimeType}'),
+            Exception(
+              'SSHClient: expected SendPort, got ${message.runtimeType}',
+            ),
           );
         }
       } else {
@@ -113,10 +115,10 @@ class SSHIsolateClient {
       }
     });
 
-    _isolate = await Isolate.spawn(
-      sshIsolateEntry,
-      [_receivePort!.sendPort, rootToken],
-    );
+    _isolate = await Isolate.spawn(sshIsolateEntry, [
+      _receivePort!.sendPort,
+      rootToken,
+    ]);
 
     // Écoute des erreurs / exit du background isolate.
     _errorPort = ReceivePort();
@@ -185,7 +187,9 @@ class SSHIsolateClient {
   void _handleWorkerMessage(dynamic message) {
     if (message is! Map) {
       if (kDebugMode) {
-        debugPrint('SSHClient: unexpected message type: ${message.runtimeType}');
+        debugPrint(
+          'SSHClient: unexpected message type: ${message.runtimeType}',
+        );
       }
       return;
     }
@@ -319,10 +323,7 @@ class SSHIsolateClient {
       try {
         final accepted = await callback(host, port, keyType, fingerprint);
         _workerSendPort?.send(
-          buildHostKeyResponseMessage(
-            requestId: requestId,
-            accepted: accepted,
-          ),
+          buildHostKeyResponseMessage(requestId: requestId, accepted: accepted),
         );
       } catch (e) {
         if (kDebugMode) {
@@ -374,7 +375,10 @@ class SSHIsolateClient {
   }
 
   /// Crée une nouvelle tab SSH. Retourne le tabId ou null en cas d'échec.
-  Future<String?> createTab({required String keyId, required String tabId}) async {
+  Future<String?> createTab({
+    required String keyId,
+    required String tabId,
+  }) async {
     await _ensureSpawned();
 
     final message = buildCreateTabMessage(keyId: keyId, tabId: tabId);
@@ -407,7 +411,10 @@ class SSHIsolateClient {
 
   /// Déconnecte toutes les sessions SSH.
   Future<void> disconnect() async {
-    if (kDebugMode) debugPrint('SSHClient: disconnect() — cancelling ${_pendingRequests.length} pending requests');
+    if (kDebugMode)
+      debugPrint(
+        'SSHClient: disconnect() — cancelling ${_pendingRequests.length} pending requests',
+      );
 
     // Annuler tous les timers de timeout.
     for (final timer in _pendingTimers.values) {
@@ -442,7 +449,10 @@ class SSHIsolateClient {
       remotePath: remotePath,
     );
     final requestId = message['requestId'] as String;
-    final completer = _createPendingRequest(requestId, debugLabel: 'uploadFile');
+    final completer = _createPendingRequest(
+      requestId,
+      debugLabel: 'uploadFile',
+    );
 
     _workerSendPort!.send(message);
 
@@ -457,12 +467,12 @@ class SSHIsolateClient {
   }) async {
     await _ensureSpawned();
 
-    final message = buildExecuteCommandMessage(
-      tabId: tabId,
-      command: command,
-    );
+    final message = buildExecuteCommandMessage(tabId: tabId, command: command);
     final requestId = message['requestId'] as String;
-    final completer = _createPendingRequest(requestId, debugLabel: 'executeCommand');
+    final completer = _createPendingRequest(
+      requestId,
+      debugLabel: 'executeCommand',
+    );
 
     _workerSendPort!.send(message);
 
@@ -686,7 +696,9 @@ class SSHIsolateClient {
       _pendingTimers.remove(requestId);
       if (_pendingRequests.containsKey(requestId) && !completer.isCompleted) {
         if (kDebugMode) {
-          debugPrint('SSHClient: request $requestId ($debugLabel) timed out after ${timeout.inSeconds}s');
+          debugPrint(
+            'SSHClient: request $requestId ($debugLabel) timed out after ${timeout.inSeconds}s',
+          );
         }
         completer.completeError(
           TimeoutException('SSHClient: request timed out', timeout),

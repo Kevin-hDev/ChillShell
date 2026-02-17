@@ -39,11 +39,12 @@ class AppSettings {
   final bool autoLockEnabled;
   final bool pinLockEnabled;
   final bool fingerprintEnabled;
-  final int autoLockMinutes;  // 5, 10, 15 ou 30
-  final bool wolEnabled;  // Wake-on-LAN
-  final bool allowScreenshots;  // Autoriser les captures d'écran (désactivé par défaut)
+  final int autoLockMinutes; // 5, 10, 15 ou 30
+  final bool wolEnabled; // Wake-on-LAN
+  final bool
+  allowScreenshots; // Autoriser les captures d'écran (désactivé par défaut)
   // Multi-langues et taille de police
-  final String? languageCode;  // null = auto-détection
+  final String? languageCode; // null = auto-détection
   final TerminalFontSize terminalFontSize;
   // Tailscale
   final bool tailscaleEnabled;
@@ -89,7 +90,8 @@ class AppSettings {
     return AppSettings(
       theme: theme ?? this.theme,
       autoConnectOnStart: autoConnectOnStart ?? this.autoConnectOnStart,
-      reconnectOnDisconnect: reconnectOnDisconnect ?? this.reconnectOnDisconnect,
+      reconnectOnDisconnect:
+          reconnectOnDisconnect ?? this.reconnectOnDisconnect,
       notifyOnDisconnect: notifyOnDisconnect ?? this.notifyOnDisconnect,
       biometricEnabled: biometricEnabled ?? this.biometricEnabled,
       autoLockEnabled: autoLockEnabled ?? this.autoLockEnabled,
@@ -98,10 +100,14 @@ class AppSettings {
       autoLockMinutes: autoLockMinutes ?? this.autoLockMinutes,
       wolEnabled: wolEnabled ?? this.wolEnabled,
       allowScreenshots: allowScreenshots ?? this.allowScreenshots,
-      languageCode: clearLanguageCode ? null : (languageCode ?? this.languageCode),
+      languageCode: clearLanguageCode
+          ? null
+          : (languageCode ?? this.languageCode),
       terminalFontSize: terminalFontSize ?? this.terminalFontSize,
       tailscaleEnabled: tailscaleEnabled ?? this.tailscaleEnabled,
-      tailscaleDeviceName: clearTailscaleDeviceName ? null : (tailscaleDeviceName ?? this.tailscaleDeviceName),
+      tailscaleDeviceName: clearTailscaleDeviceName
+          ? null
+          : (tailscaleDeviceName ?? this.tailscaleDeviceName),
     );
   }
 

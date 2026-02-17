@@ -13,9 +13,7 @@ class ForegroundSSHService {
   }
 
   /// Démarre le service foreground
-  static Future<bool> start({
-    required String connectionInfo,
-  }) async {
+  static Future<bool> start({required String connectionInfo}) async {
     if (_isRunning) return true;
 
     // Configurer les options Android

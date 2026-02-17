@@ -44,7 +44,10 @@ class AuditLogService {
 
       await _saveEntries(entries);
     } catch (e) {
-      if (kDebugMode) debugPrint('AuditLogService: CRITICAL — failed to log security event: $e');
+      if (kDebugMode)
+        debugPrint(
+          'AuditLogService: CRITICAL — failed to log security event: $e',
+        );
     }
   }
 

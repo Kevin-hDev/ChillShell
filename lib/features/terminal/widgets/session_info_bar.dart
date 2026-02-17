@@ -14,10 +14,14 @@ class SessionInfoBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(activeSessionProvider);
-    final lastExecutionTime = ref.watch(terminalProvider.select((s) => s.lastExecutionTime));
+    final lastExecutionTime = ref.watch(
+      terminalProvider.select((s) => s.lastExecutionTime),
+    );
     final theme = ref.watch(vibeTermThemeProvider);
     final wolNotifier = ref.read(wolProvider.notifier);
-    final savedConnections = ref.watch(settingsProvider.select((s) => s.savedConnections));
+    final savedConnections = ref.watch(
+      settingsProvider.select((s) => s.savedConnections),
+    );
 
     if (session == null) {
       return const SizedBox.shrink();
@@ -43,10 +47,8 @@ class SessionInfoBar extends ConsumerWidget {
         vertical: VibeTermSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: theme.bg,  // Fond opaque pour éviter la superposition au scroll
-        border: Border(
-          bottom: BorderSide(color: theme.borderLight),
-        ),
+        color: theme.bg, // Fond opaque pour éviter la superposition au scroll
+        border: Border(bottom: BorderSide(color: theme.borderLight)),
       ),
       child: Row(
         children: [
@@ -93,11 +95,7 @@ class SessionInfoBar extends ConsumerWidget {
           const SizedBox(width: VibeTermSpacing.sm),
           // Temps d'exécution (si présent)
           if (executionTimeText != null) ...[
-            Icon(
-              Icons.timer_outlined,
-              size: 10,
-              color: theme.textMuted,
-            ),
+            Icon(Icons.timer_outlined, size: 10, color: theme.textMuted),
             const SizedBox(width: 2),
             Text(
               executionTimeText,
@@ -111,10 +109,7 @@ class SessionInfoBar extends ConsumerWidget {
           ],
           // Tailscale badge à droite
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 6,
-              vertical: 2,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: theme.accentDim,
               borderRadius: BorderRadius.circular(VibeTermRadius.xs),
@@ -183,16 +178,15 @@ class _ShutdownButton extends ConsumerWidget {
           color: theme.danger.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(VibeTermRadius.xs),
         ),
-        child: Icon(
-          Icons.power_settings_new,
-          size: 14,
-          color: theme.danger,
-        ),
+        child: Icon(Icons.power_settings_new, size: 14, color: theme.danger),
       ),
     );
   }
 
-  Future<void> _showShutdownConfirmation(BuildContext context, WidgetRef ref) async {
+  Future<void> _showShutdownConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final theme = ref.read(vibeTermThemeProvider);
     final l10n = context.l10n;
 
@@ -210,20 +204,26 @@ class _ShutdownButton extends ConsumerWidget {
             const SizedBox(width: VibeTermSpacing.sm),
             Text(
               l10n.shutdownPcTitle,
-              style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+              style: VibeTermTypography.settingsTitle.copyWith(
+                color: theme.text,
+              ),
             ),
           ],
         ),
         content: Text(
           l10n.shutdownPcMessage(wolConfigName),
-          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+          style: VibeTermTypography.itemDescription.copyWith(
+            color: theme.textMuted,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               l10n.cancel,
-              style: VibeTermTypography.sectionLabel.copyWith(color: theme.textMuted),
+              style: VibeTermTypography.sectionLabel.copyWith(
+                color: theme.textMuted,
+              ),
             ),
           ),
           TextButton(
@@ -233,7 +233,9 @@ class _ShutdownButton extends ConsumerWidget {
             ),
             child: Text(
               l10n.shutdownAction,
-              style: VibeTermTypography.sectionLabel.copyWith(color: theme.danger),
+              style: VibeTermTypography.sectionLabel.copyWith(
+                color: theme.danger,
+              ),
             ),
           ),
         ],

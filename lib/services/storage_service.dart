@@ -31,9 +31,12 @@ class StorageService {
     if (data == null) return [];
     try {
       final list = jsonDecode(data) as List;
-      return list.map((json) => SSHKey.fromJson(json as Map<String, dynamic>)).toList();
+      return list
+          .map((json) => SSHKey.fromJson(json as Map<String, dynamic>))
+          .toList();
     } catch (e) {
-      if (kDebugMode) debugPrint('Error decoding SSH keys, returning empty list');
+      if (kDebugMode)
+        debugPrint('Error decoding SSH keys, returning empty list');
       return [];
     }
   }
@@ -101,9 +104,12 @@ class StorageService {
     if (data == null) return [];
     try {
       final list = jsonDecode(data) as List;
-      return list.map((json) => SavedConnection.fromJson(json as Map<String, dynamic>)).toList();
+      return list
+          .map((json) => SavedConnection.fromJson(json as Map<String, dynamic>))
+          .toList();
     } catch (e) {
-      if (kDebugMode) debugPrint('Error decoding saved connections, returning empty list');
+      if (kDebugMode)
+        debugPrint('Error decoding saved connections, returning empty list');
       return [];
     }
   }
@@ -148,10 +154,7 @@ class StorageService {
   /// Saves command history with per-entry timestamps (V2 format).
   /// Each entry: {"c": "command", "t": timestamp_ms}
   Future<void> saveCommandHistoryV2(List<Map<String, dynamic>> entries) async {
-    await _storage.write(
-      key: 'command_history',
-      value: jsonEncode(entries),
-    );
+    await _storage.write(key: 'command_history', value: jsonEncode(entries));
   }
 
   /// Loads command history with timestamps (V2 format).
@@ -166,13 +169,16 @@ class StorageService {
       // V1 migration: plain strings → add current timestamp
       if (list.first is String) {
         final now = DateTime.now().millisecondsSinceEpoch;
-        return list.map((e) => <String, dynamic>{'c': e.toString(), 't': now}).toList();
+        return list
+            .map((e) => <String, dynamic>{'c': e.toString(), 't': now})
+            .toList();
       }
 
       // V2 format: objects with 'c' and 't'
       return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (e) {
-      if (kDebugMode) debugPrint('Error decoding command history, returning empty list');
+      if (kDebugMode)
+        debugPrint('Error decoding command history, returning empty list');
       return [];
     }
   }

@@ -83,10 +83,7 @@ class _ChillShellLoaderState extends State<ChillShellLoader>
     // Appliquer la couleur du thème si fournie
     if (widget.color != null) {
       image = ColorFiltered(
-        colorFilter: ColorFilter.mode(
-          widget.color!,
-          BlendMode.srcATop,
-        ),
+        colorFilter: ColorFilter.mode(widget.color!, BlendMode.srcATop),
         child: image,
       );
     }
@@ -118,10 +115,7 @@ class _ChillShellLoaderState extends State<ChillShellLoader>
   /// Animation pulse : scale 0.85 → 1.0 → 0.85
   Widget _buildPulse(Widget child) {
     final scale = 0.85 + (_animController.value * 0.15);
-    return Transform.scale(
-      scale: scale,
-      child: child,
-    );
+    return Transform.scale(scale: scale, child: child);
   }
 
   /// Animation rotation 3D sur l'axe Y
@@ -139,20 +133,14 @@ class _ChillShellLoaderState extends State<ChillShellLoader>
   /// Animation flottement vertical
   Widget _buildFloat(Widget child) {
     final offset = math.sin(_animController.value * math.pi) * 10;
-    return Transform.translate(
-      offset: Offset(0, -offset),
-      child: child,
-    );
+    return Transform.translate(offset: Offset(0, -offset), child: child);
   }
 
   /// Animation rebond
   Widget _buildBounce(Widget child) {
     final curve = Curves.easeInOut.transform(_animController.value);
     final offset = curve * 15;
-    return Transform.translate(
-      offset: Offset(0, -offset),
-      child: child,
-    );
+    return Transform.translate(offset: Offset(0, -offset), child: child);
   }
 
   /// Animation rotation + flottement (fluide et continue)

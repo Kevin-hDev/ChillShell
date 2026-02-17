@@ -20,15 +20,13 @@ class LocalShellService {
     }
 
     // Déterminer le shell à utiliser
-    final shell = Platform.isAndroid ? 'sh' : Platform.environment['SHELL'] ?? '/bin/sh';
+    final shell = Platform.isAndroid
+        ? 'sh'
+        : Platform.environment['SHELL'] ?? '/bin/sh';
 
     if (kDebugMode) debugPrint('LocalShell: Starting shell: $shell');
 
-    final pty = Pty.start(
-      shell,
-      columns: width,
-      rows: height,
-    );
+    final pty = Pty.start(shell, columns: width, rows: height);
     _pty = pty;
 
     // Écouter la sortie du PTY

@@ -37,15 +37,11 @@ class VibeTermTypography {
   );
 
   // === Input ===
-  static TextStyle get input => GoogleFonts.jetBrainsMono(
-    fontSize: 17,
-    color: VibeTermColors.text,
-  );
+  static TextStyle get input =>
+      GoogleFonts.jetBrainsMono(fontSize: 17, color: VibeTermColors.text);
 
-  static TextStyle get caption => GoogleFonts.jetBrainsMono(
-    fontSize: 14,
-    color: VibeTermColors.textMuted,
-  );
+  static TextStyle get caption =>
+      GoogleFonts.jetBrainsMono(fontSize: 14, color: VibeTermColors.textMuted);
 
   // === Settings ===
   static TextStyle get settingsTitle => GoogleFonts.jetBrainsMono(
@@ -66,10 +62,8 @@ class VibeTermTypography {
     color: VibeTermColors.text,
   );
 
-  static TextStyle get itemDescription => GoogleFonts.jetBrainsMono(
-    fontSize: 13,
-    color: VibeTermColors.textMuted,
-  );
+  static TextStyle get itemDescription =>
+      GoogleFonts.jetBrainsMono(fontSize: 13, color: VibeTermColors.textMuted);
 
   // === Tabs ===
   static TextStyle get tabText => GoogleFonts.jetBrainsMono(

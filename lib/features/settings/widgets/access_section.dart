@@ -40,7 +40,8 @@ class _SSHKeySecurityCard extends ConsumerStatefulWidget {
   const _SSHKeySecurityCard();
 
   @override
-  ConsumerState<_SSHKeySecurityCard> createState() => _SSHKeySecurityCardState();
+  ConsumerState<_SSHKeySecurityCard> createState() =>
+      _SSHKeySecurityCardState();
 }
 
 class _SSHKeySecurityCardState extends ConsumerState<_SSHKeySecurityCard> {
@@ -105,5 +106,3 @@ class _SSHKeySecurityCardState extends ConsumerState<_SSHKeySecurityCard> {
     );
   }
 }
-
-

@@ -31,11 +31,7 @@ class TailscaleSection extends ConsumerWidget {
             // Header avec icone
             Row(
               children: [
-                Icon(
-                  Icons.public,
-                  color: theme.accent,
-                  size: 22,
-                ),
+                Icon(Icons.public, color: theme.accent, size: 22),
                 const SizedBox(width: VibeTermSpacing.sm),
                 Text(
                   'Tailscale',
@@ -49,10 +45,7 @@ class TailscaleSection extends ConsumerWidget {
             const SizedBox(height: VibeTermSpacing.sm),
 
             if (tailscaleState.isConnected)
-              _ConnectedStatus(
-                theme: theme,
-                ip: tailscaleState.myIP,
-              )
+              _ConnectedStatus(theme: theme, ip: tailscaleState.myIP)
             else
               _LoginPrompt(theme: theme, l10n: l10n, ref: ref),
 
@@ -218,10 +211,7 @@ class _TailscaleExplainerTile extends StatelessWidget {
   final VibeTermThemeData theme;
   final AppLocalizations l10n;
 
-  const _TailscaleExplainerTile({
-    required this.theme,
-    required this.l10n,
-  });
+  const _TailscaleExplainerTile({required this.theme, required this.l10n});
 
   @override
   Widget build(BuildContext context) {

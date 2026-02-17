@@ -85,7 +85,10 @@ class SettingsNotifier extends Notifier<SettingsState> {
     state = state.copyWith(sshKeys: newKeys);
     // Utiliser SecureStorageService pour la cohérence
     await SecureStorageService.saveKeyMetadata(newKeys);
-    AuditLogService.log(AuditEventType.keyImport, details: {'name': key.name, 'type': key.type.name});
+    AuditLogService.log(
+      AuditEventType.keyImport,
+      details: {'name': key.name, 'type': key.type.name},
+    );
     if (kDebugMode) debugPrint('SSH key added');
   }
 
@@ -111,7 +114,10 @@ class SettingsNotifier extends Notifier<SettingsState> {
     state = state.copyWith(sshKeys: newKeys);
     // Supprimer la clé privée et mettre à jour les métadonnées
     await SecureStorageService.deleteKey(id, state.sshKeys);
-    AuditLogService.log(AuditEventType.keyDelete, details: {'name': removedKey?.name ?? id});
+    AuditLogService.log(
+      AuditEventType.keyDelete,
+      details: {'name': removedKey?.name ?? id},
+    );
     if (kDebugMode) debugPrint('SSH key removed');
   }
 
@@ -239,12 +245,22 @@ class SettingsNotifier extends Notifier<SettingsState> {
   }
 
   void deleteSavedConnection(String id) {
-    final wasSelected = state.savedConnections.firstWhere(
-      (c) => c.id == id,
-      orElse: () => const SavedConnection(id: '', name: '', host: '', username: '', keyId: ''),
-    ).isQuickAccess;
+    final wasSelected = state.savedConnections
+        .firstWhere(
+          (c) => c.id == id,
+          orElse: () => const SavedConnection(
+            id: '',
+            name: '',
+            host: '',
+            username: '',
+            keyId: '',
+          ),
+        )
+        .isQuickAccess;
 
-    var newConnections = state.savedConnections.where((c) => c.id != id).toList();
+    var newConnections = state.savedConnections
+        .where((c) => c.id != id)
+        .toList();
 
     // Si la connexion supprimée était sélectionnée, sélectionner la première de la liste
     if (wasSelected && newConnections.isNotEmpty) {

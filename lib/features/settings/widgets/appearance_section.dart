@@ -107,9 +107,15 @@ class AppearanceSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final currentTheme = ref.watch(settingsProvider.select((s) => s.appSettings.theme));
-    final currentLanguage = ref.watch(settingsProvider.select((s) => s.appSettings.languageCode));
-    final currentFontSize = ref.watch(settingsProvider.select((s) => s.appSettings.terminalFontSize));
+    final currentTheme = ref.watch(
+      settingsProvider.select((s) => s.appSettings.theme),
+    );
+    final currentLanguage = ref.watch(
+      settingsProvider.select((s) => s.appSettings.languageCode),
+    );
+    final currentFontSize = ref.watch(
+      settingsProvider.select((s) => s.appSettings.terminalFontSize),
+    );
     final theme = ref.watch(vibeTermThemeProvider);
 
     return Column(
@@ -119,8 +125,10 @@ class AppearanceSection extends ConsumerWidget {
         const SizedBox(height: VibeTermSpacing.sm),
         Container(
           padding: const EdgeInsets.fromLTRB(
-            VibeTermSpacing.md, VibeTermSpacing.sm,
-            VibeTermSpacing.md, VibeTermSpacing.md,
+            VibeTermSpacing.md,
+            VibeTermSpacing.sm,
+            VibeTermSpacing.md,
+            VibeTermSpacing.md,
           ),
           decoration: BoxDecoration(
             color: theme.bgBlock,
@@ -133,7 +141,9 @@ class AppearanceSection extends ConsumerWidget {
               // Section Thème
               Text(
                 l10n.theme,
-                style: VibeTermTypography.sectionLabel.copyWith(color: theme.text),
+                style: VibeTermTypography.sectionLabel.copyWith(
+                  color: theme.text,
+                ),
               ),
               const SizedBox(height: VibeTermSpacing.xs),
               // Grille de thèmes
@@ -155,7 +165,9 @@ class AppearanceSection extends ConsumerWidget {
                     data: themeData,
                     isSelected: isSelected,
                     currentTheme: theme,
-                    onTap: () => ref.read(settingsProvider.notifier).updateTheme(themeData.theme),
+                    onTap: () => ref
+                        .read(settingsProvider.notifier)
+                        .updateTheme(themeData.theme),
                   );
                 },
               ),
@@ -166,7 +178,8 @@ class AppearanceSection extends ConsumerWidget {
               _LanguageSelector(
                 theme: theme,
                 currentLanguage: currentLanguage,
-                onChanged: (code) => ref.read(settingsProvider.notifier).setLanguage(code),
+                onChanged: (code) =>
+                    ref.read(settingsProvider.notifier).setLanguage(code),
               ),
               const SizedBox(height: VibeTermSpacing.lg),
               Divider(color: theme.border),
@@ -175,7 +188,8 @@ class AppearanceSection extends ConsumerWidget {
               _FontSizeSelector(
                 theme: theme,
                 currentSize: currentFontSize,
-                onChanged: (size) => ref.read(settingsProvider.notifier).setFontSize(size),
+                onChanged: (size) =>
+                    ref.read(settingsProvider.notifier).setFontSize(size),
               ),
             ],
           ),
@@ -230,7 +244,9 @@ class _LanguageSelector extends StatelessWidget {
                   value: null,
                   child: Text(
                     l10n.autoDetect,
-                    style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                    style: VibeTermTypography.itemTitle.copyWith(
+                      color: theme.text,
+                    ),
                   ),
                 ),
                 // Langues disponibles
@@ -239,7 +255,9 @@ class _LanguageSelector extends StatelessWidget {
                     value: entry.key,
                     child: Text(
                       entry.value,
-                      style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                      style: VibeTermTypography.itemTitle.copyWith(
+                        color: theme.text,
+                      ),
                     ),
                   );
                 }),
@@ -307,7 +325,9 @@ class _FontSizeSelector extends StatelessWidget {
                   value: size,
                   child: Text(
                     sizeLabels[size] ?? size.label,
-                    style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                    style: VibeTermTypography.itemTitle.copyWith(
+                      color: theme.text,
+                    ),
                   ),
                 );
               }).toList(),

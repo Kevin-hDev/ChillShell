@@ -97,21 +97,14 @@ Map<String, dynamic> buildCreateTabMessage({
 }
 
 Map<String, dynamic> buildCloseTabMessage({required String tabId}) {
-  return {
-    'type': IsolateCommand.closeTab,
-    'tabId': tabId,
-  };
+  return {'type': IsolateCommand.closeTab, 'tabId': tabId};
 }
 
 Map<String, dynamic> buildWriteMessage({
   required String tabId,
   required Uint8List data,
 }) {
-  return {
-    'type': IsolateCommand.write,
-    'tabId': tabId,
-    'data': data,
-  };
+  return {'type': IsolateCommand.write, 'tabId': tabId, 'data': data};
 }
 
 Map<String, dynamic> buildResizeMessage({
@@ -167,11 +160,7 @@ Map<String, dynamic> buildShutdownMessage({
   required String tabId,
   required String os,
 }) {
-  return {
-    'type': IsolateCommand.shutdown,
-    'tabId': tabId,
-    'os': os,
-  };
+  return {'type': IsolateCommand.shutdown, 'tabId': tabId, 'os': os};
 }
 
 Map<String, dynamic> buildHostKeyResponseMessage({
@@ -186,10 +175,7 @@ Map<String, dynamic> buildHostKeyResponseMessage({
 }
 
 Map<String, dynamic> buildReconnectTabMessage({required String tabId}) {
-  return {
-    'type': IsolateCommand.reconnectTab,
-    'tabId': tabId,
-  };
+  return {'type': IsolateCommand.reconnectTab, 'tabId': tabId};
 }
 
 Map<String, dynamic> buildReconnectAllMessage() {

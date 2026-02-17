@@ -59,7 +59,12 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.sshKeys, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+            Text(
+              l10n.sshKeys,
+              style: VibeTermTypography.settingsTitle.copyWith(
+                color: theme.text,
+              ),
+            ),
             const SizedBox(height: VibeTermSpacing.md),
             if (!_showGenerateForm && !_showImportForm) ...[
               _OptionTile(
@@ -99,12 +104,19 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
             children: [
               Icon(Icons.check_circle, color: theme.success),
               const SizedBox(width: VibeTermSpacing.sm),
-              Text(l10n.keyCopied, style: VibeTermTypography.sectionLabel.copyWith(color: theme.text)),
+              Text(
+                l10n.keyCopied,
+                style: VibeTermTypography.sectionLabel.copyWith(
+                  color: theme.text,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: VibeTermSpacing.md),
-          Text(l10n.publicKey,
-               style: VibeTermTypography.caption.copyWith(color: theme.textMuted)),
+          Text(
+            l10n.publicKey,
+            style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+          ),
           const SizedBox(height: VibeTermSpacing.xs),
           Container(
             padding: const EdgeInsets.all(VibeTermSpacing.sm),
@@ -118,28 +130,38 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
               children: [
                 Text(
                   _generatedPublicKey!,
-                  style: VibeTermTypography.caption.copyWith(fontSize: 11, color: theme.text),
+                  style: VibeTermTypography.caption.copyWith(
+                    fontSize: 11,
+                    color: theme.text,
+                  ),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: VibeTermSpacing.sm),
                 GestureDetector(
                   onTap: () {
-                    Clipboard.setData(ClipboardData(text: _generatedPublicKey!));
+                    Clipboard.setData(
+                      ClipboardData(text: _generatedPublicKey!),
+                    );
                     // Sécurité: nettoyer le clipboard après 30 secondes
                     Future.delayed(const Duration(seconds: 30), () {
                       Clipboard.setData(const ClipboardData(text: ''));
                     });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.keyCopied)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(l10n.keyCopied)));
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.copy, size: 16, color: theme.accent),
                       const SizedBox(width: 4),
-                      Text(l10n.copy, style: VibeTermTypography.caption.copyWith(color: theme.accent)),
+                      Text(
+                        l10n.copy,
+                        style: VibeTermTypography.caption.copyWith(
+                          color: theme.accent,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -171,7 +193,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           enabled: !_isGenerating,
           decoration: InputDecoration(
             labelText: l10n.keyName,
-            labelStyle: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+            labelStyle: VibeTermTypography.caption.copyWith(
+              color: theme.textMuted,
+            ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: theme.border),
               borderRadius: BorderRadius.circular(VibeTermRadius.sm),
@@ -213,7 +237,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
         Row(
           children: [
             TextButton(
-              onPressed: _isGenerating ? null : () => setState(() => _showGenerateForm = false),
+              onPressed: _isGenerating
+                  ? null
+                  : () => setState(() => _showGenerateForm = false),
               child: Text(l10n.cancel, style: TextStyle(color: theme.accent)),
             ),
             const Spacer(),
@@ -251,7 +277,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           enabled: !_isImporting,
           decoration: InputDecoration(
             labelText: l10n.keyName,
-            labelStyle: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+            labelStyle: VibeTermTypography.caption.copyWith(
+              color: theme.textMuted,
+            ),
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: theme.border),
               borderRadius: BorderRadius.circular(VibeTermRadius.sm),
@@ -299,7 +327,8 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
           enabled: !_isImporting,
           maxLines: 4,
           decoration: InputDecoration(
-            hintText: '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----',
+            hintText:
+                '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----',
             hintStyle: VibeTermTypography.caption.copyWith(
               color: theme.textMuted,
               fontSize: 10,
@@ -318,7 +347,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
         Row(
           children: [
             TextButton(
-              onPressed: _isImporting ? null : () => setState(() => _showImportForm = false),
+              onPressed: _isImporting
+                  ? null
+                  : () => setState(() => _showImportForm = false),
               child: Text(l10n.cancel, style: TextStyle(color: theme.accent)),
             ),
             const Spacer(),
@@ -389,7 +420,10 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
             _privateKeyController.text = content!;
             // Utiliser le nom du fichier comme nom de clé si vide
             if (_importNameController.text.isEmpty && file.name.isNotEmpty) {
-              _importNameController.text = file.name.replaceAll(RegExp(r'\.(pem|key|pub)$'), '');
+              _importNameController.text = file.name.replaceAll(
+                RegExp(r'\.(pem|key|pub)$'),
+                '',
+              );
             }
           });
         }
@@ -425,9 +459,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
     // Vérifier que c'est une clé valide
     if (!privateKey.contains('PRIVATE KEY')) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.invalidKeyFormat)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.invalidKeyFormat)));
       }
       return;
     }
@@ -435,9 +469,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
     // Sécurité: vérifier la taille du contenu collé
     if (privateKey.length > _maxKeyFileSizeBytes) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.keyFileTooLarge)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.keyFileTooLarge)));
       }
       return;
     }
@@ -448,7 +482,8 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
       final keyId = DateTime.now().millisecondsSinceEpoch.toString();
 
       // Détecter le type de clé
-      final keyType = privateKey.contains('ED25519') || privateKey.contains('ed25519')
+      final keyType =
+          privateKey.contains('ED25519') || privateKey.contains('ed25519')
           ? SSHKeyType.ed25519
           : SSHKeyType.rsa;
 
@@ -470,9 +505,9 @@ class _AddSSHKeySheetState extends ConsumerState<AddSSHKeySheet> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.keyImported(name))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.keyImported(name))));
       }
     } catch (e) {
       // Sécurité: nettoyer le contrôleur même en cas d'erreur
@@ -563,8 +598,18 @@ class _OptionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
-                  Text(subtitle, style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+                  Text(
+                    title,
+                    style: VibeTermTypography.itemTitle.copyWith(
+                      color: theme.text,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: VibeTermTypography.itemDescription.copyWith(
+                      color: theme.textMuted,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -574,4 +619,3 @@ class _OptionTile extends StatelessWidget {
     );
   }
 }
-

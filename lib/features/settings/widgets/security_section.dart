@@ -45,7 +45,11 @@ class SecuritySection extends ConsumerWidget {
                 onChanged: (value) async {
                   if (value) {
                     // Activer : créer un nouveau PIN
-                    final pin = await _showCreatePinDialog(context, theme, l10n);
+                    final pin = await _showCreatePinDialog(
+                      context,
+                      theme,
+                      l10n,
+                    );
                     if (pin != null) {
                       await PinService.savePin(pin);
                       AuditLogService.log(AuditEventType.pinCreated);
@@ -53,7 +57,11 @@ class SecuritySection extends ConsumerWidget {
                     }
                   } else {
                     // Désactiver : vérifier le PIN actuel
-                    final verified = await _showVerifyPinDialog(context, theme, l10n);
+                    final verified = await _showVerifyPinDialog(
+                      context,
+                      theme,
+                      l10n,
+                    );
                     if (verified) {
                       await PinService.deletePin();
                       AuditLogService.log(AuditEventType.pinDeleted);
@@ -89,10 +97,14 @@ class SecuritySection extends ConsumerWidget {
                       localizedReason: l10n.biometricReason,
                     );
                     if (success) {
-                      ref.read(settingsProvider.notifier).toggleFingerprint(true);
+                      ref
+                          .read(settingsProvider.notifier)
+                          .toggleFingerprint(true);
                     }
                   } else {
-                    ref.read(settingsProvider.notifier).toggleFingerprint(false);
+                    ref
+                        .read(settingsProvider.notifier)
+                        .toggleFingerprint(false);
                   }
                 },
                 theme: theme,
@@ -138,7 +150,9 @@ class SecuritySection extends ConsumerWidget {
                       _AutoLockTimeSelector(
                         selectedMinutes: settings.appSettings.autoLockMinutes,
                         onChanged: (minutes) {
-                          ref.read(settingsProvider.notifier).setAutoLockMinutes(minutes);
+                          ref
+                              .read(settingsProvider.notifier)
+                              .setAutoLockMinutes(minutes);
                         },
                         theme: theme,
                         minutesLabel: l10n.minutes,
@@ -172,12 +186,16 @@ class SecuritySection extends ConsumerWidget {
                         children: [
                           Text(
                             l10n.clearHistory,
-                            style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                            style: VibeTermTypography.itemTitle.copyWith(
+                              color: theme.text,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             l10n.clearHistoryConfirm,
-                            style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+                            style: VibeTermTypography.itemDescription.copyWith(
+                              color: theme.textMuted,
+                            ),
                           ),
                         ],
                       ),
@@ -198,18 +216,28 @@ class SecuritySection extends ConsumerWidget {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(dialogContext).pop(false),
-                                child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(false),
+                                child: Text(
+                                  l10n.cancel,
+                                  style: TextStyle(color: theme.textMuted),
+                                ),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.of(dialogContext).pop(true),
-                                child: Text(l10n.delete, style: TextStyle(color: theme.danger)),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(true),
+                                child: Text(
+                                  l10n.delete,
+                                  style: TextStyle(color: theme.danger),
+                                ),
                               ),
                             ],
                           ),
                         );
                         if (confirmed == true) {
-                          await ref.read(terminalProvider.notifier).clearCommandHistory();
+                          await ref
+                              .read(terminalProvider.notifier)
+                              .clearCommandHistory();
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -395,7 +423,9 @@ class _CreatePinDialogState extends State<_CreatePinDialog> {
             const SizedBox(height: VibeTermSpacing.sm),
             Text(
               _error!,
-              style: VibeTermTypography.itemDescription.copyWith(color: theme.danger),
+              style: VibeTermTypography.itemDescription.copyWith(
+                color: theme.danger,
+              ),
             ),
           ],
           const SizedBox(height: VibeTermSpacing.lg),
@@ -502,7 +532,9 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
             const SizedBox(height: VibeTermSpacing.sm),
             Text(
               _error!,
-              style: VibeTermTypography.itemDescription.copyWith(color: theme.danger),
+              style: VibeTermTypography.itemDescription.copyWith(
+                color: theme.danger,
+              ),
             ),
           ],
           const SizedBox(height: VibeTermSpacing.lg),
@@ -592,8 +624,16 @@ class _SecurityToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
-      subtitle: Text(subtitle, style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+      title: Text(
+        title,
+        style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: VibeTermTypography.itemDescription.copyWith(
+          color: theme.textMuted,
+        ),
+      ),
       trailing: Switch(
         value: value,
         activeThumbColor: theme.accent,
@@ -632,7 +672,9 @@ class _AutoLockTimeSelector extends StatelessWidget {
             child: GestureDetector(
               onTap: () => onChanged(minutes),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: VibeTermSpacing.sm),
+                padding: const EdgeInsets.symmetric(
+                  vertical: VibeTermSpacing.sm,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? theme.accent : theme.bg,
                   borderRadius: BorderRadius.circular(VibeTermRadius.sm),
@@ -645,7 +687,9 @@ class _AutoLockTimeSelector extends StatelessWidget {
                     '$minutes min',
                     style: VibeTermTypography.itemTitle.copyWith(
                       color: isSelected ? theme.bg : theme.text,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
                       fontSize: 13,
                     ),
                   ),

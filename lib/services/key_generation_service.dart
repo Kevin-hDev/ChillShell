@@ -19,7 +19,10 @@ class KeyGenerationService {
     final publicKey = await keyPair.extractPublicKey();
 
     // Formatter en format OpenSSH
-    final privateKeyPem = _formatEd25519PrivateKey(privateKeyBytes, publicKey.bytes);
+    final privateKeyPem = _formatEd25519PrivateKey(
+      privateKeyBytes,
+      publicKey.bytes,
+    );
     final publicKeyOpenSSH = _formatEd25519PublicKey(publicKey.bytes, comment);
 
     // SECURITY NOTE: Zero out private key bytes after formatting to PEM.
@@ -28,19 +31,18 @@ class KeyGenerationService {
       privateKeyBytes[i] = 0;
     }
 
-    return {
-      'privateKey': privateKeyPem,
-      'publicKey': publicKeyOpenSSH,
-    };
+    return {'privateKey': privateKeyPem, 'publicKey': publicKeyOpenSSH};
   }
 
   /// Génère une paire de clés RSA 4096 bits
   static Future<Map<String, String>> generateRSA4096(String comment) async {
     final keyGen = pc.RSAKeyGenerator()
-      ..init(pc.ParametersWithRandom(
-        pc.RSAKeyGeneratorParameters(BigInt.parse('65537'), 4096, 64),
-        _secureRandom(),
-      ));
+      ..init(
+        pc.ParametersWithRandom(
+          pc.RSAKeyGeneratorParameters(BigInt.parse('65537'), 4096, 64),
+          _secureRandom(),
+        ),
+      );
 
     final pair = keyGen.generateKeyPair();
     final publicKey = pair.publicKey as pc.RSAPublicKey;
@@ -49,10 +51,7 @@ class KeyGenerationService {
     final privateKeyPem = _formatRSAPrivateKey(privateKey);
     final publicKeyOpenSSH = _formatRSAPublicKey(publicKey, comment);
 
-    return {
-      'privateKey': privateKeyPem,
-      'publicKey': publicKeyOpenSSH,
-    };
+    return {'privateKey': privateKeyPem, 'publicKey': publicKeyOpenSSH};
   }
 
   static pc.SecureRandom _secureRandom() {
@@ -63,7 +62,10 @@ class KeyGenerationService {
     return secureRandom;
   }
 
-  static String _formatEd25519PrivateKey(List<int> privateBytes, List<int> publicBytes) {
+  static String _formatEd25519PrivateKey(
+    List<int> privateBytes,
+    List<int> publicBytes,
+  ) {
     final buffer = BytesBuilder();
 
     // AUTH_MAGIC
@@ -91,7 +93,10 @@ class KeyGenerationService {
     _writeInt32(privKeyBuffer, checkInt);
     _writeString(privKeyBuffer, 'ssh-ed25519');
     _writeBytes(privKeyBuffer, Uint8List.fromList(publicBytes));
-    _writeBytes(privKeyBuffer, Uint8List.fromList([...privateBytes, ...publicBytes]));
+    _writeBytes(
+      privKeyBuffer,
+      Uint8List.fromList([...privateBytes, ...publicBytes]),
+    );
     _writeString(privKeyBuffer, '');
 
     // Padding
@@ -110,7 +115,9 @@ class KeyGenerationService {
     final keyData = base64.encode(buffer.toBytes());
     final lines = <String>[];
     for (var i = 0; i < keyData.length; i += 70) {
-      lines.add(keyData.substring(i, i + 70 > keyData.length ? keyData.length : i + 70));
+      lines.add(
+        keyData.substring(i, i + 70 > keyData.length ? keyData.length : i + 70),
+      );
     }
 
     return '-----BEGIN OPENSSH PRIVATE KEY-----\n${lines.join('\n')}\n-----END OPENSSH PRIVATE KEY-----';
@@ -128,7 +135,9 @@ class KeyGenerationService {
     final keyData = base64.encode(encoded);
     final lines = <String>[];
     for (var i = 0; i < keyData.length; i += 64) {
-      lines.add(keyData.substring(i, i + 64 > keyData.length ? keyData.length : i + 64));
+      lines.add(
+        keyData.substring(i, i + 64 > keyData.length ? keyData.length : i + 64),
+      );
     }
     return '-----BEGIN RSA PRIVATE KEY-----\n${lines.join('\n')}\n-----END RSA PRIVATE KEY-----';
   }

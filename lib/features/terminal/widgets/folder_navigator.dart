@@ -52,7 +52,9 @@ class _FolderNavigatorState extends ConsumerState<FolderNavigator> {
     final basePath = (state.currentPath != '~' && state.currentPath.isNotEmpty)
         ? state.currentPath
         : null;
-    await ref.read(folderProvider.notifier).loadFolders(execute, basePath: basePath);
+    await ref
+        .read(folderProvider.notifier)
+        .loadFolders(execute, basePath: basePath);
   }
 
   void _closeDropdown() {
@@ -64,7 +66,9 @@ class _FolderNavigatorState extends ConsumerState<FolderNavigator> {
 
   Future<void> _navigateToFolder(String folderName) async {
     final execute = ref.read(sshProvider.notifier).executeCommandSilently;
-    await ref.read(folderProvider.notifier).navigateToFolder(folderName, execute);
+    await ref
+        .read(folderProvider.notifier)
+        .navigateToFolder(folderName, execute);
 
     // Envoyer aussi le cd au shell interactif pour synchroniser
     final folderState = ref.read(folderProvider);
@@ -119,11 +123,11 @@ class _FolderNavigatorState extends ConsumerState<FolderNavigator> {
           height: 26,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: _isOpen ? theme.accent.withValues(alpha: 0.2) : theme.bgBlock,
+            color: _isOpen
+                ? theme.accent.withValues(alpha: 0.2)
+                : theme.bgBlock,
             borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-            border: Border.all(
-              color: _isOpen ? theme.accent : theme.border,
-            ),
+            border: Border.all(color: _isOpen ? theme.accent : theme.border),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -144,11 +148,7 @@ class _FolderNavigatorState extends ConsumerState<FolderNavigator> {
               ),
               if (_isOpen) ...[
                 const SizedBox(width: 2),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: theme.accent,
-                  size: 14,
-                ),
+                Icon(Icons.keyboard_arrow_down, color: theme.accent, size: 14),
               ],
             ],
           ),
@@ -163,10 +163,7 @@ class _FolderDropdown extends ConsumerStatefulWidget {
   final void Function(String) onNavigate;
   final VoidCallback onClose;
 
-  const _FolderDropdown({
-    required this.onNavigate,
-    required this.onClose,
-  });
+  const _FolderDropdown({required this.onNavigate, required this.onClose});
 
   @override
   ConsumerState<_FolderDropdown> createState() => _FolderDropdownState();
@@ -238,7 +235,10 @@ class _FolderDropdownState extends ConsumerState<_FolderDropdown> {
                     fontSize: 12,
                   ),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(VibeTermRadius.sm),
                     borderSide: BorderSide(color: theme.border),
@@ -307,13 +307,15 @@ class _FolderDropdownState extends ConsumerState<_FolderDropdown> {
                             ),
                           )
                         else
-                          ...folders.map((folder) => _FolderItem(
-                                name: folder,
-                                displayName: folder,
-                                icon: Icons.folder_outlined,
-                                theme: theme,
-                                onTap: () => widget.onNavigate(folder),
-                              )),
+                          ...folders.map(
+                            (folder) => _FolderItem(
+                              name: folder,
+                              displayName: folder,
+                              icon: Icons.folder_outlined,
+                              theme: theme,
+                              onTap: () => widget.onNavigate(folder),
+                            ),
+                          ),
                       ],
                     ),
             ),
@@ -357,20 +359,26 @@ class _FolderItemState extends State<_FolderItem> {
         behavior: HitTestBehavior.opaque,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          color: _isHovered ? widget.theme.accent.withValues(alpha: 0.15) : Colors.transparent,
+          color: _isHovered
+              ? widget.theme.accent.withValues(alpha: 0.15)
+              : Colors.transparent,
           child: Row(
             children: [
               Icon(
                 widget.icon,
                 size: 14,
-                color: _isHovered ? widget.theme.accent : widget.theme.textMuted,
+                color: _isHovered
+                    ? widget.theme.accent
+                    : widget.theme.textMuted,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   widget.displayName,
                   style: TextStyle(
-                    color: _isHovered ? widget.theme.text : widget.theme.textMuted,
+                    color: _isHovered
+                        ? widget.theme.text
+                        : widget.theme.textMuted,
                     fontSize: 12,
                   ),
                   overflow: TextOverflow.ellipsis,

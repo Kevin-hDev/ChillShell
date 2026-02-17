@@ -12,7 +12,8 @@ class ScreenshotProtectionService {
     try {
       await _channel.invokeMethod('setScreenshotProtection', enabled);
     } on PlatformException catch (e) {
-      if (kDebugMode) debugPrint('ScreenshotProtectionService: setEnabled failed: $e');
+      if (kDebugMode)
+        debugPrint('ScreenshotProtectionService: setEnabled failed: $e');
     }
   }
 
@@ -22,7 +23,8 @@ class ScreenshotProtectionService {
     try {
       await _channel.invokeMethod('clearClipboard');
     } on PlatformException catch (e) {
-      if (kDebugMode) debugPrint('ScreenshotProtectionService: clearClipboard failed: $e');
+      if (kDebugMode)
+        debugPrint('ScreenshotProtectionService: clearClipboard failed: $e');
     }
   }
 }

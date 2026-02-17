@@ -50,10 +50,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             onTerminalTap: widget.onTerminalTap,
           ),
           // Barre d'onglets
-          _SettingsTabBar(
-            tabController: _tabController,
-            theme: theme,
-          ),
+          _SettingsTabBar(tabController: _tabController, theme: theme),
           // Contenu des onglets
           Expanded(
             child: TabBarView(
@@ -85,10 +82,7 @@ class _SettingsTabBar extends StatelessWidget {
   final TabController tabController;
   final VibeTermThemeData theme;
 
-  const _SettingsTabBar({
-    required this.tabController,
-    required this.theme,
-  });
+  const _SettingsTabBar({required this.tabController, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -97,9 +91,7 @@ class _SettingsTabBar extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.bg,
-        border: Border(
-          bottom: BorderSide(color: theme.border),
-        ),
+        border: Border(bottom: BorderSide(color: theme.border)),
       ),
       child: TabBar(
         controller: tabController,
@@ -109,7 +101,9 @@ class _SettingsTabBar extends StatelessWidget {
         unselectedLabelColor: theme.textMuted,
         indicatorColor: theme.accent,
         indicatorWeight: 2,
-        labelPadding: const EdgeInsets.symmetric(horizontal: VibeTermSpacing.md),
+        labelPadding: const EdgeInsets.symmetric(
+          horizontal: VibeTermSpacing.md,
+        ),
         labelStyle: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,

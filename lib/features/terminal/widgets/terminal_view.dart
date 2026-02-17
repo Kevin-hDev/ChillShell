@@ -79,9 +79,14 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   bool _lastIsEditorMode = false;
 
   /// Retourne le theme terminal depuis le cache ou le crée si nécessaire
-  TerminalTheme _getTerminalTheme(VibeTermThemeData theme, {bool isEditorMode = false}) {
+  TerminalTheme _getTerminalTheme(
+    VibeTermThemeData theme, {
+    bool isEditorMode = false,
+  }) {
     // Retourner le cache si le theme et le mode n'ont pas changé
-    if (_cachedTheme != null && _lastThemeData == theme && _lastIsEditorMode == isEditorMode) {
+    if (_cachedTheme != null &&
+        _lastThemeData == theme &&
+        _lastIsEditorMode == isEditorMode) {
       return _cachedTheme!;
     }
 
@@ -196,9 +201,12 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       // Vérifier si l'app courante a besoin de scroll clavier
       final sshState = ref.read(sshProvider);
       final tabId = sshState.currentTabId;
-      final currentCmd = tabId != null ? sshState.tabCurrentCommand[tabId] : null;
+      final currentCmd = tabId != null
+          ? sshState.tabCurrentCommand[tabId]
+          : null;
       final cmdName = _extractCommandName(currentCmd);
-      final useKeyboardScroll = cmdName != null && _keyboardScrollApps.contains(cmdName);
+      final useKeyboardScroll =
+          cmdName != null && _keyboardScrollApps.contains(cmdName);
 
       if (useKeyboardScroll) {
         // Apps sans support souris (OpenCode) : envoyer Page Up/Down
@@ -206,17 +214,26 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         // Page Up: \x1b[5~ / Page Down: \x1b[6~
         final pageKey = scrollUp ? '\x1b[5~' : '\x1b[6~';
         ref.read(sshProvider.notifier).write(pageKey);
-        if (kDebugMode) debugPrint('ALT_SCROLL: Page ${scrollUp ? "UP" : "DOWN"} sent (keyboard scroll for $cmdName)');
+        if (kDebugMode)
+          debugPrint(
+            'ALT_SCROLL: Page ${scrollUp ? "UP" : "DOWN"} sent (keyboard scroll for $cmdName)',
+          );
       } else {
         // Mouse wheel SGR 1006 — coordonnées au CENTRE du terminal
         // pour que les apps position-aware (Crush, etc.) routent l'événement
         // vers la zone de contenu, pas le header en (1,1).
         final int buttonCode = scrollUp ? 64 : 65;
         final int col = (terminal.viewWidth ~/ 2).clamp(1, terminal.viewWidth);
-        final int row = (terminal.viewHeight ~/ 2).clamp(1, terminal.viewHeight);
+        final int row = (terminal.viewHeight ~/ 2).clamp(
+          1,
+          terminal.viewHeight,
+        );
         final String sgrSequence = '\x1b[<$buttonCode;$col;${row}M';
         ref.read(sshProvider.notifier).write(sgrSequence);
-        if (kDebugMode) debugPrint('ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} at ($col,$row) sent (SGR)');
+        if (kDebugMode)
+          debugPrint(
+            'ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} at ($col,$row) sent (SGR)',
+          );
       }
 
       // Forcer un redraw du terminal local après le scroll
@@ -242,7 +259,8 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
         // Ne pas envoyer de resize pendant l'alternate screen mode
         // pour éviter la corruption d'affichage (Codex, etc.)
         if (_isInAltBuffer) {
-          if (kDebugMode) debugPrint('RESIZE: Skipped (alternate screen active)');
+          if (kDebugMode)
+            debugPrint('RESIZE: Skipped (alternate screen active)');
           return;
         }
 
@@ -263,23 +281,31 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
             if (height < lastSize.$2) {
               // Hauteur DIMINUE → bloquer (empêche Codex de redessiner avec moins de lignes)
               if (kDebugMode) {
-                debugPrint('RESIZE: Blocked height shrink ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)');
+                debugPrint(
+                  'RESIZE: Blocked height shrink ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)',
+                );
               }
               return;
             }
             // Hauteur AUGMENTE → autoriser (Codex redessine avec plus de lignes)
             if (kDebugMode) {
-              debugPrint('RESIZE: Allowed height grow ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)');
+              debugPrint(
+                'RESIZE: Allowed height grow ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)',
+              );
             }
           }
         }
 
         if (kDebugMode) {
-          final oldStr = lastSize != null ? '${lastSize.$1}x${lastSize.$2}' : 'initial';
+          final oldStr = lastSize != null
+              ? '${lastSize.$1}x${lastSize.$2}'
+              : 'initial';
           debugPrint('RESIZE: $oldStr → ${width}x$height (tab=$tabId)');
         }
         _lastSentSize[tabId] = (width, height);
-        ref.read(sshProvider.notifier).resizeTerminalForTab(tabId, width, height);
+        ref
+            .read(sshProvider.notifier)
+            .resizeTerminalForTab(tabId, width, height);
       };
       _terminals[tabId] = terminal;
     }
@@ -294,7 +320,8 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   /// Initialise l'onglet courant
   void _initializeCurrentTab() {
     final sshState = ref.read(sshProvider);
-    if (sshState.connectionState == SSHConnectionState.connected && sshState.currentTabId != null) {
+    if (sshState.connectionState == SSHConnectionState.connected &&
+        sshState.currentTabId != null) {
       _connectToSSH(sshState.currentTabId!);
       _currentTabId = sshState.currentTabId;
     }
@@ -324,7 +351,11 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
               debugPrint('XTERM: Buffer error (ignored): $e');
               debugPrint('XTERM: Data length: ${decoded.length} chars');
               // Afficher les 3 premières lignes de la stack trace pour identifier l'assertion
-              final traceLines = stackTrace.toString().split('\n').take(3).join('\n');
+              final traceLines = stackTrace
+                  .toString()
+                  .split('\n')
+                  .take(3)
+                  .join('\n');
               debugPrint('XTERM: Stack: $traceLines');
             }
           }
@@ -343,7 +374,8 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
           ref.read(sshProvider.notifier).markTabAsDead(tabId);
           // Ne pas cleanup automatiquement - laisser l'utilisateur voir l'état final
         },
-        cancelOnError: false, // Continuer même après erreur pour voir les messages
+        cancelOnError:
+            false, // Continuer même après erreur pour voir les messages
       );
       if (kDebugMode) debugPrint('Connected to SSH stream for tab $tabId');
       // Forcer un rebuild pour afficher le contenu
@@ -352,14 +384,20 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       // Le stream n'est pas encore disponible (connexion en cours)
       // Réessayer après un court délai (max 10 tentatives = 2 secondes)
       if (retryCount < 10) {
-        if (kDebugMode) debugPrint('No output stream for tab $tabId, retrying (attempt ${retryCount + 1}/10)');
+        if (kDebugMode)
+          debugPrint(
+            'No output stream for tab $tabId, retrying (attempt ${retryCount + 1}/10)',
+          );
         Future.delayed(const Duration(milliseconds: 200), () {
           if (mounted && _subscriptions[tabId] == null) {
             _connectToSSH(tabId, retryCount: retryCount + 1);
           }
         });
       } else {
-        if (kDebugMode) debugPrint('Failed to connect to SSH stream for tab $tabId after 10 attempts');
+        if (kDebugMode)
+          debugPrint(
+            'Failed to connect to SSH stream for tab $tabId after 10 attempts',
+          );
       }
     }
   }
@@ -393,7 +431,8 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   /// et met à jour isEditorModeProvider UNIQUEMENT pour les vrais éditeurs
   void _detectAlternateScreenMode(String output) {
     // Entrée en alternate screen
-    if (output.contains(_alternateScreenEnter) || output.contains(_alternateScreenEnterAlt)) {
+    if (output.contains(_alternateScreenEnter) ||
+        output.contains(_alternateScreenEnterAlt)) {
       // Mettre à jour l'état alt buffer pour le scroll custom
       if (!_isInAltBuffer) {
         _isInAltBuffer = true;
@@ -417,11 +456,13 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
           if (kDebugMode) debugPrint('EDITOR MODE: Entered for "$commandName"');
         }
       } else {
-        if (kDebugMode) debugPrint('EDITOR MODE: Skipped for "${commandName ?? "unknown"}"');
+        if (kDebugMode)
+          debugPrint('EDITOR MODE: Skipped for "${commandName ?? "unknown"}"');
       }
     }
     // Sortie du mode alternate screen
-    else if (output.contains(_alternateScreenExit) || output.contains(_alternateScreenExitAlt)) {
+    else if (output.contains(_alternateScreenExit) ||
+        output.contains(_alternateScreenExitAlt)) {
       // Mettre à jour l'état alt buffer
       if (_isInAltBuffer) {
         _isInAltBuffer = false;
@@ -442,16 +483,21 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   /// Le resize height-only est bloqué pour ces agents afin d'éviter
   /// la perte de messages (ils effacent et réécrivent tout à chaque resize).
   static const _cliAgentCommands = <String>{
-    'claude', 'codex', 'opencode', 'aider', 'gemini', 'cody',
-    'amazon-q', 'aws-q', 'crush',
+    'claude',
+    'codex',
+    'opencode',
+    'aider',
+    'gemini',
+    'cody',
+    'amazon-q',
+    'aws-q',
+    'crush',
   };
 
   /// Apps sans support mouse wheel SGR.
   /// Pour ces apps, on envoie Page Up/Down au lieu de mouse wheel.
   /// OpenCode (Bubble Tea v1) : mouse désactivé, scroll = PgUp/PgDown/Ctrl+U/D.
-  static const _keyboardScrollApps = <String>{
-    'opencode',
-  };
+  static const _keyboardScrollApps = <String>{'opencode'};
 
   /// Vérifie si la commande en cours est un agent CLI moderne
   bool _isCliAgentCommand(String command) {
@@ -478,15 +524,20 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   Widget build(BuildContext context) {
     // Sélecteurs ciblés pour observer uniquement ce qui est nécessaire
     // Cela réduit les rebuilds inutiles quand des propriétés non-utilisées changent
-    final connectionState = ref.watch(sshProvider.select((s) => s.connectionState));
+    final connectionState = ref.watch(
+      sshProvider.select((s) => s.connectionState),
+    );
     final currentTabId = ref.watch(sshProvider.select((s) => s.currentTabId));
     final errorMessage = ref.watch(sshProvider.select((s) => s.errorMessage));
     final theme = ref.watch(vibeTermThemeProvider);
-    final fontSize = ref.watch(settingsProvider.select((s) => s.appSettings.terminalFontSize.size));
+    final fontSize = ref.watch(
+      settingsProvider.select((s) => s.appSettings.terminalFontSize.size),
+    );
 
     // Listener pour les changements complets (nécessaire pour previous/next)
     ref.listen<SSHState>(sshProvider, (previous, next) {
-      if (next.connectionState == SSHConnectionState.connected && next.currentTabId != null) {
+      if (next.connectionState == SSHConnectionState.connected &&
+          next.currentTabId != null) {
         // Changement d'onglet
         if (previous != null && previous.currentTabId != next.currentTabId) {
           _switchToTab(next.currentTabId!);
@@ -500,7 +551,9 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
 
         // Nettoyer les onglets fermés
         if (previous != null) {
-          final closedTabs = previous.tabIds.where((id) => !next.tabIds.contains(id));
+          final closedTabs = previous.tabIds.where(
+            (id) => !next.tabIds.contains(id),
+          );
           for (final tabId in closedTabs) {
             _cleanupTab(tabId);
           }
@@ -518,7 +571,8 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     });
 
     // Afficher un état de chargement si non connecté
-    if (connectionState != SSHConnectionState.connected || currentTabId == null) {
+    if (connectionState != SSHConnectionState.connected ||
+        currentTabId == null) {
       final l10n = context.l10n;
       return Center(
         child: Column(
@@ -527,18 +581,14 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
             if (connectionState == SSHConnectionState.connecting)
               CircularProgressIndicator(color: theme.accent)
             else
-              Icon(
-                Icons.terminal,
-                size: 64,
-                color: theme.textMuted,
-              ),
+              Icon(Icons.terminal, size: 64, color: theme.textMuted),
             const SizedBox(height: 16),
             Text(
               connectionState == SSHConnectionState.connecting
                   ? l10n.connectionInProgress
                   : errorMessage != null
-                      ? translateSshError(l10n, errorMessage)
-                      : l10n.noConnection,
+                  ? translateSshError(l10n, errorMessage)
+                  : l10n.noConnection,
               style: TextStyle(color: theme.textMuted),
             ),
           ],
@@ -560,7 +610,8 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
     final currentCommand = ref.watch(
       sshProvider.select((s) => s.tabCurrentCommand[s.currentTabId]),
     );
-    final isCliAgentActive = currentCommand != null && _isCliAgentCommand(currentCommand);
+    final isCliAgentActive =
+        currentCommand != null && _isCliAgentCommand(currentCommand);
 
     // Afficher le terminal xterm avec bouton Copier flottant
     // Key avec l'ID stable pour forcer Flutter à recréer le widget
@@ -574,8 +625,10 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       scrollController: _scrollController,
       // En mode édition : autofocus pour ouvrir le clavier, readOnly=false pour saisie directe
       autofocus: isEditorMode,
-      readOnly: !isEditorMode,  // Mode normal: true (champ en bas), Mode édition: false (saisie directe)
-      hardwareKeyboardOnly: !isEditorMode,  // Mode édition: clavier virtuel autorisé
+      readOnly:
+          !isEditorMode, // Mode normal: true (champ en bas), Mode édition: false (saisie directe)
+      hardwareKeyboardOnly:
+          !isEditorMode, // Mode édition: clavier virtuel autorisé
       // Mode grow-only pour agents CLI : le buffer peut GRANDIR (clavier fermé
       // = plus de lignes visibles) mais ne RÉTRÉCIT PAS (clavier ouvert).
       // Empêche Buffer.resize() d'appeler lines.pop() qui supprime des lignes,
@@ -583,15 +636,13 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       growOnlyResize: isCliAgentActive,
       backgroundOpacity: 0,
       theme: _getTerminalTheme(theme, isEditorMode: isEditorMode),
-      textStyle: TerminalStyle(
-        fontSize: fontSize,
-        fontFamily: 'JetBrainsMono',
-      ),
+      textStyle: TerminalStyle(fontSize: fontSize, fontFamily: 'JetBrainsMono'),
       // Désactiver simulateScroll car on gère nous-mêmes le scroll en alternate buffer
       // avec mouse wheel SGR au lieu de flèches (mieux pour les CLI modernes comme Vibe)
       simulateScroll: false,
       // Clic droit pour desktop
-      onSecondaryTapDown: (details, _) => _showContextMenu(context, details.globalPosition, terminal, theme),
+      onSecondaryTapDown: (details, _) =>
+          _showContextMenu(context, details.globalPosition, terminal, theme),
     );
 
     return ClipRect(
@@ -608,7 +659,8 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onVerticalDragStart: (_) => _resetAltBufferScroll(),
-                onVerticalDragUpdate: (details) => _handleAltBufferScroll(details, terminal),
+                onVerticalDragUpdate: (details) =>
+                    _handleAltBufferScroll(details, terminal),
               ),
             ),
           // Bouton Copier flottant (apparaît quand sélection active)
@@ -634,7 +686,10 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   }
 
   /// Copie le texte sélectionné dans le presse-papiers
-  Future<void> _copySelection(Terminal terminal, VibeTermThemeData theme) async {
+  Future<void> _copySelection(
+    Terminal terminal,
+    VibeTermThemeData theme,
+  ) async {
     final selection = terminalController.selection;
     if (selection == null) return;
 
@@ -649,14 +704,24 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
   }
 
   /// Affiche le menu contextuel Copier/Coller (pour desktop clic droit)
-  void _showContextMenu(BuildContext context, Offset position, Terminal terminal, VibeTermThemeData theme) {
+  void _showContextMenu(
+    BuildContext context,
+    Offset position,
+    Terminal terminal,
+    VibeTermThemeData theme,
+  ) {
     final l10n = context.l10n;
     final selection = terminalController.selection;
     final hasSelection = selection != null;
 
     showMenu<String>(
       context: context,
-      position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx, position.dy),
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy,
+        position.dx,
+        position.dy,
+      ),
       color: theme.bgBlock,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),

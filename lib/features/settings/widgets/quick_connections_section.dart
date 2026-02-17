@@ -13,10 +13,12 @@ class QuickConnectionsSection extends ConsumerStatefulWidget {
   const QuickConnectionsSection({super.key});
 
   @override
-  ConsumerState<QuickConnectionsSection> createState() => _QuickConnectionsSectionState();
+  ConsumerState<QuickConnectionsSection> createState() =>
+      _QuickConnectionsSectionState();
 }
 
-class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSection>
+class _QuickConnectionsSectionState
+    extends ConsumerState<QuickConnectionsSection>
     with SelectionModeMixin {
   Future<void> _deleteSelected() async {
     final theme = ref.read(vibeTermThemeProvider);
@@ -33,7 +35,9 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
         ),
         content: Text(
           l10n.actionIrreversible,
-          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+          style: VibeTermTypography.itemDescription.copyWith(
+            color: theme.textMuted,
+          ),
         ),
         actions: [
           TextButton(
@@ -83,7 +87,9 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
                 title: l10n.autoConnectOnStart,
                 subtitle: l10n.autoConnectOnStartDesc,
                 value: appSettings.autoConnectOnStart,
-                onChanged: (value) => ref.read(settingsProvider.notifier).toggleAutoConnect(value),
+                onChanged: (value) => ref
+                    .read(settingsProvider.notifier)
+                    .toggleAutoConnect(value),
                 theme: theme,
               ),
               Divider(height: 1, color: theme.border),
@@ -91,7 +97,8 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
                 title: l10n.autoReconnect,
                 subtitle: l10n.autoReconnectDesc,
                 value: appSettings.reconnectOnDisconnect,
-                onChanged: (value) => ref.read(settingsProvider.notifier).toggleReconnect(value),
+                onChanged: (value) =>
+                    ref.read(settingsProvider.notifier).toggleReconnect(value),
                 theme: theme,
               ),
               Divider(height: 1, color: theme.border),
@@ -99,7 +106,9 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
                 title: l10n.disconnectNotification,
                 subtitle: l10n.disconnectNotificationDesc,
                 value: appSettings.notifyOnDisconnect,
-                onChanged: (value) => ref.read(settingsProvider.notifier).toggleNotifyOnDisconnect(value),
+                onChanged: (value) => ref
+                    .read(settingsProvider.notifier)
+                    .toggleNotifyOnDisconnect(value),
                 theme: theme,
               ),
             ],
@@ -125,7 +134,9 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
                   padding: const EdgeInsets.all(VibeTermSpacing.md),
                   child: Text(
                     l10n.noSavedConnections,
-                    style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.textMuted,
+                    ),
                   ),
                 )
               : Column(
@@ -141,10 +152,17 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
                           isEnabled: autoConnectEnabled,
                           isSelectionMode: isSelectionMode,
                           isSelected: selectedIds.contains(connection.id),
-                          onSelect: () => ref.read(settingsProvider.notifier).selectAutoConnection(connection.id),
-                          onDelete: () => _showDeleteDialog(context, connection.id, connection.name),
+                          onSelect: () => ref
+                              .read(settingsProvider.notifier)
+                              .selectAutoConnection(connection.id),
+                          onDelete: () => _showDeleteDialog(
+                            context,
+                            connection.id,
+                            connection.name,
+                          ),
                           onLongPress: () => enterSelectionMode(connection.id),
-                          onSelectionToggle: () => toggleSelection(connection.id),
+                          onSelectionToggle: () =>
+                              toggleSelection(connection.id),
                         ),
                       ],
                     );
@@ -162,7 +180,10 @@ class _QuickConnectionsSectionState extends ConsumerState<QuickConnectionsSectio
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgElevated,
-        title: Text(l10n.deleteConnectionConfirm, style: TextStyle(color: theme.text)),
+        title: Text(
+          l10n.deleteConnectionConfirm,
+          style: TextStyle(color: theme.text),
+        ),
         content: Text(
           l10n.deleteConnectionConfirmMessage(name),
           style: TextStyle(color: theme.textMuted),
@@ -203,8 +224,16 @@ class _SettingsToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(title, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
-      subtitle: Text(subtitle, style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+      title: Text(
+        title,
+        style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: VibeTermTypography.itemDescription.copyWith(
+          color: theme.textMuted,
+        ),
+      ),
       trailing: Switch(
         value: value,
         activeTrackColor: theme.accent.withValues(alpha: 0.5),
@@ -267,8 +296,12 @@ class _ConnectionItem extends StatelessWidget {
   }
 
   Widget _buildTile(BuildContext context, bool isActive, bool isDisabled) {
-    final textColor = isDisabled ? theme.textMuted.withValues(alpha: 0.5) : theme.text;
-    final subtitleColor = isDisabled ? theme.textMuted.withValues(alpha: 0.3) : theme.textMuted;
+    final textColor = isDisabled
+        ? theme.textMuted.withValues(alpha: 0.5)
+        : theme.text;
+    final subtitleColor = isDisabled
+        ? theme.textMuted.withValues(alpha: 0.3)
+        : theme.textMuted;
 
     return ListTile(
       leading: isSelectionMode
@@ -282,10 +315,14 @@ class _ConnectionItem extends StatelessWidget {
               width: 20,
               height: 20,
               decoration: BoxDecoration(
-                color: isActive && !isDisabled ? theme.accent : Colors.transparent,
+                color: isActive && !isDisabled
+                    ? theme.accent
+                    : Colors.transparent,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isDisabled ? theme.textMuted.withValues(alpha: 0.3) : (isActive ? theme.accent : theme.textMuted),
+                  color: isDisabled
+                      ? theme.textMuted.withValues(alpha: 0.3)
+                      : (isActive ? theme.accent : theme.textMuted),
                   width: 2,
                 ),
               ),
@@ -299,7 +336,9 @@ class _ConnectionItem extends StatelessWidget {
       ),
       subtitle: Text(
         '${connection.username}@${connection.host}:${connection.port}',
-        style: VibeTermTypography.itemDescription.copyWith(color: subtitleColor),
+        style: VibeTermTypography.itemDescription.copyWith(
+          color: subtitleColor,
+        ),
       ),
       onTap: isSelectionMode
           ? onSelectionToggle
@@ -319,7 +358,9 @@ class _ConnectionItem extends StatelessWidget {
         ),
         content: Text(
           connection.name,
-          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+          style: VibeTermTypography.itemDescription.copyWith(
+            color: theme.textMuted,
+          ),
         ),
         actions: [
           TextButton(

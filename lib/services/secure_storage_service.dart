@@ -23,7 +23,9 @@ class SecureStorageService {
     if (jsonString == null) return [];
 
     final jsonList = jsonDecode(jsonString) as List;
-    return jsonList.map((j) => SSHKey.fromJson(j as Map<String, dynamic>)).toList();
+    return jsonList
+        .map((j) => SSHKey.fromJson(j as Map<String, dynamic>))
+        .toList();
   }
 
   /// Sauvegarde une clé privée séparément (plus sécurisé)
@@ -47,7 +49,11 @@ class SecureStorageService {
   }
 
   /// Sauvegarde le fingerprint d'un hôte SSH (TOFU)
-  static Future<void> saveHostFingerprint(String host, int port, String fingerprint) async {
+  static Future<void> saveHostFingerprint(
+    String host,
+    int port,
+    String fingerprint,
+  ) async {
     await _storage.write(key: 'hostkey_${host}_$port', value: fingerprint);
   }
 
@@ -65,7 +71,9 @@ class SecureStorageService {
   static Future<void> clearAll() async {
     final all = await _storage.readAll();
     for (final key in all.keys) {
-      if (key.startsWith(_privateKeyPrefix) || key.startsWith('hostkey_') || key == _keysKey) {
+      if (key.startsWith(_privateKeyPrefix) ||
+          key.startsWith('hostkey_') ||
+          key == _keysKey) {
         await _storage.delete(key: key);
       }
     }

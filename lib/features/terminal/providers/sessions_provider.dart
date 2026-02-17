@@ -45,7 +45,6 @@ class SessionsNotifier extends Notifier<List<Session>> {
       return s;
     }).toList();
   }
-
 }
 
 final sessionsProvider = NotifierProvider<SessionsNotifier, List<Session>>(

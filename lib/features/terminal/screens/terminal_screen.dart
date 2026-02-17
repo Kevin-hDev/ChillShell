@@ -27,8 +27,15 @@ const double _kInputOverlayHeight = 140;
 /// Agents CLI IA connus — la barre d'info session est masquée quand l'un
 /// d'eux est actif pour maximiser l'espace terminal sur petit écran.
 const _kCliAgentNames = <String>{
-  'claude', 'codex', 'opencode', 'aider', 'gemini', 'cody',
-  'amazon-q', 'aws-q', 'crush',
+  'claude',
+  'codex',
+  'opencode',
+  'aider',
+  'gemini',
+  'cody',
+  'amazon-q',
+  'aws-q',
+  'crush',
 };
 
 class TerminalScreen extends ConsumerStatefulWidget {
@@ -45,6 +52,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   final _ghostTextInputKey = GlobalKey<GhostTextInputState>();
   // GlobalKey pour préserver l'animation du loader entre les rebuilds
   final _loaderKey = GlobalKey();
+
   /// Flag d'annulation WOL : empêche tryConnect de finaliser si l'utilisateur a annulé
   bool _wolCancelled = false;
 
@@ -84,7 +92,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   /// Affiche un dialogue pour confirmer une nouvelle clé d'hôte SSH (TOFU)
   Future<bool> _showHostKeyDialog(
-    String host, int port, String keyType, String fingerprint,
+    String host,
+    int port,
+    String keyType,
+    String fingerprint,
   ) async {
     if (!mounted) return false;
     final l10n = context.l10n;
@@ -173,7 +184,10 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
   /// Affiche un dialogue d'alerte quand la clé d'hôte SSH a changé (MITM potentiel)
   Future<bool> _showHostKeyMismatchDialog(
-    String host, int port, String keyType, String fingerprint,
+    String host,
+    int port,
+    String keyType,
+    String fingerprint,
   ) async {
     if (!mounted) return false;
     final l10n = context.l10n;
@@ -287,7 +301,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     if (connections.isEmpty) return;
 
     // Trouver la connexion marquée comme auto-connexion (isQuickAccess = true)
-    final autoConnection = connections.where((c) => c.isQuickAccess).firstOrNull;
+    final autoConnection = connections
+        .where((c) => c.isQuickAccess)
+        .firstOrNull;
     if (autoConnection == null) return;
 
     final lastConnection = autoConnection;
@@ -304,7 +320,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         wolAttempts++;
       }
 
-      final wolConfig = ref.read(wolProvider.notifier).getConfigForSshConnection(lastConnection.id);
+      final wolConfig = ref
+          .read(wolProvider.notifier)
+          .getConfigForSshConnection(lastConnection.id);
 
       if (wolConfig != null) {
         // WOL auto: lancer WolStartScreen au lieu de SSH directe
@@ -350,31 +368,34 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final l10n = context.l10n;
     // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
-    ref.read(sessionsProvider.notifier).addSession(
-      name: l10n.terminalTab(tabNumber.toString()),
-      host: connection.host,
-      username: connection.username,
-      port: connection.port,
-    );
+    ref
+        .read(sessionsProvider.notifier)
+        .addSession(
+          name: l10n.terminalTab(tabNumber.toString()),
+          host: connection.host,
+          username: connection.username,
+          port: connection.port,
+        );
 
     final sessions = ref.read(sessionsProvider);
     final sessionId = sessions.last.id;
 
-    final success = await ref.read(sshProvider.notifier).connect(
-      host: connection.host,
-      username: connection.username,
-      keyId: connection.keyId,
-      sessionId: sessionId,
-      port: connection.port,
-      onFirstHostKey: _showHostKeyDialog,
-      onHostKeyMismatch: _showHostKeyMismatchDialog,
-    );
+    final success = await ref
+        .read(sshProvider.notifier)
+        .connect(
+          host: connection.host,
+          username: connection.username,
+          keyId: connection.keyId,
+          sessionId: sessionId,
+          port: connection.port,
+          onFirstHostKey: _showHostKeyDialog,
+          onHostKeyMismatch: _showHostKeyMismatchDialog,
+        );
 
     if (success) {
-      ref.read(sessionsProvider.notifier).updateSessionStatus(
-        sessionId,
-        ConnectionStatus.connected,
-      );
+      ref
+          .read(sessionsProvider.notifier)
+          .updateSessionStatus(sessionId, ConnectionStatus.connected);
       await StorageService().updateConnectionLastConnected(connection.id);
     } else {
       ref.read(sessionsProvider.notifier).removeSession(sessionId);
@@ -404,7 +425,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final sshState = ref.watch(sshProvider);
     final sessions = ref.watch(sessionsProvider);
     final theme = ref.watch(vibeTermThemeProvider);
-    final isConnected = sshState.connectionState == SSHConnectionState.connected;
+    final isConnected =
+        sshState.connectionState == SSHConnectionState.connected;
     final isEditorMode = isConnected ? ref.watch(isEditorModeProvider) : false;
 
     // Écouter les changements d'onglet UI
@@ -438,7 +460,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           SessionTabBar(
             onAddTab: _addNewTab,
             onAddSession: _showConnectionDialog,
-            onScrollToBottom: () => terminalViewKey.currentState?.scrollToBottom(),
+            onScrollToBottom: () =>
+                terminalViewKey.currentState?.scrollToBottom(),
             onImageImport: _handleImageImport,
           ),
           if (sshState.connectionState == SSHConnectionState.connected &&
@@ -456,7 +479,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     // navigation Android apparaît/disparaît avec le clavier.
                     // Cela empêche le terminal de changer de taille → pas de SIGWINCH
                     // inutile → les agents CLI (Codex, etc.) ne redessinent pas.
-                    bottom: _kInputOverlayHeight + MediaQuery.of(context).viewPadding.bottom,
+                    bottom:
+                        _kInputOverlayHeight +
+                        MediaQuery.of(context).viewPadding.bottom,
                     child: _buildContent(sshState, sessions, theme),
                   )
                 else
@@ -469,12 +494,20 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                     child: EditorModeButtons(
                       onEnter: () => ref.read(sshProvider.notifier).write('\r'),
                       onCtrlKey: (ctrlCode) {
-                        ref.read(sshProvider.notifier).write(String.fromCharCode(ctrlCode));
+                        ref
+                            .read(sshProvider.notifier)
+                            .write(String.fromCharCode(ctrlCode));
                       },
                       onArrow: (direction) {
-                        final isAppMode = terminalViewKey.currentState?.isApplicationCursorMode ?? false;
+                        final isAppMode =
+                            terminalViewKey
+                                .currentState
+                                ?.isApplicationCursorMode ??
+                            false;
                         final prefix = isAppMode ? '\x1bO' : '\x1b[';
-                        ref.read(sshProvider.notifier).write('$prefix$direction');
+                        ref
+                            .read(sshProvider.notifier)
+                            .write('$prefix$direction');
                       },
                       theme: theme,
                     ),
@@ -491,19 +524,26 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                       children: [
                         // Boutons ESC et saut de ligne
                         Padding(
-                          padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+                          padding: const EdgeInsets.only(
+                            left: 4,
+                            right: 4,
+                            bottom: 4,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               _DiscreteOverlayButton(
                                 text: 'ESC',
-                                onTap: () => ref.read(sshProvider.notifier).write('\x1b'),
+                                onTap: () => ref
+                                    .read(sshProvider.notifier)
+                                    .write('\x1b'),
                                 theme: theme,
                               ),
                               _DiscreteOverlayButton(
                                 icon: Icons.subdirectory_arrow_left,
                                 onTap: () {
-                                  _ghostTextInputKey.currentState?.insertNewLine();
+                                  _ghostTextInputKey.currentState
+                                      ?.insertNewLine();
                                 },
                                 theme: theme,
                               ),
@@ -523,7 +563,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     );
   }
 
-  Widget _buildContent(SSHState sshState, List<Session> sessions, VibeTermThemeData theme) {
+  Widget _buildContent(
+    SSHState sshState,
+    List<Session> sessions,
+    VibeTermThemeData theme,
+  ) {
     if (sshState.connectionState == SSHConnectionState.connected) {
       return VibeTerminalView(key: terminalViewKey);
     }
@@ -531,7 +575,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     if (sshState.connectionState == SSHConnectionState.connecting ||
         sshState.connectionState == SSHConnectionState.reconnecting) {
       final l10n = context.l10n;
-      final isReconnecting = sshState.connectionState == SSHConnectionState.reconnecting;
+      final isReconnecting =
+          sshState.connectionState == SSHConnectionState.reconnecting;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -546,8 +591,12 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             Text(
               sshState.errorMessage != null
                   ? translateSshError(l10n, sshState.errorMessage)
-                  : (isReconnecting ? l10n.reconnecting : l10n.connectionInProgress),
-              style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+                  : (isReconnecting
+                        ? l10n.reconnecting
+                        : l10n.connectionInProgress),
+              style: VibeTermTypography.caption.copyWith(
+                color: theme.textMuted,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: VibeTermSpacing.xl),
@@ -626,21 +675,21 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: theme.border),
               ),
-              child: Icon(
-                Icons.terminal,
-                size: 40,
-                color: theme.textMuted,
-              ),
+              child: Icon(Icons.terminal, size: 40, color: theme.textMuted),
             ),
             const SizedBox(height: VibeTermSpacing.md),
             Text(
               l10n.noConnection,
-              style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+              style: VibeTermTypography.settingsTitle.copyWith(
+                color: theme.text,
+              ),
             ),
             const SizedBox(height: VibeTermSpacing.xs),
             Text(
               l10n.connectToServer,
-              style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+              style: VibeTermTypography.caption.copyWith(
+                color: theme.textMuted,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: VibeTermSpacing.lg),
@@ -668,16 +717,15 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             const SizedBox(height: VibeTermSpacing.md),
             InkWell(
               onTap: () async {
-                final uri = Uri.parse('https://github.com/Kevin-hdev/ChillShell');
+                final uri = Uri.parse(
+                  'https://github.com/Kevin-hdev/ChillShell',
+                );
                 if (await canLaunchUrl(uri)) {
                   await launchUrl(uri, mode: LaunchMode.externalApplication);
                 }
               },
               borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/images/icons_github.png',
-                height: 70,
-              ),
+              child: Image.asset('assets/images/icons_github.png', height: 70),
             ),
           ],
         ),
@@ -692,7 +740,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final wolState = ref.watch(wolProvider);
 
     // Le bouton est grisé si WOL désactivé OU aucune config
-    final isEnabled = settings.appSettings.wolEnabled && wolState.configs.isNotEmpty;
+    final isEnabled =
+        settings.appSettings.wolEnabled && wolState.configs.isNotEmpty;
 
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
@@ -709,10 +758,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         elevation: 0,
       ),
       onPressed: isEnabled ? _handleWolStartPress : null,
-      icon: Icon(
-        Icons.bolt,
-        color: isEnabled ? theme.bg : theme.textMuted,
-      ),
+      icon: Icon(Icons.bolt, color: isEnabled ? theme.bg : theme.textMuted),
       label: Text(l10n.wolStart),
     );
   }
@@ -777,17 +823,18 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               );
 
               return ListTile(
-                leading: Icon(
-                  Icons.computer,
-                  color: theme.accent,
-                ),
+                leading: Icon(Icons.computer, color: theme.accent),
                 title: Text(
                   config.name,
-                  style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                  style: VibeTermTypography.itemTitle.copyWith(
+                    color: theme.text,
+                  ),
                 ),
                 subtitle: Text(
                   '${sshConnection.username}@${sshConnection.host}',
-                  style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+                  style: VibeTermTypography.itemDescription.copyWith(
+                    color: theme.textMuted,
+                  ),
                 ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(VibeTermRadius.md),
@@ -800,10 +847,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(null),
-            child: Text(
-              l10n.cancel,
-              style: TextStyle(color: theme.textMuted),
-            ),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
           ),
         ],
       ),
@@ -908,21 +952,22 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     final firstSession = sessions.first;
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
 
-    ref.read(sessionsProvider.notifier).addSession(
-      name: l10n.terminalTab(tabNumber.toString()),
-      host: firstSession.host,
-      username: firstSession.username,
-      port: firstSession.port,
-    );
+    ref
+        .read(sessionsProvider.notifier)
+        .addSession(
+          name: l10n.terminalTab(tabNumber.toString()),
+          host: firstSession.host,
+          username: firstSession.username,
+          port: firstSession.port,
+        );
 
     final newSessions = ref.read(sessionsProvider);
     final newSessionId = newSessions.last.id;
 
     // Statut "connecting" → point jaune visible immédiatement
-    ref.read(sessionsProvider.notifier).updateSessionStatus(
-      newSessionId,
-      ConnectionStatus.connecting,
-    );
+    ref
+        .read(sessionsProvider.notifier)
+        .updateSessionStatus(newSessionId, ConnectionStatus.connecting);
 
     // 2. Sélectionner le nouvel onglet immédiatement
     ref.read(activeSessionIndexProvider.notifier).set(newSessions.length - 1);
@@ -937,9 +982,14 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         ref.read(sessionsProvider.notifier).removeSession(newSessionId);
         final updatedSessions = ref.read(sessionsProvider);
         if (updatedSessions.isNotEmpty) {
-          ref.read(activeSessionIndexProvider.notifier).set(
-            (updatedSessions.length - 1).clamp(0, updatedSessions.length - 1),
-          );
+          ref
+              .read(activeSessionIndexProvider.notifier)
+              .set(
+                (updatedSessions.length - 1).clamp(
+                  0,
+                  updatedSessions.length - 1,
+                ),
+              );
         }
         final theme = ref.read(vibeTermThemeProvider);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -955,10 +1005,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // 4. Connexion réussie → point vert
     if (mounted) {
-      ref.read(sessionsProvider.notifier).updateSessionStatus(
-        newSessionId,
-        ConnectionStatus.connected,
-      );
+      ref
+          .read(sessionsProvider.notifier)
+          .updateSessionStatus(newSessionId, ConnectionStatus.connected);
     }
   }
 
@@ -976,7 +1025,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // Pour les shells locaux, on utilise le chemin local directement
     final currentTabId = sshState.currentTabId;
-    final isLocalTab = currentTabId != null && sshState.localTabIds.contains(currentTabId);
+    final isLocalTab =
+        currentTabId != null && sshState.localTabIds.contains(currentTabId);
 
     try {
       final picker = ImagePicker();
@@ -990,7 +1040,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
       if (isLocalTab) {
         // Shell local : copier vers /tmp local et coller le chemin
         final tempDir = await getTemporaryDirectory();
-        final localPath = '${tempDir.path}/vibeterm_image_$timestamp.$extension';
+        final localPath =
+            '${tempDir.path}/vibeterm_image_$timestamp.$extension';
         await File(pickedFile.path).copy(localPath);
         ref.read(sshProvider.notifier).write(localPath);
       } else {
@@ -1008,10 +1059,9 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           );
         }
 
-        final uploadedPath = await ref.read(sshProvider.notifier).uploadFile(
-          localPath: pickedFile.path,
-          remotePath: remotePath,
-        );
+        final uploadedPath = await ref
+            .read(sshProvider.notifier)
+            .uploadFile(localPath: pickedFile.path, remotePath: remotePath);
 
         // Fermer le snackbar de chargement
         if (mounted) {
@@ -1068,17 +1118,11 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(
-              l10n.cancel,
-              style: TextStyle(color: theme.textMuted),
-            ),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
-              l10n.disconnect,
-              style: TextStyle(color: theme.danger),
-            ),
+            child: Text(l10n.disconnect, style: TextStyle(color: theme.danger)),
           ),
         ],
       ),
@@ -1116,32 +1160,35 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
 
     // Utiliser le compteur pour nommer l'onglet (évite répétition IP)
     final tabNumber = ref.read(sshProvider.notifier).getAndIncrementTabNumber();
-    ref.read(sessionsProvider.notifier).addSession(
-      name: l10n.terminalTab(tabNumber.toString()),
-      host: info.host,
-      username: info.username,
-      port: info.port,
-    );
+    ref
+        .read(sessionsProvider.notifier)
+        .addSession(
+          name: l10n.terminalTab(tabNumber.toString()),
+          host: info.host,
+          username: info.username,
+          port: info.port,
+        );
 
     final sessions = ref.read(sessionsProvider);
     final sessionId = sessions.last.id;
 
     // SECURITY: Only pass keyId — worker reads private key from SecureStorage
-    final success = await ref.read(sshProvider.notifier).connect(
-      host: info.host,
-      username: info.username,
-      keyId: info.keyId,
-      sessionId: sessionId,
-      port: info.port,
-      onFirstHostKey: _showHostKeyDialog,
-      onHostKeyMismatch: _showHostKeyMismatchDialog,
-    );
+    final success = await ref
+        .read(sshProvider.notifier)
+        .connect(
+          host: info.host,
+          username: info.username,
+          keyId: info.keyId,
+          sessionId: sessionId,
+          port: info.port,
+          onFirstHostKey: _showHostKeyDialog,
+          onHostKeyMismatch: _showHostKeyMismatchDialog,
+        );
 
     if (success) {
-      ref.read(sessionsProvider.notifier).updateSessionStatus(
-        sessionId,
-        ConnectionStatus.connected,
-      );
+      ref
+          .read(sessionsProvider.notifier)
+          .updateSessionStatus(sessionId, ConnectionStatus.connected);
 
       final storage = StorageService();
       if (info.isNewConnection) {
@@ -1218,11 +1265,7 @@ class _DiscreteOverlayButtonState extends State<_DiscreteOverlayButton> {
                     fontWeight: FontWeight.bold,
                   ),
                 )
-              : Icon(
-                  widget.icon,
-                  color: widget.theme.textMuted,
-                  size: 20,
-                ),
+              : Icon(widget.icon, color: widget.theme.textMuted, size: 20),
         ),
       ),
     );

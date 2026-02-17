@@ -27,11 +27,7 @@ class TerminalHistoryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(6),
           border: Border.all(color: theme.border),
         ),
-        child: Icon(
-          icon,
-          color: theme.textMuted,
-          size: 18,
-        ),
+        child: Icon(icon, color: theme.textMuted, size: 18),
       ),
     );
   }
@@ -60,11 +56,7 @@ class TerminalGhostAcceptButton extends StatelessWidget {
           color: theme.accent.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          Icons.keyboard_tab,
-          color: theme.accent,
-          size: 18,
-        ),
+        child: Icon(Icons.keyboard_tab, color: theme.accent, size: 18),
       ),
     );
   }
@@ -302,7 +294,9 @@ class _DpadButtonState extends State<_DpadButton> {
         width: widget.size,
         height: widget.size,
         decoration: BoxDecoration(
-          color: _isPressed ? widget.arrowColor.withValues(alpha: 0.3) : widget.buttonColor,
+          color: _isPressed
+              ? widget.arrowColor.withValues(alpha: 0.3)
+              : widget.buttonColor,
           borderRadius: widget.borderRadius,
         ),
         child: Icon(
