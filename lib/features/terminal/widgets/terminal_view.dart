@@ -199,42 +199,10 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       // Doigt vers le bas (delta > 0) = scroll down
       final bool scrollUp = _altBufferScrollAccumulator < 0;
 
-      // Vérifier si l'app courante a besoin de scroll clavier
-      final sshState = ref.read(sshProvider);
-      final tabId = sshState.currentTabId;
-      final currentCmd = tabId != null
-          ? sshState.tabCurrentCommand[tabId]
-          : null;
-      final cmdName = _extractCommandName(currentCmd);
-      final useKeyboardScroll =
-          cmdName != null && _keyboardScrollApps.contains(cmdName);
-
-      if (useKeyboardScroll) {
-        // Apps sans support souris (OpenCode) : envoyer Page Up/Down
-        // OpenCode utilise PgUp/PgDown pour scroller, PAS les flèches.
-        // Page Up: \x1b[5~ / Page Down: \x1b[6~
-        final pageKey = scrollUp ? '\x1b[5~' : '\x1b[6~';
-        ref.read(sshProvider.notifier).write(pageKey);
-        if (kDebugMode)
-          debugPrint(
-            'ALT_SCROLL: Page ${scrollUp ? "UP" : "DOWN"} sent (keyboard scroll for $cmdName)',
-          );
+      if (_shouldUseKeyboardScroll()) {
+        _sendKeyboardScroll(scrollUp);
       } else {
-        // Mouse wheel SGR 1006 — coordonnées au CENTRE du terminal
-        // pour que les apps position-aware (Crush, etc.) routent l'événement
-        // vers la zone de contenu, pas le header en (1,1).
-        final int buttonCode = scrollUp ? 64 : 65;
-        final int col = (terminal.viewWidth ~/ 2).clamp(1, terminal.viewWidth);
-        final int row = (terminal.viewHeight ~/ 2).clamp(
-          1,
-          terminal.viewHeight,
-        );
-        final String sgrSequence = '\x1b[<$buttonCode;$col;${row}M';
-        ref.read(sshProvider.notifier).write(sgrSequence);
-        if (kDebugMode)
-          debugPrint(
-            'ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} at ($col,$row) sent (SGR)',
-          );
+        _sendMouseWheelScroll(terminal, scrollUp);
       }
 
       // Forcer un redraw du terminal local après le scroll
@@ -242,6 +210,48 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
 
       _altBufferScrollAccumulator = 0.0;
     }
+  }
+
+  bool _shouldUseKeyboardScroll() {
+    final sshState = ref.read(sshProvider);
+    final tabId = sshState.currentTabId;
+    final currentCmd = tabId != null ? sshState.tabCurrentCommand[tabId] : null;
+    final cmdName = _extractCommandName(currentCmd);
+    return cmdName != null && _keyboardScrollApps.contains(cmdName);
+  }
+
+  void _sendKeyboardScroll(bool scrollUp) {
+    // Apps sans support souris (OpenCode) : envoyer Page Up/Down
+    // OpenCode utilise PgUp/PgDown pour scroller, PAS les flèches.
+    // Page Up: \x1b[5~ / Page Down: \x1b[6~
+    final pageKey = scrollUp ? '\x1b[5~' : '\x1b[6~';
+    ref.read(sshProvider.notifier).write(pageKey);
+    if (kDebugMode) {
+      final sshState = ref.read(sshProvider);
+      final tabId = sshState.currentTabId;
+      final currentCmd = tabId != null
+          ? sshState.tabCurrentCommand[tabId]
+          : null;
+      final cmdName = _extractCommandName(currentCmd);
+      debugPrint(
+        'ALT_SCROLL: Page ${scrollUp ? "UP" : "DOWN"} sent (keyboard scroll for $cmdName)',
+      );
+    }
+  }
+
+  void _sendMouseWheelScroll(Terminal terminal, bool scrollUp) {
+    // Mouse wheel SGR 1006 — coordonnées au CENTRE du terminal
+    // pour que les apps position-aware (Crush, etc.) routent l'événement
+    // vers la zone de contenu, pas le header en (1,1).
+    final int buttonCode = scrollUp ? 64 : 65;
+    final int col = (terminal.viewWidth ~/ 2).clamp(1, terminal.viewWidth);
+    final int row = (terminal.viewHeight ~/ 2).clamp(1, terminal.viewHeight);
+    final String sgrSequence = '\x1b[<$buttonCode;$col;${row}M';
+    ref.read(sshProvider.notifier).write(sgrSequence);
+    if (kDebugMode)
+      debugPrint(
+        'ALT_SCROLL: Mouse wheel ${scrollUp ? "UP" : "DOWN"} at ($col,$row) sent (SGR)',
+      );
   }
 
   /// Réinitialise l'accumulateur au début d'un nouveau geste
@@ -257,60 +267,76 @@ class VibeTerminalViewState extends ConsumerState<VibeTerminalView> {
       // Synchroniser la taille du terminal avec le PTY distant
       // MAIS pas pendant l'alternate screen mode (apps CLI modernes)
       terminal.onResize = (width, height, pixelWidth, pixelHeight) {
-        // Ne pas envoyer de resize pendant l'alternate screen mode
-        // pour éviter la corruption d'affichage (Codex, etc.)
-        if (_isInAltBuffer) {
-          if (kDebugMode)
-            debugPrint('RESIZE: Skipped (alternate screen active)');
-          return;
-        }
-
-        // Vérifier si la taille a réellement changé
-        final lastSize = _lastSentSize[tabId];
-        if (lastSize != null && lastSize.$1 == width && lastSize.$2 == height) {
-          return; // Pas de changement, ignorer
-        }
-
-        // Guard agents CLI : autoriser les AUGMENTATIONS de hauteur (clavier fermé
-        // → plus de lignes → Codex redessine avec plus de contenu visible),
-        // mais BLOQUER les DIMINUTIONS (clavier ouvert → Codex redessinérait
-        // avec moins de lignes → messages "disparaissent").
-        if (lastSize != null && lastSize.$1 == width && lastSize.$2 != height) {
-          final sshState = ref.read(sshProvider);
-          final currentCommand = sshState.tabCurrentCommand[tabId];
-          if (currentCommand != null && _isCliAgentCommand(currentCommand)) {
-            if (height < lastSize.$2) {
-              // Hauteur DIMINUE → bloquer (empêche Codex de redessiner avec moins de lignes)
-              if (kDebugMode) {
-                debugPrint(
-                  'RESIZE: Blocked height shrink ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)',
-                );
-              }
-              return;
-            }
-            // Hauteur AUGMENTE → autoriser (Codex redessine avec plus de lignes)
-            if (kDebugMode) {
-              debugPrint(
-                'RESIZE: Allowed height grow ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)',
-              );
-            }
-          }
-        }
-
-        if (kDebugMode) {
-          final oldStr = lastSize != null
-              ? '${lastSize.$1}x${lastSize.$2}'
-              : 'initial';
-          debugPrint('RESIZE: $oldStr → ${width}x$height (tab=$tabId)');
-        }
-        _lastSentSize[tabId] = (width, height);
-        ref
-            .read(sshProvider.notifier)
-            .resizeTerminalForTab(tabId, width, height);
+        _handleTerminalResize(tabId, width, height);
       };
       _terminals[tabId] = terminal;
     }
     return _terminals[tabId]!;
+  }
+
+  void _handleTerminalResize(String tabId, int width, int height) {
+    // Ne pas envoyer de resize pendant l'alternate screen mode
+    // pour éviter la corruption d'affichage (Codex, etc.)
+    if (_isInAltBuffer) {
+      if (kDebugMode) debugPrint('RESIZE: Skipped (alternate screen active)');
+      return;
+    }
+
+    if (!_hasSizeChanged(tabId, width, height)) {
+      return;
+    }
+
+    if (_shouldBlockHeightShrink(tabId, width, height)) {
+      return;
+    }
+
+    final lastSize = _lastSentSize[tabId];
+    if (kDebugMode) {
+      final oldStr = lastSize != null
+          ? '${lastSize.$1}x${lastSize.$2}'
+          : 'initial';
+      debugPrint('RESIZE: $oldStr → ${width}x$height (tab=$tabId)');
+    }
+    _lastSentSize[tabId] = (width, height);
+    ref.read(sshProvider.notifier).resizeTerminalForTab(tabId, width, height);
+  }
+
+  bool _hasSizeChanged(String tabId, int width, int height) {
+    final lastSize = _lastSentSize[tabId];
+    if (lastSize != null && lastSize.$1 == width && lastSize.$2 == height) {
+      return false;
+    }
+    return true;
+  }
+
+  bool _shouldBlockHeightShrink(String tabId, int width, int height) {
+    final lastSize = _lastSentSize[tabId];
+    // Guard agents CLI : autoriser les AUGMENTATIONS de hauteur (clavier fermé
+    // → plus de lignes → Codex redessine avec plus de contenu visible),
+    // mais BLOQUER les DIMINUTIONS (clavier ouvert → Codex redessinérait
+    // avec moins de lignes → messages "disparaissent").
+    if (lastSize != null && lastSize.$1 == width && lastSize.$2 != height) {
+      final sshState = ref.read(sshProvider);
+      final currentCommand = sshState.tabCurrentCommand[tabId];
+      if (currentCommand != null && _isCliAgentCommand(currentCommand)) {
+        if (height < lastSize.$2) {
+          // Hauteur DIMINUE → bloquer (empêche Codex de redessiner avec moins de lignes)
+          if (kDebugMode) {
+            debugPrint(
+              'RESIZE: Blocked height shrink ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)',
+            );
+          }
+          return true;
+        }
+        // Hauteur AUGMENTE → autoriser (Codex redessine avec plus de lignes)
+        if (kDebugMode) {
+          debugPrint(
+            'RESIZE: Allowed height grow ${lastSize.$1}x${lastSize.$2} → ${width}x$height (CLI agent: $currentCommand)',
+          );
+        }
+      }
+    }
+    return false;
   }
 
   /// Envoie les données saisies par l'utilisateur vers le serveur SSH

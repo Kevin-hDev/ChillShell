@@ -69,14 +69,8 @@ class FolderNotifier extends Notifier<FolderState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      // Détecter l'OS distant si pas encore fait (résultat mis en cache dans l'état)
-      String os = state.remoteOS ?? '';
-      if (os.isEmpty) {
-        os = await _detectRemoteOS(execute);
-        state = state.copyWith(remoteOS: os);
-      }
+      final os = await _ensureOSDetected(execute);
 
-      // Construire la commande selon l'OS distant
       final command = os == 'windows'
           ? _buildWindowsCommand(basePath)
           : _buildUnixCommand(basePath);
@@ -87,37 +81,14 @@ class FolderNotifier extends Notifier<FolderState> {
         return;
       }
 
-      // Parser le résultat (format identique pour les deux OS: chemin + ___SEP___ + liste)
-      final sepIndex = result.indexOf('___SEP___');
-      if (sepIndex == -1) {
+      final parsed = _parseFolderListResult(result);
+      if (parsed == null) {
         state = state.copyWith(isLoading: false, error: 'Erreur parsing');
         return;
       }
 
-      final currentPath = result.substring(0, sepIndex).trim();
-      final listPart = result.substring(sepIndex + '___SEP___'.length).trim();
-
-      final folders = listPart
-          .split('\n')
-          .map((f) => f.trim())
-          .where((f) => f.isNotEmpty)
-          .map((f) => f.endsWith('/') ? f.substring(0, f.length - 1) : f)
-          .toList();
-
-      // Calculer le nom d'affichage (dernier segment du chemin)
-      final sep = os == 'windows' ? r'\' : '/';
-      String displayName;
-      if (currentPath == '~' || currentPath == '/') {
-        displayName = '~';
-      } else if (os == 'windows' &&
-          RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
-        displayName = currentPath;
-      } else {
-        final segments = currentPath.split(sep);
-        displayName = segments.isNotEmpty ? segments.last : '~';
-        if (displayName.isEmpty)
-          displayName = os == 'windows' ? currentPath : '/';
-      }
+      final (currentPath, folders) = parsed;
+      final displayName = _calculateDisplayName(currentPath, os);
 
       state = state.copyWith(
         currentPath: currentPath,
@@ -135,6 +106,67 @@ class FolderNotifier extends Notifier<FolderState> {
       if (kDebugMode) debugPrint('FolderProvider: Error: $e');
       state = state.copyWith(isLoading: false, error: 'Erreur: $e');
     }
+  }
+
+  Future<String> _ensureOSDetected(SilentCommandExecutor execute) async {
+    String os = state.remoteOS ?? '';
+    if (os.isEmpty) {
+      os = await _detectRemoteOS(execute);
+      state = state.copyWith(remoteOS: os);
+    }
+    return os;
+  }
+
+  (String, List<String>)? _parseFolderListResult(String result) {
+    final sepIndex = result.indexOf('___SEP___');
+    if (sepIndex == -1) return null;
+
+    final currentPath = result.substring(0, sepIndex).trim();
+    final listPart = result.substring(sepIndex + '___SEP___'.length).trim();
+
+    final folders = listPart
+        .split('\n')
+        .map((f) => f.trim())
+        .where((f) => f.isNotEmpty)
+        .map((f) => f.endsWith('/') ? f.substring(0, f.length - 1) : f)
+        .toList();
+
+    return (currentPath, folders);
+  }
+
+  String _calculateDisplayName(String currentPath, String os) {
+    final sep = os == 'windows' ? r'\' : '/';
+    if (currentPath == '~' || currentPath == '/') return '~';
+    if (os == 'windows' && RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
+      return currentPath;
+    }
+    final segments = currentPath.split(sep);
+    String displayName = segments.isNotEmpty ? segments.last : '~';
+    if (displayName.isEmpty) {
+      displayName = os == 'windows' ? currentPath : '/';
+    }
+    return displayName;
+  }
+
+  String _computeParentPath(String currentPath, String os) {
+    final sep = os == 'windows' ? r'\' : '/';
+    if (currentPath == '/' || currentPath == '~') return currentPath;
+    if (os == 'windows' && RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
+      return currentPath;
+    }
+    final segments = currentPath.split(sep);
+    segments.removeLast();
+    if (os == 'windows') {
+      return segments.length <= 1
+          ? '${segments.first}$sep'
+          : segments.join(sep);
+    }
+    return segments.isEmpty ? '/' : segments.join(sep);
+  }
+
+  String _computeChildPath(String currentPath, String folderName, String os) {
+    final sep = os == 'windows' ? r'\' : '/';
+    return '$currentPath$sep$folderName';
   }
 
   /// Détecte l'OS distant via uname -s (cache le résultat dans l'état)
@@ -179,34 +211,10 @@ class FolderNotifier extends Notifier<FolderState> {
 
     try {
       final os = state.remoteOS ?? 'linux';
-      final sep = os == 'windows' ? r'\' : '/';
 
-      String targetPath;
-      if (folderName == '..') {
-        // Remonter d'un niveau
-        final currentPath = state.currentPath;
-        if (currentPath == '/' || currentPath == '~') {
-          targetPath = currentPath;
-        } else if (os == 'windows' &&
-            RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
-          // Déjà à la racine du lecteur (ex: C:\)
-          targetPath = currentPath;
-        } else {
-          final segments = currentPath.split(sep);
-          segments.removeLast();
-          if (os == 'windows') {
-            // Garder au minimum "C:\" au lieu de juste "C:"
-            targetPath = segments.length <= 1
-                ? '${segments.first}$sep'
-                : segments.join(sep);
-          } else {
-            targetPath = segments.isEmpty ? '/' : segments.join(sep);
-          }
-        }
-      } else {
-        // Descendre dans le sous-dossier (chemin absolu)
-        targetPath = '${state.currentPath}$sep$folderName';
-      }
+      final targetPath = folderName == '..'
+          ? _computeParentPath(state.currentPath, os)
+          : _computeChildPath(state.currentPath, folderName, os);
 
       // Charger les dossiers du nouveau chemin
       await loadFolders(execute, basePath: targetPath);
