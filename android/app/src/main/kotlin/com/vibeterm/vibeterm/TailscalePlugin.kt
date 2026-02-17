@@ -320,10 +320,14 @@ class TailscalePlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             return
         }
 
-        // Reject if a login is already in progress
-        if (pendingLoginResult != null) {
-            result.error("LOGIN_IN_PROGRESS", "A login is already in progress", null)
-            return
+        // Cancel previous login attempt if user retries (e.g. closed browser without completing OAuth)
+        pendingLoginResult?.let { oldResult ->
+            try {
+                oldResult.error("LOGIN_CANCELLED", "Login cancelled by new attempt", null)
+            } catch (_: Exception) {
+                // Result may already have been sent, ignore
+            }
+            pendingLoginResult = null
         }
 
         pendingLoginResult = result
