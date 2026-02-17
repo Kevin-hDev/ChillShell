@@ -341,6 +341,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  freerasp:
+    dependency: "direct main"
+    description:
+      name: freerasp
+      sha256: "76a3fb6f8e3fdd7d83e224866998523e7fb79d5779321983e484a6cfbf4b01b5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.12.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -485,6 +493,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.7"
+  json_annotation:
+    dependency: transitive
+    description:
+      name: json_annotation
+      sha256: "805fa86df56383000f640384b282ce0cb8431f1a7a2396de92fb66186d8c57df"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.10.0"
   leak_tracker:
     dependency: transitive
     description:
