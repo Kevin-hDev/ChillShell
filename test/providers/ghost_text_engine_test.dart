@@ -7,11 +7,14 @@ void main() {
       expect(GhostTextEngine.getSuggestion('', []), null);
     });
 
-    test('whitespace-only input still triggers suggestion (trim matches all)', () {
-      // '   ' is trimmed to '' which matches everything in the command list
-      // This is expected behavior - the ghost text input field wouldn't normally contain only spaces
-      expect(GhostTextEngine.getSuggestion('   ', []), isNotNull);
-    });
+    test(
+      'whitespace-only input still triggers suggestion (trim matches all)',
+      () {
+        // '   ' is trimmed to '' which matches everything in the command list
+        // This is expected behavior - the ghost text input field wouldn't normally contain only spaces
+        expect(GhostTextEngine.getSuggestion('   ', []), isNotNull);
+      },
+    );
 
     test('suggests from command database', () {
       final suggestion = GhostTextEngine.getSuggestion('git st', []);
@@ -68,17 +71,23 @@ void main() {
       expect(suggestion, 'ev');
     });
 
-    test('does not suggest sensitive commands (export is in the list but thats okay)', () {
-      // GhostTextEngine has 'export ' in its command list
-      // The security filtering happens in TerminalNotifier, not here
-      // This test just verifies suggestions work for 'exp'
-      final suggestion = GhostTextEngine.getSuggestion('exp', []);
-      expect(suggestion, isNotNull);
-    });
+    test(
+      'does not suggest sensitive commands (export is in the list but thats okay)',
+      () {
+        // GhostTextEngine has 'export ' in its command list
+        // The security filtering happens in TerminalNotifier, not here
+        // This test just verifies suggestions work for 'exp'
+        final suggestion = GhostTextEngine.getSuggestion('exp', []);
+        expect(suggestion, isNotNull);
+      },
+    );
 
-    test('does not suggest from history if input is longer than history entry', () {
-      final history = ['ls'];
-      expect(GhostTextEngine.getSuggestion('ls -la', history), null);
-    });
+    test(
+      'does not suggest from history if input is longer than history entry',
+      () {
+        final history = ['ls'];
+        expect(GhostTextEngine.getSuggestion('ls -la', history), null);
+      },
+    );
   });
 }

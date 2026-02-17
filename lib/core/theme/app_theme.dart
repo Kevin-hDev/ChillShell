@@ -7,7 +7,7 @@ class VibeTermTheme {
   static ThemeData get dark => ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    
+
     // Couleurs
     scaffoldBackgroundColor: VibeTermColors.bg,
     colorScheme: const ColorScheme.dark(
@@ -16,7 +16,7 @@ class VibeTermTheme {
       secondary: VibeTermColors.accent,
       error: VibeTermColors.danger,
     ),
-    
+
     // AppBar
     appBarTheme: AppBarTheme(
       backgroundColor: VibeTermColors.bg,
@@ -27,14 +27,14 @@ class VibeTermTheme {
         color: VibeTermColors.text,
       ),
     ),
-    
+
     // Texte
     textTheme: TextTheme(
       bodyLarge: GoogleFonts.jetBrainsMono(color: VibeTermColors.text),
       bodyMedium: GoogleFonts.jetBrainsMono(color: VibeTermColors.textOutput),
       bodySmall: GoogleFonts.jetBrainsMono(color: VibeTermColors.textMuted),
     ),
-    
+
     // Input
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
@@ -53,13 +53,13 @@ class VibeTermTheme {
       ),
       hintStyle: GoogleFonts.jetBrainsMono(color: VibeTermColors.textMuted),
     ),
-    
+
     // Divider
     dividerTheme: const DividerThemeData(
       color: VibeTermColors.border,
       thickness: 1,
     ),
-    
+
     // Scrollbar
     scrollbarTheme: ScrollbarThemeData(
       thumbColor: WidgetStateProperty.all(VibeTermColors.scrollThumb),

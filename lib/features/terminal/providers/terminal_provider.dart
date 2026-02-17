@@ -112,13 +112,22 @@ class TerminalNotifier extends Notifier<TerminalState> {
   /// (ex: "auth" ne matche plus "author") et détectent les vrais tokens inline.
   static final _sensitiveRegexes = [
     // Assignation inline de variables sensibles: SECRET=value, TOKEN=xyz, etc.
-    RegExp(r'\b(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|APIKEY|API[-_]KEY|PRIVATE_KEY|CREDENTIAL)\s*=\S+', caseSensitive: false),
+    RegExp(
+      r'\b(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|APIKEY|API[-_]KEY|PRIVATE_KEY|CREDENTIAL)\s*=\S+',
+      caseSensitive: false,
+    ),
 
     // Export de variables contenant des mots-clés sensibles (GITHUB_TOKEN, DB_PASSWORD, etc.)
-    RegExp(r'\bexport\s+\w*(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|APIKEY|PRIVATE_KEY|CREDENTIAL)\w*\s*=', caseSensitive: false),
+    RegExp(
+      r'\bexport\s+\w*(PASSWORD|PASSWD|SECRET|TOKEN|API_KEY|APIKEY|PRIVATE_KEY|CREDENTIAL)\w*\s*=',
+      caseSensitive: false,
+    ),
 
     // Export de variables cloud/DB spécifiques
-    RegExp(r'\bexport\s+(AWS_SECRET\w*|AZURE_\w+|GCP_\w+|GOOGLE_APPLICATION_CREDENTIALS|PGPASSWORD|MYSQL_PWD)\s*=', caseSensitive: false),
+    RegExp(
+      r'\bexport\s+(AWS_SECRET\w*|AZURE_\w+|GCP_\w+|GOOGLE_APPLICATION_CREDENTIALS|PGPASSWORD|MYSQL_PWD)\s*=',
+      caseSensitive: false,
+    ),
 
     // sshpass (outil qui passe un mot de passe en clair)
     RegExp(r'\bsshpass\b'),
@@ -153,7 +162,9 @@ class TerminalNotifier extends Notifier<TerminalState> {
 
     // Lecture de fichiers sensibles (clés, .env, .pem)
     RegExp(r'\b(cat|less|more|head|tail|bat)\s+\S*\.(env|pem|key)\b'),
-    RegExp(r'\b(cat|less|more|head|tail|bat)\s+\S*id_(rsa|ed25519|ecdsa|dsa)\b'),
+    RegExp(
+      r'\b(cat|less|more|head|tail|bat)\s+\S*id_(rsa|ed25519|ecdsa|dsa)\b',
+    ),
   ];
 
   /// Vérifie si une commande contient des données sensibles (regex)
@@ -173,7 +184,8 @@ class TerminalNotifier extends Notifier<TerminalState> {
 
     // NE JAMAIS enregistrer les commandes sensibles (mots de passe, tokens, etc.)
     if (_isSensitiveCommand(command)) {
-      if (kDebugMode) debugPrint('SECURITY: Sensitive command NOT added to history');
+      if (kDebugMode)
+        debugPrint('SECURITY: Sensitive command NOT added to history');
       return;
     }
 
@@ -184,7 +196,10 @@ class TerminalNotifier extends Notifier<TerminalState> {
     }
 
     final newHistory = [...state.commandHistory, command];
-    final newTimestamps = [..._historyTimestamps, DateTime.now().millisecondsSinceEpoch];
+    final newTimestamps = [
+      ..._historyTimestamps,
+      DateTime.now().millisecondsSinceEpoch,
+    ];
 
     // Limiter l'historique à 200 commandes
     if (newHistory.length > 200) {
@@ -205,7 +220,9 @@ class TerminalNotifier extends Notifier<TerminalState> {
     for (var i = 0; i < commands.length; i++) {
       entries.add({
         'c': commands[i],
-        't': i < timestamps.length ? timestamps[i] : DateTime.now().millisecondsSinceEpoch,
+        't': i < timestamps.length
+            ? timestamps[i]
+            : DateTime.now().millisecondsSinceEpoch,
       });
     }
     _storage.saveCommandHistoryV2(entries);
@@ -292,8 +309,8 @@ class TerminalNotifier extends Notifier<TerminalState> {
     'not permitted',
 
     // French - Ubuntu/Debian suggestion messages
-    "n'a pas été trouvée",  // "La commande « htopi » n'a pas été trouvée"
-    'pas été trouvé',       // Variante masculine
+    "n'a pas été trouvée", // "La commande « htopi » n'a pas été trouvée"
+    'pas été trouvé', // Variante masculine
     'Aucun fichier ou dossier de ce nom',
     'commande introuvable',
     "n'existe pas",
@@ -306,7 +323,7 @@ class TerminalNotifier extends Notifier<TerminalState> {
     'zsh: no such file or directory',
 
     // Bash specific
-    'bash: ',  // Préfixe d'erreur bash (ex: "bash: htopi: command not found")
+    'bash: ', // Préfixe d'erreur bash (ex: "bash: htopi: command not found")
   ];
 
   /// Stocke une commande en attente de validation
@@ -314,7 +331,8 @@ class TerminalNotifier extends Notifier<TerminalState> {
   void setPendingCommand(String command) {
     // SÉCURITÉ CRITIQUE: Si le shell attend un mot de passe, on n'enregistre PAS l'input
     if (_isWaitingForSensitiveInput) {
-      if (kDebugMode) debugPrint('SECURITY: Sensitive input detected, NOT saving to history');
+      if (kDebugMode)
+        debugPrint('SECURITY: Sensitive input detected, NOT saving to history');
       _isWaitingForSensitiveInput = false; // Reset pour le prochain input
       _pendingCommand = null;
       _pendingCommandTime = null;
@@ -337,7 +355,10 @@ class TerminalNotifier extends Notifier<TerminalState> {
     for (final pattern in _passwordPromptPatterns) {
       if (lowerOutput.contains(pattern.toLowerCase())) {
         _isWaitingForSensitiveInput = true;
-        if (kDebugMode) debugPrint('SECURITY: Password prompt detected, next input will NOT be saved');
+        if (kDebugMode)
+          debugPrint(
+            'SECURITY: Password prompt detected, next input will NOT be saved',
+          );
         // Annuler aussi la commande en attente si c'était une commande qui demande un password
         _pendingCommand = null;
         _pendingCommandTime = null;
@@ -352,7 +373,8 @@ class TerminalNotifier extends Notifier<TerminalState> {
     for (final pattern in _errorPatterns) {
       if (lowerOutput.contains(pattern.toLowerCase())) {
         // Erreur détectée → ne pas ajouter à l'historique
-        if (kDebugMode) debugPrint('ERROR DETECTED in output, command NOT added to history');
+        if (kDebugMode)
+          debugPrint('ERROR DETECTED in output, command NOT added to history');
         _pendingCommand = null;
         _pendingCommandTime = null;
         return;
@@ -369,7 +391,8 @@ class TerminalNotifier extends Notifier<TerminalState> {
       final elapsed = DateTime.now().difference(_pendingCommandTime!);
       if (elapsed.inMilliseconds >= 500) {
         // Pas d'erreur détectée après le délai → ajouter à l'historique
-        if (kDebugMode) debugPrint('No error detected, adding command to history');
+        if (kDebugMode)
+          debugPrint('No error detected, adding command to history');
         addToHistory(_pendingCommand!);
         _pendingCommandValidated = true;
         _pendingCommand = null;
@@ -412,7 +435,9 @@ class TerminalNotifier extends Notifier<TerminalState> {
     // Capturer le temps d'exécution de la commande précédente
     Duration? previousExecutionTime;
     if (state.lastCommandStart != null) {
-      previousExecutionTime = DateTime.now().difference(state.lastCommandStart!);
+      previousExecutionTime = DateTime.now().difference(
+        state.lastCommandStart!,
+      );
     }
 
     state = state.copyWith(
@@ -420,7 +445,6 @@ class TerminalNotifier extends Notifier<TerminalState> {
       lastExecutionTime: previousExecutionTime,
     );
   }
-
 }
 
 final terminalProvider = NotifierProvider<TerminalNotifier, TerminalState>(

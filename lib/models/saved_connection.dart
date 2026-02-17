@@ -55,16 +55,17 @@ class SavedConnection {
     'isQuickAccess': isQuickAccess,
   };
 
-  factory SavedConnection.fromJson(Map<String, dynamic> json) => SavedConnection(
-    id: json['id'] as String,
-    name: json['name'] as String,
-    host: json['host'] as String,
-    port: json['port'] as int? ?? 22,
-    username: json['username'] as String,
-    keyId: json['keyId'] as String,
-    lastConnected: json['lastConnected'] != null
-        ? DateTime.parse(json['lastConnected'] as String)
-        : null,
-    isQuickAccess: json['isQuickAccess'] as bool? ?? false,
-  );
+  factory SavedConnection.fromJson(Map<String, dynamic> json) =>
+      SavedConnection(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        host: json['host'] as String,
+        port: json['port'] as int? ?? 22,
+        username: json['username'] as String,
+        keyId: json['keyId'] as String,
+        lastConnected: json['lastConnected'] != null
+            ? DateTime.parse(json['lastConnected'] as String)
+            : null,
+        isQuickAccess: json['isQuickAccess'] as bool? ?? false,
+      );
 }

@@ -151,7 +151,9 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
 
   void _navigateHistory(bool up) {
     final terminalNotifier = ref.read(terminalProvider.notifier);
-    final cmd = up ? terminalNotifier.previousCommand() : terminalNotifier.nextCommand();
+    final cmd = up
+        ? terminalNotifier.previousCommand()
+        : terminalNotifier.nextCommand();
 
     if (cmd != null) {
       _controller.text = cmd;
@@ -208,7 +210,8 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
   /// En mode normal: \x1b[A (CSI)
   /// En mode application: \x1bOA (SS3) - utilisé par alsamixer, pulsemixer, etc.
   void _sendArrowKey(String direction) {
-    final isAppMode = terminalViewKey.currentState?.isApplicationCursorMode ?? false;
+    final isAppMode =
+        terminalViewKey.currentState?.isApplicationCursorMode ?? false;
     final prefix = isAppMode ? '\x1bO' : '\x1b[';
     ref.read(sshProvider.notifier).write('$prefix$direction');
   }
@@ -216,7 +219,9 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
   @override
   Widget build(BuildContext context) {
     final ghostText = ref.watch(terminalProvider.select((s) => s.ghostText));
-    final currentInput = ref.watch(terminalProvider.select((s) => s.currentInput));
+    final currentInput = ref.watch(
+      terminalProvider.select((s) => s.currentInput),
+    );
     final theme = ref.watch(vibeTermThemeProvider);
 
     return Container(
@@ -226,9 +231,7 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
       ),
       decoration: BoxDecoration(
         color: theme.bgBlock,
-        border: Border(
-          top: BorderSide(color: theme.border),
-        ),
+        border: Border(top: BorderSide(color: theme.border)),
       ),
       child: SafeArea(
         top: false,
@@ -287,12 +290,12 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 225),
                     child: SingleChildScrollView(
-                      reverse: true, // Scroll automatique vers le bas (dernière ligne visible)
+                      reverse:
+                          true, // Scroll automatique vers le bas (dernière ligne visible)
                       child: Stack(
                         children: [
                           // Ghost text layer (seulement si pas expanded)
-                          if (ghostText != null &&
-                              !currentInput.contains('\n'))
+                          if (ghostText != null && !currentInput.contains('\n'))
                             Positioned(
                               left: 0,
                               bottom: 4,
@@ -308,14 +311,18 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
                             data: Theme.of(context).copyWith(
                               textSelectionTheme: TextSelectionThemeData(
                                 cursorColor: theme.accent,
-                                selectionColor: theme.accent.withValues(alpha: 0.3),
+                                selectionColor: theme.accent.withValues(
+                                  alpha: 0.3,
+                                ),
                                 selectionHandleColor: theme.accent,
                               ),
                             ),
                             child: TextField(
                               controller: _controller,
                               focusNode: _focusNode,
-                              style: VibeTermTypography.input.copyWith(color: theme.text),
+                              style: VibeTermTypography.input.copyWith(
+                                color: theme.text,
+                              ),
                               cursorColor: theme.accent,
                               maxLines: null, // Permet plusieurs lignes
                               minLines: 1,
@@ -334,7 +341,9 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
                                     ? context.l10n.pressKeyForCtrl
                                     : context.l10n.runCommands,
                                 hintStyle: VibeTermTypography.input.copyWith(
-                                  color: _ctrlArmed ? const Color(0xFFEAB308) : theme.textMuted,
+                                  color: _ctrlArmed
+                                      ? const Color(0xFFEAB308)
+                                      : theme.textMuted,
                                 ),
                                 border: InputBorder.none,
                                 enabledBorder: InputBorder.none,
@@ -349,10 +358,15 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
                                   final lastChar = value[value.length - 1];
                                   _sendCtrlKey(lastChar);
                                   // Effacer le caractère tapé
-                                  _controller.text = value.substring(0, value.length - 1);
+                                  _controller.text = value.substring(
+                                    0,
+                                    value.length - 1,
+                                  );
                                   return;
                                 }
-                                ref.read(terminalProvider.notifier).setInput(value);
+                                ref
+                                    .read(terminalProvider.notifier)
+                                    .setInput(value);
                               },
                             ),
                           ),

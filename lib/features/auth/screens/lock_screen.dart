@@ -212,7 +212,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       setState(() {
         _pin = '';
         _errorMessage = _failedAttempts >= 5
-            ? context.l10n.tooManyAttempts(30 * pow(2, _failedAttempts - 5).toInt())
+            ? context.l10n.tooManyAttempts(
+                30 * pow(2, _failedAttempts - 5).toInt(),
+              )
             : context.l10n.wrongPin;
       });
     }
@@ -264,7 +266,11 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
                 // PIN entry (si PIN activé)
                 if (widget.pinEnabled) ...[
-                  PinDots(length: _pin.length, total: _storedPinLength, theme: theme),
+                  PinDots(
+                    length: _pin.length,
+                    total: _storedPinLength,
+                    theme: theme,
+                  ),
 
                   // Erreur
                   if (_errorMessage != null) ...[

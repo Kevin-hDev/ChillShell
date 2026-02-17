@@ -60,10 +60,7 @@ class PinService {
   /// Hash le PIN avec PBKDF2-HMAC-SHA256 (100k itérations)
   static Future<String> _hashPin(String pin, Uint8List salt) async {
     final secretKey = SecretKey(utf8.encode(pin));
-    final derived = await _pbkdf2.deriveKey(
-      secretKey: secretKey,
-      nonce: salt,
-    );
+    final derived = await _pbkdf2.deriveKey(secretKey: secretKey, nonce: salt);
     return base64Encode(await derived.extractBytes());
   }
 

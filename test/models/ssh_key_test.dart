@@ -11,7 +11,8 @@ void main() {
         name: 'My Key',
         host: '192.168.1.100',
         type: SSHKeyType.ed25519,
-        privateKey: '-----BEGIN OPENSSH PRIVATE KEY-----\ntest\n-----END OPENSSH PRIVATE KEY-----',
+        privateKey:
+            '-----BEGIN OPENSSH PRIVATE KEY-----\ntest\n-----END OPENSSH PRIVATE KEY-----',
         createdAt: now,
         lastUsed: lastUsed,
       );

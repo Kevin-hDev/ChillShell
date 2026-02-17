@@ -65,141 +65,148 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
           bottom: MediaQuery.of(context).viewInsets.bottom + VibeTermSpacing.md,
         ),
         child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.arrow_back_ios, size: 16, color: theme.accent),
-                        const SizedBox(width: 4),
-                        Text(
-                          l10n.back,
-                          style: VibeTermTypography.caption.copyWith(color: theme.accent),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    l10n.addPc,
-                    style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
-                  ),
-                  const Spacer(),
-                  const SizedBox(width: 60), // Balance pour centrer le titre
-                ],
-              ),
-              const SizedBox(height: VibeTermSpacing.lg),
-
-              // Nom du PC
-              _buildLabel(l10n.pcName, theme),
-              const SizedBox(height: VibeTermSpacing.xs),
-              _buildTextField(
-                controller: _nameController,
-                hint: 'PC Bureau',
-                theme: theme,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l10n.pcNameRequired;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: VibeTermSpacing.md),
-
-              // Adresse MAC
-              _buildLabel('${l10n.macAddress} *', theme),
-              const SizedBox(height: VibeTermSpacing.xs),
-              _buildTextField(
-                controller: _macController,
-                hint: 'AA:BB:CC:DD:EE:FF',
-                theme: theme,
-                keyboardType: TextInputType.text,
-                inputFormatters: [
-                  _MacAddressFormatter(),
-                ],
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l10n.macAddressRequired;
-                  }
-                  if (!_macRegex.hasMatch(value.toUpperCase())) {
-                    return l10n.macAddressInvalid;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: VibeTermSpacing.xs),
-              GestureDetector(
-                onTap: _showMacHelp,
-                child: Row(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        l10n.howToFindMac,
-                        style: VibeTermTypography.caption.copyWith(color: theme.accent),
-                        overflow: TextOverflow.ellipsis,
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.arrow_back_ios,
+                            size: 16,
+                            color: theme.accent,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.back,
+                            style: VibeTermTypography.caption.copyWith(
+                              color: theme.accent,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Text(
-                      '\u{1F4D6}',
-                      style: TextStyle(fontSize: 14),
+                    const Spacer(),
+                    Text(
+                      l10n.addPc,
+                      style: VibeTermTypography.settingsTitle.copyWith(
+                        color: theme.text,
+                      ),
                     ),
+                    const Spacer(),
+                    const SizedBox(width: 60), // Balance pour centrer le titre
                   ],
                 ),
-              ),
-              const SizedBox(height: VibeTermSpacing.md),
+                const SizedBox(height: VibeTermSpacing.lg),
 
-              // Connexion SSH associée
-              _buildLabel(l10n.linkedSshConnection, theme),
-              const SizedBox(height: VibeTermSpacing.xs),
-              _buildConnectionDropdown(savedConnections, theme),
-              const SizedBox(height: VibeTermSpacing.lg),
-
-              // Bouton Enregistrer
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.accent,
-                    foregroundColor: theme.bg,
-                    padding: const EdgeInsets.symmetric(vertical: VibeTermSpacing.md),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(VibeTermRadius.md),
-                    ),
-                  ),
-                  onPressed: _isSaving ? null : _saveConfig,
-                  child: _isSaving
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: theme.bg,
-                          ),
-                        )
-                      : Text(
-                          l10n.save,
-                          style: VibeTermTypography.itemTitle.copyWith(
-                            color: theme.bg,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                // Nom du PC
+                _buildLabel(l10n.pcName, theme),
+                const SizedBox(height: VibeTermSpacing.xs),
+                _buildTextField(
+                  controller: _nameController,
+                  hint: 'PC Bureau',
+                  theme: theme,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.pcNameRequired;
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              const SizedBox(height: VibeTermSpacing.md),
-            ],
+                const SizedBox(height: VibeTermSpacing.md),
+
+                // Adresse MAC
+                _buildLabel('${l10n.macAddress} *', theme),
+                const SizedBox(height: VibeTermSpacing.xs),
+                _buildTextField(
+                  controller: _macController,
+                  hint: 'AA:BB:CC:DD:EE:FF',
+                  theme: theme,
+                  keyboardType: TextInputType.text,
+                  inputFormatters: [_MacAddressFormatter()],
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return l10n.macAddressRequired;
+                    }
+                    if (!_macRegex.hasMatch(value.toUpperCase())) {
+                      return l10n.macAddressInvalid;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: VibeTermSpacing.xs),
+                GestureDetector(
+                  onTap: _showMacHelp,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          l10n.howToFindMac,
+                          style: VibeTermTypography.caption.copyWith(
+                            color: theme.accent,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Text('\u{1F4D6}', style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: VibeTermSpacing.md),
+
+                // Connexion SSH associée
+                _buildLabel(l10n.linkedSshConnection, theme),
+                const SizedBox(height: VibeTermSpacing.xs),
+                _buildConnectionDropdown(savedConnections, theme),
+                const SizedBox(height: VibeTermSpacing.lg),
+
+                // Bouton Enregistrer
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.accent,
+                      foregroundColor: theme.bg,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: VibeTermSpacing.md,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(VibeTermRadius.md),
+                      ),
+                    ),
+                    onPressed: _isSaving ? null : _saveConfig,
+                    child: _isSaving
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.bg,
+                            ),
+                          )
+                        : Text(
+                            l10n.save,
+                            style: VibeTermTypography.itemTitle.copyWith(
+                              color: theme.bg,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: VibeTermSpacing.md),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -266,7 +273,9 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
         color: theme.bg,
         borderRadius: BorderRadius.circular(VibeTermRadius.sm),
         border: Border.all(
-          color: _selectedConnectionId == null && _formKey.currentState?.validate() == false
+          color:
+              _selectedConnectionId == null &&
+                  _formKey.currentState?.validate() == false
               ? theme.danger
               : theme.border,
         ),
@@ -288,7 +297,9 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                     enabled: false,
                     child: Text(
                       l10n.noSavedConnections,
-                      style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+                      style: VibeTermTypography.caption.copyWith(
+                        color: theme.textMuted,
+                      ),
                     ),
                   ),
                 ]
@@ -306,12 +317,16 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
                             children: [
                               Text(
                                 connection.name,
-                                style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+                                style: VibeTermTypography.itemTitle.copyWith(
+                                  color: theme.text,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 '${connection.username}@${connection.host}',
-                                style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+                                style: VibeTermTypography.caption.copyWith(
+                                  color: theme.textMuted,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
@@ -354,7 +369,9 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
             const SizedBox(height: VibeTermSpacing.md),
             Text(
               l10n.macAddressFormat,
-              style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+              style: VibeTermTypography.caption.copyWith(
+                color: theme.textMuted,
+              ),
             ),
           ],
         ),
@@ -406,9 +423,9 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
 
     // Validation de la connexion SSH sélectionnée
     if (_selectedConnectionId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.pleaseSelectSshConnection)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.pleaseSelectSshConnection)));
       return;
     }
 
@@ -434,9 +451,9 @@ class _AddWolSheetState extends ConsumerState<AddWolSheet> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.configAdded(name))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.configAdded(name))));
       }
     } catch (e) {
       setState(() => _isSaving = false);

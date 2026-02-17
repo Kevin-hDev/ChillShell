@@ -84,7 +84,8 @@ class SSHIsolateWorker {
 
   void _handleMessage(dynamic message) {
     if (message is! Map<String, dynamic>) {
-      if (kDebugMode) debugPrint('SSHWorker: Ignoring non-map message: $message');
+      if (kDebugMode)
+        debugPrint('SSHWorker: Ignoring non-map message: $message');
       return;
     }
 
@@ -158,7 +159,10 @@ class SSHIsolateWorker {
 
     final requestId = message['requestId'] as String?;
 
-    if (kDebugMode) debugPrint('SSHWorker: Connecting to $host:$port as $username (tab: $tabId)');
+    if (kDebugMode)
+      debugPrint(
+        'SSHWorker: Connecting to $host:$port as $username (tab: $tabId)',
+      );
 
     // SECURITY: Read private key directly from SecureStorage in the worker
     // to avoid transmitting it via SendPort (which creates non-erasable copies)
@@ -219,7 +223,8 @@ class SSHIsolateWorker {
           'tabId': tabId,
         });
 
-        if (kDebugMode) debugPrint('SSHWorker: Connected successfully (tab: $tabId)');
+        if (kDebugMode)
+          debugPrint('SSHWorker: Connected successfully (tab: $tabId)');
       } else {
         _mainSendPort.send({
           'type': IsolateEvent.connectionFailed,
@@ -234,7 +239,9 @@ class SSHIsolateWorker {
       _mainSendPort.send({
         'type': IsolateEvent.connectionFailed,
         'requestId': requestId,
-        'error': errorMsg.contains('timeout') ? 'ssh:timeout' : 'ssh:connectionFailed',
+        'error': errorMsg.contains('timeout')
+            ? 'ssh:timeout'
+            : 'ssh:connectionFailed',
         'tabId': tabId,
       });
     } finally {
@@ -270,18 +277,27 @@ class SSHIsolateWorker {
       'isNew': isNew,
     });
 
-    if (kDebugMode) debugPrint('SSHWorker: Waiting for host key verification (requestId: $requestId)');
+    if (kDebugMode)
+      debugPrint(
+        'SSHWorker: Waiting for host key verification (requestId: $requestId)',
+      );
 
     final accepted = await completer.future.timeout(
       const Duration(seconds: 60),
       onTimeout: () {
-        if (kDebugMode) debugPrint('SSH TOFU: Host key verification timed out after 60s, rejecting');
+        if (kDebugMode)
+          debugPrint(
+            'SSH TOFU: Host key verification timed out after 60s, rejecting',
+          );
         return false; // Fail-secure : rejeter si timeout
       },
     );
     _pendingHostKeyRequests.remove(requestId);
 
-    if (kDebugMode) debugPrint('SSHWorker: Host key ${accepted ? "accepted" : "rejected"} (requestId: $requestId)');
+    if (kDebugMode)
+      debugPrint(
+        'SSHWorker: Host key ${accepted ? "accepted" : "rejected"} (requestId: $requestId)',
+      );
 
     return accepted;
   }
@@ -292,7 +308,8 @@ class SSHIsolateWorker {
     final accepted = message['accepted'] as bool? ?? false;
 
     if (requestId == null) {
-      if (kDebugMode) debugPrint('SSHWorker: hostKeyResponse without requestId');
+      if (kDebugMode)
+        debugPrint('SSHWorker: hostKeyResponse without requestId');
       return;
     }
 
@@ -300,7 +317,8 @@ class SSHIsolateWorker {
     if (completer != null && !completer.isCompleted) {
       completer.complete(accepted);
     } else {
-      if (kDebugMode) debugPrint('SSHWorker: No pending request for requestId: $requestId');
+      if (kDebugMode)
+        debugPrint('SSHWorker: No pending request for requestId: $requestId');
     }
   }
 
@@ -311,7 +329,10 @@ class SSHIsolateWorker {
 
     final session = service.session;
     if (session == null) {
-      if (kDebugMode) debugPrint('SSHWorker: No session for tab $tabId, cannot subscribe to stdout');
+      if (kDebugMode)
+        debugPrint(
+          'SSHWorker: No session for tab $tabId, cannot subscribe to stdout',
+        );
       return;
     }
 
@@ -325,27 +346,31 @@ class SSHIsolateWorker {
           });
         },
         onError: (error) {
-          if (kDebugMode) debugPrint('SSHWorker: stdout error for tab $tabId: $error');
+          if (kDebugMode)
+            debugPrint('SSHWorker: stdout error for tab $tabId: $error');
         },
         onDone: () {
-          if (kDebugMode) debugPrint('SSHWorker: stdout stream closed for tab $tabId');
-          _mainSendPort.send({
-            'type': IsolateEvent.tabDead,
-            'tabId': tabId,
-          });
+          if (kDebugMode)
+            debugPrint('SSHWorker: stdout stream closed for tab $tabId');
+          _mainSendPort.send({'type': IsolateEvent.tabDead, 'tabId': tabId});
         },
       );
 
       _stdoutSubscriptions[tabId] = subscription;
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHWorker: Failed to subscribe to stdout for tab $tabId: $e');
+      if (kDebugMode)
+        debugPrint(
+          'SSHWorker: Failed to subscribe to stdout for tab $tabId: $e',
+        );
     }
   }
 
   /// Creates a new tab, trying multiplexing first, then a full connection.
   Future<void> _handleCreateTab(Map<String, dynamic> message) async {
     final keyId = message['keyId'] as String? ?? _connectionKeyId;
-    final tabId = message['tabId'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString();
+    final tabId =
+        message['tabId'] as String? ??
+        DateTime.now().millisecondsSinceEpoch.toString();
     final requestId = message['requestId'] as String?;
 
     if (kDebugMode) debugPrint('SSHWorker: Creating new tab $tabId');
@@ -368,14 +393,22 @@ class SSHIsolateWorker {
             'tabId': tabId,
           });
 
-          if (kDebugMode) debugPrint('SSHWorker: Tab $tabId created via SSH multiplexing (fast)');
+          if (kDebugMode)
+            debugPrint(
+              'SSHWorker: Tab $tabId created via SSH multiplexing (fast)',
+            );
           return;
         }
-        if (kDebugMode) debugPrint('SSHWorker: Multiplexing failed, falling back to new connection');
+        if (kDebugMode)
+          debugPrint(
+            'SSHWorker: Multiplexing failed, falling back to new connection',
+          );
       }
 
       // Slow path: new full SSH connection (~1-2s)
-      if (_connectionHost == null || _connectionUsername == null || keyId == null) {
+      if (_connectionHost == null ||
+          _connectionUsername == null ||
+          keyId == null) {
         _mainSendPort.send({
           'type': IsolateEvent.tabCreateFailed,
           'requestId': requestId,
@@ -387,7 +420,10 @@ class SSHIsolateWorker {
 
       final privateKeyRaw = await SecureStorageService.getPrivateKey(keyId);
       if (privateKeyRaw == null || privateKeyRaw.isEmpty) {
-        if (kDebugMode) debugPrint('SSHWorker: Failed to retrieve private key for tab creation');
+        if (kDebugMode)
+          debugPrint(
+            'SSHWorker: Failed to retrieve private key for tab creation',
+          );
         _mainSendPort.send({
           'type': IsolateEvent.tabCreateFailed,
           'requestId': requestId,
@@ -418,7 +454,10 @@ class SSHIsolateWorker {
             'tabId': tabId,
           });
 
-          if (kDebugMode) debugPrint('SSHWorker: Tab $tabId created via new connection (slow)');
+          if (kDebugMode)
+            debugPrint(
+              'SSHWorker: Tab $tabId created via new connection (slow)',
+            );
         } else {
           _mainSendPort.send({
             'type': IsolateEvent.tabCreateFailed,
@@ -456,8 +495,9 @@ class SSHIsolateWorker {
     final service = _tabServices[tabId];
     if (service != null) {
       // Check if other tabs share the same SSH client (multiplexing)
-      final hasSharedConnection = _tabServices.entries
-          .any((e) => e.key != tabId && service.sharesClientWith(e.value));
+      final hasSharedConnection = _tabServices.entries.any(
+        (e) => e.key != tabId && service.sharesClientWith(e.value),
+      );
 
       if (hasSharedConnection) {
         service.closeSession();
@@ -471,19 +511,15 @@ class SSHIsolateWorker {
     _pendingResizes.remove(tabId);
     _lastSentSizes.remove(tabId);
 
-    _mainSendPort.send({
-      'type': IsolateEvent.tabClosed,
-      'tabId': tabId,
-    });
+    _mainSendPort.send({'type': IsolateEvent.tabClosed, 'tabId': tabId});
 
     // If no more tabs remain, stop monitor and notify
     if (_tabServices.isEmpty) {
       _connectionCheckTimer?.cancel();
       _connectionCheckTimer = null;
-      _mainSendPort.send({
-        'type': IsolateEvent.allDisconnected,
-      });
-      if (kDebugMode) debugPrint('SSHWorker: All tabs closed, connection monitor stopped');
+      _mainSendPort.send({'type': IsolateEvent.allDisconnected});
+      if (kDebugMode)
+        debugPrint('SSHWorker: All tabs closed, connection monitor stopped');
     }
   }
 
@@ -557,7 +593,8 @@ class SSHIsolateWorker {
         continue; // No change
       }
 
-      if (kDebugMode) debugPrint('SSHWorker: PTY RESIZE SEND: tab=$tabId, ${width}x$height');
+      if (kDebugMode)
+        debugPrint('SSHWorker: PTY RESIZE SEND: tab=$tabId, ${width}x$height');
       _lastSentSizes[tabId] = (width, height);
 
       _tabServices[tabId]?.resizeTerminal(width, height);
@@ -590,9 +627,7 @@ class SSHIsolateWorker {
     _pendingResizes.clear();
     _lastSentSizes.clear();
 
-    _mainSendPort.send({
-      'type': IsolateEvent.allDisconnected,
-    });
+    _mainSendPort.send({'type': IsolateEvent.allDisconnected});
   }
 
   /// Uploads a file via SFTP using the first connected service.
@@ -612,9 +647,7 @@ class SSHIsolateWorker {
     }
 
     // Find a connected service to use for SFTP
-    final service = _tabServices.values
-        .where((s) => s.isConnected)
-        .firstOrNull;
+    final service = _tabServices.values.where((s) => s.isConnected).firstOrNull;
 
     if (service == null) {
       _mainSendPort.send({
@@ -728,7 +761,8 @@ class SSHIsolateWorker {
         'tabId': tabId,
       });
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHWorker: OS detection failed for tab $tabId: $e');
+      if (kDebugMode)
+        debugPrint('SSHWorker: OS detection failed for tab $tabId: $e');
       _mainSendPort.send({
         'type': IsolateEvent.osDetected,
         'requestId': requestId,
@@ -750,9 +784,11 @@ class SSHIsolateWorker {
 
     try {
       await service.shutdown(os);
-      if (kDebugMode) debugPrint('SSHWorker: Shutdown command sent for tab $tabId (OS: $os)');
+      if (kDebugMode)
+        debugPrint('SSHWorker: Shutdown command sent for tab $tabId (OS: $os)');
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHWorker: Shutdown command failed for tab $tabId: $e');
+      if (kDebugMode)
+        debugPrint('SSHWorker: Shutdown command failed for tab $tabId: $e');
       _mainSendPort.send({
         'type': IsolateEvent.error,
         'error': 'Shutdown failed: $e',
@@ -766,21 +802,25 @@ class SSHIsolateWorker {
     final tabId = message['tabId'] as String?;
     if (tabId == null) return;
 
-    if (_connectionHost == null || _connectionUsername == null || _connectionKeyId == null) {
-      if (kDebugMode) debugPrint('SSHWorker: Cannot reconnect tab $tabId, no connection info');
+    if (_connectionHost == null ||
+        _connectionUsername == null ||
+        _connectionKeyId == null) {
+      if (kDebugMode)
+        debugPrint(
+          'SSHWorker: Cannot reconnect tab $tabId, no connection info',
+        );
       return;
     }
 
     if (kDebugMode) debugPrint('SSHWorker: Reconnecting tab $tabId');
 
-    _mainSendPort.send({
-      'type': IsolateEvent.reconnecting,
-      'tabId': tabId,
-    });
+    _mainSendPort.send({'type': IsolateEvent.reconnecting, 'tabId': tabId});
 
     SecureBuffer? keyBuffer;
     try {
-      final privateKey = await SecureStorageService.getPrivateKey(_connectionKeyId!);
+      final privateKey = await SecureStorageService.getPrivateKey(
+        _connectionKeyId!,
+      );
       if (privateKey == null || privateKey.isEmpty) {
         _mainSendPort.send({
           'type': IsolateEvent.connectionFailed,
@@ -810,12 +850,10 @@ class SSHIsolateWorker {
         _tabServices[tabId] = newService;
         _subscribeToStdout(tabId, newService);
 
-        _mainSendPort.send({
-          'type': IsolateEvent.reconnected,
-          'tabId': tabId,
-        });
+        _mainSendPort.send({'type': IsolateEvent.reconnected, 'tabId': tabId});
 
-        if (kDebugMode) debugPrint('SSHWorker: Tab $tabId reconnected successfully');
+        if (kDebugMode)
+          debugPrint('SSHWorker: Tab $tabId reconnected successfully');
       } else {
         _mainSendPort.send({
           'type': IsolateEvent.connectionFailed,
@@ -824,7 +862,8 @@ class SSHIsolateWorker {
         });
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHWorker: Tab $tabId reconnection failed: $e');
+      if (kDebugMode)
+        debugPrint('SSHWorker: Tab $tabId reconnection failed: $e');
       _mainSendPort.send({
         'type': IsolateEvent.connectionFailed,
         'error': e.toString(),
@@ -837,8 +876,11 @@ class SSHIsolateWorker {
 
   /// Reconnects all tabs: disconnects everything and creates a fresh connection.
   Future<void> _handleReconnectAll(Map<String, dynamic> message) async {
-    if (_connectionHost == null || _connectionUsername == null || _connectionKeyId == null) {
-      if (kDebugMode) debugPrint('SSHWorker: Cannot reconnect, no connection info');
+    if (_connectionHost == null ||
+        _connectionUsername == null ||
+        _connectionKeyId == null) {
+      if (kDebugMode)
+        debugPrint('SSHWorker: Cannot reconnect, no connection info');
       _mainSendPort.send({
         'type': IsolateEvent.connectionFailed,
         'error': 'No connection info available',
@@ -848,7 +890,10 @@ class SSHIsolateWorker {
 
     _reconnectAttempts++;
     if (_reconnectAttempts > _maxReconnectAttempts) {
-      if (kDebugMode) debugPrint('SSHWorker: Max reconnect attempts reached ($_reconnectAttempts/$_maxReconnectAttempts)');
+      if (kDebugMode)
+        debugPrint(
+          'SSHWorker: Max reconnect attempts reached ($_reconnectAttempts/$_maxReconnectAttempts)',
+        );
       _mainSendPort.send({
         'type': IsolateEvent.connectionFailed,
         'error': 'Max reconnection attempts reached',
@@ -857,20 +902,24 @@ class SSHIsolateWorker {
       return;
     }
 
-    if (kDebugMode) debugPrint('SSHWorker: Reconnecting all (attempt $_reconnectAttempts/$_maxReconnectAttempts)');
+    if (kDebugMode)
+      debugPrint(
+        'SSHWorker: Reconnecting all (attempt $_reconnectAttempts/$_maxReconnectAttempts)',
+      );
 
-    _mainSendPort.send({
-      'type': IsolateEvent.reconnecting,
-    });
+    _mainSendPort.send({'type': IsolateEvent.reconnecting});
 
     // Wait before reconnecting
     await Future<void>.delayed(_reconnectDelay);
 
     SecureBuffer? keyBuffer;
     try {
-      final privateKey = await SecureStorageService.getPrivateKey(_connectionKeyId!);
+      final privateKey = await SecureStorageService.getPrivateKey(
+        _connectionKeyId!,
+      );
       if (privateKey == null || privateKey.isEmpty) {
-        if (kDebugMode) debugPrint('SSHWorker: Private key not found for reconnection');
+        if (kDebugMode)
+          debugPrint('SSHWorker: Private key not found for reconnection');
         _mainSendPort.send({
           'type': IsolateEvent.connectionFailed,
           'error': 'Private key not found',
@@ -909,12 +958,10 @@ class SSHIsolateWorker {
         _startConnectionMonitor();
         _reconnectAttempts = 0;
 
-        _mainSendPort.send({
-          'type': IsolateEvent.reconnected,
-          'tabId': tabId,
-        });
+        _mainSendPort.send({'type': IsolateEvent.reconnected, 'tabId': tabId});
 
-        if (kDebugMode) debugPrint('SSHWorker: Reconnection successful (new tab: $tabId)');
+        if (kDebugMode)
+          debugPrint('SSHWorker: Reconnection successful (new tab: $tabId)');
       } else {
         _mainSendPort.send({
           'type': IsolateEvent.connectionFailed,
@@ -949,9 +996,7 @@ class SSHIsolateWorker {
         _connectionCheckTimer?.cancel();
         _connectionCheckTimer = null;
         // Notify main isolate — it decides whether to reconnect
-        _mainSendPort.send({
-          'type': IsolateEvent.allDisconnected,
-        });
+        _mainSendPort.send({'type': IsolateEvent.allDisconnected});
       }
     });
   }
@@ -970,7 +1015,8 @@ class SSHIsolateWorker {
     final port = message['port'] as int;
     final requestId = message['requestId'] as String?;
 
-    if (kDebugMode) debugPrint('SSHWorker: Test connect to $host:$port as $username');
+    if (kDebugMode)
+      debugPrint('SSHWorker: Test connect to $host:$port as $username');
 
     // SECURITY: Read private key directly from SecureStorage
     final privateKeyRaw = await SecureStorageService.getPrivateKey(keyId);

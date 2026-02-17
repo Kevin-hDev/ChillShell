@@ -40,9 +40,9 @@ class TailscaleDashboard extends ConsumerWidget {
 
         // Liste des machines
         SectionHeader(
-          title: l10n.tailscaleDevicesCount(
-            tailscaleState.devices.length,
-          ).toUpperCase(),
+          title: l10n
+              .tailscaleDevicesCount(tailscaleState.devices.length)
+              .toUpperCase(),
         ),
         const SizedBox(height: VibeTermSpacing.sm),
         ...tailscaleState.devices.map(
@@ -72,11 +72,7 @@ class _NotConnectedMessage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.public_off,
-              color: theme.textMuted,
-              size: 48,
-            ),
+            Icon(Icons.public_off, color: theme.textMuted, size: 48),
             const SizedBox(height: VibeTermSpacing.md),
             Text(
               l10n.tailscaleAuthPrompt,

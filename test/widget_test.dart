@@ -10,11 +10,11 @@ void main() {
   const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-    if (methodCall.method == 'read') return null;
-    if (methodCall.method == 'write') return null;
-    if (methodCall.method == 'delete') return null;
-    return null;
-  });
+        if (methodCall.method == 'read') return null;
+        if (methodCall.method == 'write') return null;
+        if (methodCall.method == 'delete') return null;
+        return null;
+      });
 
   testWidgets('VibeTerm app starts without crash', (WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: VibeTermApp()));

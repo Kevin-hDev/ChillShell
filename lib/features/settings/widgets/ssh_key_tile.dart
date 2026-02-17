@@ -52,7 +52,11 @@ class SSHKeyTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildTile(BuildContext context, WidgetRef ref, VibeTermThemeData theme) {
+  Widget _buildTile(
+    BuildContext context,
+    WidgetRef ref,
+    VibeTermThemeData theme,
+  ) {
     return ListTile(
       leading: Checkbox(
         value: isSelected,
@@ -60,22 +64,36 @@ class SSHKeyTile extends ConsumerWidget {
         activeColor: theme.accent,
         side: BorderSide(color: theme.textMuted),
       ),
-      title: Text(sshKey.name, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
+      title: Text(
+        sshKey.name,
+        style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+      ),
       subtitle: Text(
         '${sshKey.typeLabel} • ${_formatDate(sshKey.createdAt)}',
-        style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+        style: VibeTermTypography.itemDescription.copyWith(
+          color: theme.textMuted,
+        ),
       ),
       onTap: onSelectionToggle,
     );
   }
 
-  Widget _buildTileContent(BuildContext context, WidgetRef ref, VibeTermThemeData theme) {
+  Widget _buildTileContent(
+    BuildContext context,
+    WidgetRef ref,
+    VibeTermThemeData theme,
+  ) {
     return ListTile(
       leading: Icon(Icons.key, color: theme.accent),
-      title: Text(sshKey.name, style: VibeTermTypography.itemTitle.copyWith(color: theme.text)),
+      title: Text(
+        sshKey.name,
+        style: VibeTermTypography.itemTitle.copyWith(color: theme.text),
+      ),
       subtitle: Text(
         '${sshKey.typeLabel} • ${_formatDate(sshKey.createdAt)}',
-        style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+        style: VibeTermTypography.itemDescription.copyWith(
+          color: theme.textMuted,
+        ),
       ),
       onTap: () => _showKeyDetails(context, ref),
     );
@@ -88,10 +106,15 @@ class SSHKeyTile extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: theme.bgBlock,
-        title: Text(l10n.deleteKeyConfirmTitle, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        title: Text(
+          l10n.deleteKeyConfirmTitle,
+          style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+        ),
         content: Text(
           l10n.actionIrreversible,
-          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+          style: VibeTermTypography.itemDescription.copyWith(
+            color: theme.textMuted,
+          ),
         ),
         actions: [
           TextButton(
@@ -122,11 +145,31 @@ class SSHKeyTile extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(sshKey.name, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+            Text(
+              sshKey.name,
+              style: VibeTermTypography.settingsTitle.copyWith(
+                color: theme.text,
+              ),
+            ),
             const SizedBox(height: VibeTermSpacing.sm),
-            Text(l10n.sshKeyTypeLabel(sshKey.typeLabel), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
-            Text(l10n.sshKeyHostLabel(sshKey.host), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
-            Text(l10n.sshKeyLastUsedLabel(_formatLastUsed(l10n, sshKey.lastUsed)), style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted)),
+            Text(
+              l10n.sshKeyTypeLabel(sshKey.typeLabel),
+              style: VibeTermTypography.itemDescription.copyWith(
+                color: theme.textMuted,
+              ),
+            ),
+            Text(
+              l10n.sshKeyHostLabel(sshKey.host),
+              style: VibeTermTypography.itemDescription.copyWith(
+                color: theme.textMuted,
+              ),
+            ),
+            Text(
+              l10n.sshKeyLastUsedLabel(_formatLastUsed(l10n, sshKey.lastUsed)),
+              style: VibeTermTypography.itemDescription.copyWith(
+                color: theme.textMuted,
+              ),
+            ),
             const SizedBox(height: VibeTermSpacing.md),
             SizedBox(
               width: double.infinity,
@@ -161,7 +204,10 @@ class SSHKeyTile extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgBlock,
-        title: Text(l10n.rename, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        title: Text(
+          l10n.rename,
+          style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -169,8 +215,12 @@ class SSHKeyTile extends ConsumerWidget {
           decoration: InputDecoration(
             hintText: l10n.renameDialogHint,
             hintStyle: TextStyle(color: theme.textMuted),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.border)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.accent)),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: theme.border),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: theme.accent),
+            ),
           ),
         ),
         actions: [
@@ -182,7 +232,9 @@ class SSHKeyTile extends ConsumerWidget {
             onPressed: () {
               final newName = controller.text.trim();
               if (newName.isNotEmpty) {
-                ref.read(settingsProvider.notifier).renameSSHKey(sshKey.id, newName);
+                ref
+                    .read(settingsProvider.notifier)
+                    .renameSSHKey(sshKey.id, newName);
                 Navigator.pop(dialogContext);
               }
             },

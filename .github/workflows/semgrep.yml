@@ -9,34 +9,17 @@ on:
     # Scan hebdomadaire le lundi à 9h
     - cron: '0 9 * * 1'
 
-permissions:
-  contents: read
-  security-events: write
-  actions: read
-
 jobs:
   semgrep:
     name: Scan de Sécurité
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Run Semgrep
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: >-
-            p/security-audit
-            p/secrets
-            p/owasp-top-ten
-            p/mobile
-          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
-          publishDeployment: ${{ secrets.SEMGREP_DEPLOYMENT_ID }}
-          generateSarif: true
-
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: semgrep.sarif
-        if: always()
+        run: |
+          pip install semgrep
+          semgrep --config=p/security-audit --config=p/secrets --config=p/owasp-top-ten --config=p/mobile \
+            --error --no-rewrite-rule-ids .

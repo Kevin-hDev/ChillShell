@@ -8,11 +8,11 @@ void setupSecureStorageMock() {
   const channel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-    if (methodCall.method == 'read') return null;
-    if (methodCall.method == 'write') return null;
-    if (methodCall.method == 'delete') return null;
-    return null;
-  });
+        if (methodCall.method == 'read') return null;
+        if (methodCall.method == 'write') return null;
+        if (methodCall.method == 'delete') return null;
+        return null;
+      });
 }
 
 void main() {

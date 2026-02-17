@@ -41,7 +41,9 @@ class _WolSectionState extends ConsumerState<WolSection>
         ),
         content: Text(
           l10n.actionIrreversible,
-          style: VibeTermTypography.itemDescription.copyWith(color: theme.textMuted),
+          style: VibeTermTypography.itemDescription.copyWith(
+            color: theme.textMuted,
+          ),
         ),
         actions: [
           TextButton(
@@ -67,7 +69,9 @@ class _WolSectionState extends ConsumerState<WolSection>
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final wolEnabled = ref.watch(settingsProvider.select((s) => s.appSettings.wolEnabled));
+    final wolEnabled = ref.watch(
+      settingsProvider.select((s) => s.appSettings.wolEnabled),
+    );
     final wolState = ref.watch(wolProvider);
     final theme = ref.watch(vibeTermThemeProvider);
 
@@ -106,7 +110,9 @@ class _WolSectionState extends ConsumerState<WolSection>
           },
           onRenameConfig: (configId, newName) {
             final config = wolState.configs.firstWhere((c) => c.id == configId);
-            ref.read(wolProvider.notifier).updateConfig(config.copyWith(name: newName));
+            ref
+                .read(wolProvider.notifier)
+                .updateConfig(config.copyWith(name: newName));
           },
           isSelectionMode: isSelectionMode,
           selectedIds: selectedIds,
@@ -333,7 +339,9 @@ class _WolConfigItem extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     return InkWell(
-      onTap: isSelectionMode ? onSelectionToggle : () => _showRenameDialog(context),
+      onTap: isSelectionMode
+          ? onSelectionToggle
+          : () => _showRenameDialog(context),
       onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -350,11 +358,7 @@ class _WolConfigItem extends StatelessWidget {
                 side: BorderSide(color: theme.textMuted),
               )
             else
-              Icon(
-                Icons.desktop_windows,
-                color: theme.accent,
-                size: 22,
-              ),
+              Icon(Icons.desktop_windows, color: theme.accent, size: 22),
             const SizedBox(width: VibeTermSpacing.sm),
             Expanded(
               child: Column(
@@ -390,7 +394,10 @@ class _WolConfigItem extends StatelessWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: theme.bgBlock,
-        title: Text(l10n.rename, style: VibeTermTypography.settingsTitle.copyWith(color: theme.text)),
+        title: Text(
+          l10n.rename,
+          style: VibeTermTypography.settingsTitle.copyWith(color: theme.text),
+        ),
         content: TextField(
           controller: controller,
           autofocus: true,
@@ -398,8 +405,12 @@ class _WolConfigItem extends StatelessWidget {
           decoration: InputDecoration(
             hintText: l10n.renameDialogHint,
             hintStyle: TextStyle(color: theme.textMuted),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.border)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: theme.accent)),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: theme.border),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: theme.accent),
+            ),
           ),
         ),
         actions: [
@@ -441,17 +452,11 @@ class _WolConfigItem extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(
-              l10n.cancel,
-              style: TextStyle(color: theme.textMuted),
-            ),
+            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
-              l10n.delete,
-              style: TextStyle(color: theme.danger),
-            ),
+            child: Text(l10n.delete, style: TextStyle(color: theme.danger)),
           ),
         ],
       ),
@@ -464,10 +469,7 @@ class _AddConfigButton extends StatelessWidget {
   final VoidCallback? onTap;
   final VibeTermThemeData theme;
 
-  const _AddConfigButton({
-    required this.onTap,
-    required this.theme,
-  });
+  const _AddConfigButton({required this.onTap, required this.theme});
 
   @override
   Widget build(BuildContext context) {
@@ -549,7 +551,9 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
                 Expanded(
                   child: Text(
                     l10n.turnOnCableRequired,
-                    style: VibeTermTypography.caption.copyWith(color: theme.text),
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.text,
+                    ),
                   ),
                 ),
               ],
@@ -562,7 +566,9 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
                 Expanded(
                   child: Text(
                     l10n.turnOffWifiOrCable,
-                    style: VibeTermTypography.caption.copyWith(color: theme.text),
+                    style: VibeTermTypography.caption.copyWith(
+                      color: theme.text,
+                    ),
                   ),
                 ),
               ],
@@ -594,7 +600,9 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
             // Lien vers guide complet
             GestureDetector(
               onTap: () {
-                Clipboard.setData(const ClipboardData(text: 'https://chillshell.app/wol'));
+                Clipboard.setData(
+                  const ClipboardData(text: 'https://chillshell.app/wol'),
+                );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -737,16 +745,18 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
           ),
         ),
         const SizedBox(height: VibeTermSpacing.xs),
-        ...items.map((item) => Padding(
-          padding: const EdgeInsets.only(left: VibeTermSpacing.sm),
-          child: Text(
-            item,
-            style: VibeTermTypography.caption.copyWith(
-              color: theme.textMuted,
-              fontSize: 11,
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(left: VibeTermSpacing.sm),
+            child: Text(
+              item,
+              style: VibeTermTypography.caption.copyWith(
+                color: theme.textMuted,
+                fontSize: 11,
+              ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }

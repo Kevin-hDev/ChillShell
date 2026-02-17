@@ -34,16 +34,19 @@ class AuditEntry {
   });
 
   Map<String, dynamic> toJson() => {
-        't': timestamp,
-        'e': type.index,
-        's': success,
-        if (details.isNotEmpty) 'd': details,
-      };
+    't': timestamp,
+    'e': type.index,
+    's': success,
+    if (details.isNotEmpty) 'd': details,
+  };
 
   factory AuditEntry.fromJson(Map<String, dynamic> json) {
     final typeIndex = json['e'] as int;
     if (typeIndex >= AuditEventType.values.length) {
-      if (kDebugMode) debugPrint('AuditEntry: unknown event type index $typeIndex, falling back to sshConnect');
+      if (kDebugMode)
+        debugPrint(
+          'AuditEntry: unknown event type index $typeIndex, falling back to sshConnect',
+        );
     }
     return AuditEntry(
       timestamp: json['t'] as int,

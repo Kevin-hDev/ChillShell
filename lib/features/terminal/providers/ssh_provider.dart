@@ -9,13 +9,19 @@ import '../../../services/audit_log_service.dart';
 import '../../../models/audit_entry.dart';
 import '../../settings/providers/settings_provider.dart';
 
-enum SSHConnectionState { disconnected, connecting, connected, error, reconnecting }
+enum SSHConnectionState {
+  disconnected,
+  connecting,
+  connected,
+  error,
+  reconnecting,
+}
 
 /// Informations de connexion pour la reconnexion et les nouveaux onglets
 class SSHConnectionInfo {
   final String host;
   final String username;
-  final String keyId;  // Référence vers la clé stockée de manière sécurisée
+  final String keyId; // Référence vers la clé stockée de manière sécurisée
   final String sessionId;
   final int port;
 
@@ -35,20 +41,28 @@ class SSHState {
   final SSHConnectionInfo? lastConnectionInfo;
   final bool showDisconnectNotification;
   final int reconnectAttempts;
+
   /// ID de l'onglet actif (stable, ne change pas quand on ferme d'autres onglets)
   final String? currentTabId;
+
   /// Liste ordonnée des IDs d'onglets ouverts
   final List<String> tabIds;
+
   /// Compteur global pour nommer les onglets (ne décrémente jamais)
   final int nextTabNumber;
+
   /// État "process en cours" par onglet (pour bouton Send/Stop)
   final Map<String, bool> tabRunningState;
+
   /// Commande en cours par onglet (pour détecter si interactive)
   final Map<String, String> tabCurrentCommand;
+
   /// IDs des onglets qui sont des shells locaux (pas SSH)
   final Set<String> localTabIds;
+
   /// Noms personnalisés des onglets
   final Map<String, String> tabNames;
+
   /// IDs des onglets dont la connexion est morte (stream fermé)
   final Set<String> deadTabIds;
 
@@ -61,7 +75,8 @@ class SSHState {
     this.reconnectAttempts = 0,
     this.currentTabId,
     this.tabIds = const [],
-    this.nextTabNumber = 1,  // Commence à 1, tous les onglets utilisent ce compteur
+    this.nextTabNumber =
+        1, // Commence à 1, tous les onglets utilisent ce compteur
     this.tabRunningState = const {},
     this.tabCurrentCommand = const {},
     this.localTabIds = const {},
@@ -70,7 +85,8 @@ class SSHState {
   });
 
   int get tabCount => tabIds.length;
-  int get currentTabIndex => currentTabId != null ? tabIds.indexOf(currentTabId!) : 0;
+  int get currentTabIndex =>
+      currentTabId != null ? tabIds.indexOf(currentTabId!) : 0;
 
   /// Vérifie si l'onglet actif a un process en cours
   bool get isCurrentTabRunning {
@@ -105,7 +121,8 @@ class SSHState {
       errorMessage: errorMessage,
       activeSessionId: activeSessionId ?? this.activeSessionId,
       lastConnectionInfo: lastConnectionInfo ?? this.lastConnectionInfo,
-      showDisconnectNotification: showDisconnectNotification ?? this.showDisconnectNotification,
+      showDisconnectNotification:
+          showDisconnectNotification ?? this.showDisconnectNotification,
       reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
       currentTabId: currentTabId ?? this.currentTabId,
       tabIds: tabIds ?? this.tabIds,
@@ -227,7 +244,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
       final info = state.lastConnectionInfo;
       if (info != null) {
-        AuditLogService.log(AuditEventType.sshReconnect, details: {'host': info.host, 'port': '${info.port}'});
+        AuditLogService.log(
+          AuditEventType.sshReconnect,
+          details: {'host': info.host, 'port': '${info.port}'},
+        );
         ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(info.keyId);
       }
     };
@@ -235,7 +255,8 @@ class SSHNotifier extends Notifier<SSHState> {
     // Échec de connexion (provient de reconnectTab/reconnectAll)
     client.onConnectionFailed = (error, tabId) {
       if (_isDisposed) return;
-      if (kDebugMode) debugPrint('SSH isolate connection failed: $error (tab: $tabId)');
+      if (kDebugMode)
+        debugPrint('SSH isolate connection failed: $error (tab: $tabId)');
       // Si on est en reconnexion, passer en état d'erreur
       if (state.connectionState == SSHConnectionState.reconnecting) {
         state = state.copyWith(
@@ -261,7 +282,8 @@ class SSHNotifier extends Notifier<SSHState> {
     HostKeyVerifyCallback? onFirstHostKey,
     HostKeyVerifyCallback? onHostKeyMismatch,
   }) async {
-    if (kDebugMode) debugPrint('SSHNotifier: connect() called — host=$host port=$port');
+    if (kDebugMode)
+      debugPrint('SSHNotifier: connect() called — host=$host port=$port');
 
     state = state.copyWith(
       connectionState: SSHConnectionState.connecting,
@@ -274,7 +296,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
     // Vérifier si annulé
     if (state.connectionState != SSHConnectionState.connecting) {
-      if (kDebugMode) debugPrint('SSHNotifier: connect cancelled before start (state changed)');
+      if (kDebugMode)
+        debugPrint(
+          'SSHNotifier: connect cancelled before start (state changed)',
+        );
       return false;
     }
 
@@ -304,11 +329,15 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Vérifier si annulé pendant la connexion SSH
       if (state.connectionState != SSHConnectionState.connecting) {
-        if (kDebugMode) debugPrint('SSHNotifier: connect cancelled DURING SSH handshake (state=${state.connectionState})');
+        if (kDebugMode)
+          debugPrint(
+            'SSHNotifier: connect cancelled DURING SSH handshake (state=${state.connectionState})',
+          );
         client.closeTab(tabId);
         return false;
       }
-      if (kDebugMode) debugPrint('SSHNotifier: connect SUCCESS to $host:$port (tab=$tabId)');
+      if (kDebugMode)
+        debugPrint('SSHNotifier: connect SUCCESS to $host:$port (tab=$tabId)');
 
       state = state.copyWith(
         connectionState: SSHConnectionState.connected,
@@ -320,15 +349,23 @@ class SSHNotifier extends Notifier<SSHState> {
       );
 
       // Démarrer le foreground service pour maintenir la connexion
-      await ForegroundSSHService.start(
-        connectionInfo: 'Connecté à $host',
+      await ForegroundSSHService.start(connectionInfo: 'Connecté à $host');
+      AuditLogService.log(
+        AuditEventType.sshConnect,
+        details: {'host': host, 'port': '$port'},
       );
-      AuditLogService.log(AuditEventType.sshConnect, details: {'host': host, 'port': '$port'});
       ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(keyId);
       return true;
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHNotifier: connect FAILED to $host:$port — ${e.runtimeType}: $e');
-      AuditLogService.log(AuditEventType.sshAuthFail, success: false, details: {'host': host, 'port': '$port'});
+      if (kDebugMode)
+        debugPrint(
+          'SSHNotifier: connect FAILED to $host:$port — ${e.runtimeType}: $e',
+        );
+      AuditLogService.log(
+        AuditEventType.sshAuthFail,
+        success: false,
+        details: {'host': host, 'port': '$port'},
+      );
 
       // Mapper le message d'erreur (l'exception vient de l'isolate, pas SSHException directe)
       final errorMsg = e.toString();
@@ -372,9 +409,7 @@ class SSHNotifier extends Notifier<SSHState> {
       );
 
       // Démarrer le foreground service
-      await ForegroundSSHService.start(
-        connectionInfo: 'Shell local actif',
-      );
+      await ForegroundSSHService.start(connectionInfo: 'Shell local actif');
       if (kDebugMode) debugPrint('Local shell connected: $tabId');
     } catch (e) {
       state = state.copyWith(
@@ -414,14 +449,14 @@ class SSHNotifier extends Notifier<SSHState> {
 
     // FEEDBACK IMMÉDIAT: Ajouter l'onglet en état "connecting"
     final newTabIds = [...state.tabIds, tabId];
-    state = state.copyWith(
-      currentTabId: tabId,
-      tabIds: newTabIds,
-    );
+    state = state.copyWith(currentTabId: tabId, tabIds: newTabIds);
 
     try {
       // Délègue au worker : multiplexage SSH (~50ms) ou nouvelle connexion (~1-2s)
-      final resultTabId = await client.createTab(keyId: info.keyId, tabId: tabId);
+      final resultTabId = await client.createTab(
+        keyId: info.keyId,
+        tabId: tabId,
+      );
       if (resultTabId != null) {
         if (kDebugMode) debugPrint('Tab $tabId created via isolate');
         return tabId;
@@ -479,7 +514,9 @@ class SSHNotifier extends Notifier<SSHState> {
     String newCurrentTabId = state.currentTabId!;
     if (state.currentTabId == tabId) {
       final oldIndex = state.tabIds.indexOf(tabId);
-      final newIndex = oldIndex >= newTabIds.length ? newTabIds.length - 1 : oldIndex;
+      final newIndex = oldIndex >= newTabIds.length
+          ? newTabIds.length - 1
+          : oldIndex;
       newCurrentTabId = newTabIds[newIndex];
     }
 
@@ -510,7 +547,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
   /// Gère la perte de connexion détectée par le worker
   void _handleDisconnection() {
-    if (kDebugMode) debugPrint('SSHNotifier: _handleDisconnection() called (state=${state.connectionState})');
+    if (kDebugMode)
+      debugPrint(
+        'SSHNotifier: _handleDisconnection() called (state=${state.connectionState})',
+      );
     if (state.connectionState == SSHConnectionState.disconnected) return;
 
     final wasConnected = state.connectionState == SSHConnectionState.connected;
@@ -543,7 +583,10 @@ class SSHNotifier extends Notifier<SSHState> {
   }
 
   Future<void> disconnect() async {
-    if (kDebugMode) debugPrint('SSHNotifier: disconnect() called (state=${state.connectionState})');
+    if (kDebugMode)
+      debugPrint(
+        'SSHNotifier: disconnect() called (state=${state.connectionState})',
+      );
     final info = state.lastConnectionInfo;
 
     // Déconnecter toutes les sessions SSH via l'isolate
@@ -559,7 +602,10 @@ class SSHNotifier extends Notifier<SSHState> {
     await ForegroundSSHService.stop();
 
     if (info != null) {
-      AuditLogService.log(AuditEventType.sshDisconnect, details: {'host': info.host, 'port': '${info.port}'});
+      AuditLogService.log(
+        AuditEventType.sshDisconnect,
+        details: {'host': info.host, 'port': '${info.port}'},
+      );
     }
 
     state = const SSHState();
@@ -586,16 +632,16 @@ class SSHNotifier extends Notifier<SSHState> {
   /// Marque un onglet comme ayant une connexion morte (stream fermé)
   void markTabAsDead(String tabId) {
     if (kDebugMode) debugPrint('markTabAsDead: Tab $tabId marked as dead');
-    state = state.copyWith(
-      deadTabIds: {...state.deadTabIds, tabId},
-    );
+    state = state.copyWith(deadTabIds: {...state.deadTabIds, tabId});
   }
 
   /// Vérifie et reconnecte les onglets SSH si la connexion est perdue
   /// Appelé quand l'app revient au premier plan
   Future<void> checkAndReconnectIfNeeded() async {
-    if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Checking SSH connections...');
-    if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Dead tabs: ${state.deadTabIds}');
+    if (kDebugMode)
+      debugPrint('checkAndReconnectIfNeeded: Checking SSH connections...');
+    if (kDebugMode)
+      debugPrint('checkAndReconnectIfNeeded: Dead tabs: ${state.deadTabIds}');
 
     // Pour chaque onglet SSH (pas local)
     for (final tabId in state.tabIds) {
@@ -603,10 +649,14 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Vérifier si l'onglet est marqué comme mort
       final isDead = state.deadTabIds.contains(tabId);
-      if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Tab $tabId - isDead: $isDead');
+      if (kDebugMode)
+        debugPrint('checkAndReconnectIfNeeded: Tab $tabId - isDead: $isDead');
 
       if (isDead && state.lastConnectionInfo != null) {
-        if (kDebugMode) debugPrint('checkAndReconnectIfNeeded: Tab $tabId needs reconnection');
+        if (kDebugMode)
+          debugPrint(
+            'checkAndReconnectIfNeeded: Tab $tabId needs reconnection',
+          );
         // Demander au worker de reconnecter cet onglet
         _isolateClient?.reconnectTab(tabId);
       }
@@ -619,7 +669,8 @@ class SSHNotifier extends Notifier<SSHState> {
     if (currentTabId != null) {
       writeToTab(currentTabId, data);
     } else {
-      if (kDebugMode) debugPrint('SSH write: currentTabId is NULL, data not sent!');
+      if (kDebugMode)
+        debugPrint('SSH write: currentTabId is NULL, data not sent!');
     }
   }
 
@@ -634,7 +685,10 @@ class SSHNotifier extends Notifier<SSHState> {
     if (state.localTabIds.contains(currentTabId)) return null;
 
     try {
-      return await _isolateClient?.executeCommand(tabId: currentTabId, command: command);
+      return await _isolateClient?.executeCommand(
+        tabId: currentTabId,
+        command: command,
+      );
     } catch (e) {
       if (kDebugMode) debugPrint('executeCommandSilently error: $e');
       return null;
@@ -730,7 +784,14 @@ class SSHNotifier extends Notifier<SSHState> {
     'kubectl', 'helm', 'terraform', 'ansible', 'vagrant',
     // Serveurs locaux
     'nginx', 'apache2', 'httpd', 'caddy', 'lighttpd',
-    'mysql', 'mysqld', 'postgres', 'psql', 'redis-server', 'redis-cli', 'mongo', 'mongod',
+    'mysql',
+    'mysqld',
+    'postgres',
+    'psql',
+    'redis-server',
+    'redis-cli',
+    'mongo',
+    'mongod',
     // Process managers
     'pm2', 'forever', 'supervisord',
     // Shells interactifs
@@ -754,10 +815,13 @@ class SSHNotifier extends Notifier<SSHState> {
     // Cas spéciaux avec arguments
     if (trimmed.startsWith('tail ') && trimmed.contains('-f')) return true;
     if (trimmed.startsWith('docker build')) return true;
-    if (trimmed.startsWith('docker-compose') || trimmed.startsWith('docker compose')) return true;
+    if (trimmed.startsWith('docker-compose') ||
+        trimmed.startsWith('docker compose'))
+      return true;
 
     // Commandes interactives avec -i (demandent confirmation y/n)
-    if (trimmed.contains(' -i') || trimmed.contains(' --interactive')) return true;
+    if (trimmed.contains(' -i') || trimmed.contains(' --interactive'))
+      return true;
 
     // Vérifier chaque commande dans un pipe (cmd1 | cmd2 | cmd3)
     final pipedCommands = trimmed.split('|');
@@ -769,7 +833,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Scripts exécutables
       if (firstWord.startsWith('./') || firstWord.startsWith('/')) return true;
-      if (firstWord.endsWith('.sh') || firstWord.endsWith('.py') || firstWord.endsWith('.rb')) return true;
+      if (firstWord.endsWith('.sh') ||
+          firstWord.endsWith('.py') ||
+          firstWord.endsWith('.rb'))
+        return true;
 
       if (_longRunningCommands.contains(firstWord)) return true;
     }
@@ -822,6 +889,4 @@ class SSHNotifier extends Notifier<SSHState> {
   }
 }
 
-final sshProvider = NotifierProvider<SSHNotifier, SSHState>(
-  SSHNotifier.new,
-);
+final sshProvider = NotifierProvider<SSHNotifier, SSHState>(SSHNotifier.new);

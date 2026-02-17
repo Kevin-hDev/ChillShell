@@ -4,11 +4,7 @@ import 'package:vibeterm/models/command.dart';
 void main() {
   group('Command', () {
     test('default values are correct', () {
-      final cmd = Command(
-        id: '1',
-        command: 'ls',
-        timestamp: DateTime(2026),
-      );
+      final cmd = Command(id: '1', command: 'ls', timestamp: DateTime(2026));
       expect(cmd.output, '');
       expect(cmd.executionTime, Duration.zero);
       expect(cmd.isRunning, false);

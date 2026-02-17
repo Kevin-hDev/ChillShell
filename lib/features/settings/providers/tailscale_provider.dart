@@ -69,16 +69,16 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
     );
 
     if (isConnected && !wasConnected) {
-      ref.read(settingsProvider.notifier).updateTailscaleSettings(
-        enabled: true,
-      );
+      ref
+          .read(settingsProvider.notifier)
+          .updateTailscaleSettings(enabled: true);
       // Charger la liste des peers dès qu'on est connecté
       _fetchPeers();
     }
     if (deviceName != null) {
-      ref.read(settingsProvider.notifier).updateTailscaleSettings(
-        deviceName: deviceName,
-      );
+      ref
+          .read(settingsProvider.notifier)
+          .updateTailscaleSettings(deviceName: deviceName);
     }
   }
 
@@ -128,9 +128,9 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
       // Le plugin natif a démarré le VPN service.
       // Le token OAuth sera obtenu via l'API REST côté Dart.
       // Pour l'instant, on active Tailscale et on récupère le statut.
-      ref.read(settingsProvider.notifier).updateTailscaleSettings(
-        enabled: true,
-      );
+      ref
+          .read(settingsProvider.notifier)
+          .updateTailscaleSettings(enabled: true);
 
       // Récupérer le statut après connexion
       final status = await _service.getStatus();
@@ -148,9 +148,9 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
 
       // Sauvegarder le nom de l'appareil
       if (deviceName != null) {
-        ref.read(settingsProvider.notifier).updateTailscaleSettings(
-          deviceName: deviceName,
-        );
+        ref
+            .read(settingsProvider.notifier)
+            .updateTailscaleSettings(deviceName: deviceName);
       }
 
       // Récupérer la liste des appareils via LocalAPI
@@ -171,10 +171,9 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
       await _service.logout();
 
       // Nettoyer les settings
-      ref.read(settingsProvider.notifier).updateTailscaleSettings(
-        enabled: false,
-        clearDeviceName: true,
-      );
+      ref
+          .read(settingsProvider.notifier)
+          .updateTailscaleSettings(enabled: false, clearDeviceName: true);
 
       state = const TailscaleState();
     } catch (e) {
@@ -207,4 +206,3 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
 final tailscaleProvider = NotifierProvider<TailscaleNotifier, TailscaleState>(
   TailscaleNotifier.new,
 );
-

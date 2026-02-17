@@ -12,15 +12,9 @@ class WolState {
   final List<WolConfig> configs;
   final bool isLoading;
 
-  const WolState({
-    this.configs = const [],
-    this.isLoading = false,
-  });
+  const WolState({this.configs = const [], this.isLoading = false});
 
-  WolState copyWith({
-    List<WolConfig>? configs,
-    bool? isLoading,
-  }) {
+  WolState copyWith({List<WolConfig>? configs, bool? isLoading}) {
     return WolState(
       configs: configs ?? this.configs,
       isLoading: isLoading ?? this.isLoading,
@@ -62,7 +56,8 @@ class WolNotifier extends Notifier<WolState> {
           .toList();
 
       state = state.copyWith(configs: configs, isLoading: false);
-      if (kDebugMode) debugPrint('WOL configs loaded: ${configs.length} configurations');
+      if (kDebugMode)
+        debugPrint('WOL configs loaded: ${configs.length} configurations');
     } catch (e) {
       if (kDebugMode) debugPrint('Error loading WOL configs: $e');
       state = state.copyWith(isLoading: false);
@@ -155,6 +150,4 @@ class WolNotifier extends Notifier<WolState> {
 }
 
 /// Provider global pour la gestion des configurations WOL.
-final wolProvider = NotifierProvider<WolNotifier, WolState>(
-  WolNotifier.new,
-);
+final wolProvider = NotifierProvider<WolNotifier, WolState>(WolNotifier.new);

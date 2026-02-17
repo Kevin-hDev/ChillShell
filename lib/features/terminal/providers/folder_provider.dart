@@ -9,6 +9,7 @@ class FolderState {
   final bool isLoading;
   final String? error;
   final String searchQuery;
+
   /// OS distant détecté ('linux', 'macos', 'windows') — mis en cache après le 1er appel
   final String? remoteOS;
 
@@ -48,7 +49,6 @@ class FolderState {
     final query = searchQuery.toLowerCase();
     return folders.where((f) => f.toLowerCase().contains(query)).toList();
   }
-
 }
 
 /// Callback type pour exécuter des commandes SSH silencieuses
@@ -62,7 +62,10 @@ class FolderNotifier extends Notifier<FolderState> {
   /// Récupère le chemin courant et la liste des dossiers via SSH exec (silencieux)
   /// Si basePath est fourni, on liste ce dossier, sinon on liste le home
   /// Détecte automatiquement l'OS distant (Linux/macOS/Windows) au premier appel
-  Future<void> loadFolders(SilentCommandExecutor execute, {String? basePath}) async {
+  Future<void> loadFolders(
+    SilentCommandExecutor execute, {
+    String? basePath,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -106,12 +109,14 @@ class FolderNotifier extends Notifier<FolderState> {
       String displayName;
       if (currentPath == '~' || currentPath == '/') {
         displayName = '~';
-      } else if (os == 'windows' && RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
+      } else if (os == 'windows' &&
+          RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
         displayName = currentPath;
       } else {
         final segments = currentPath.split(sep);
         displayName = segments.isNotEmpty ? segments.last : '~';
-        if (displayName.isEmpty) displayName = os == 'windows' ? currentPath : '/';
+        if (displayName.isEmpty)
+          displayName = os == 'windows' ? currentPath : '/';
       }
 
       state = state.copyWith(
@@ -122,7 +127,10 @@ class FolderNotifier extends Notifier<FolderState> {
         error: null,
       );
 
-      if (kDebugMode) debugPrint('FolderProvider: path=$currentPath, folders=${folders.length}, os=$os');
+      if (kDebugMode)
+        debugPrint(
+          'FolderProvider: path=$currentPath, folders=${folders.length}, os=$os',
+        );
     } catch (e) {
       if (kDebugMode) debugPrint('FolderProvider: Error: $e');
       state = state.copyWith(isLoading: false, error: 'Erreur: $e');
@@ -144,15 +152,12 @@ class FolderNotifier extends Notifier<FolderState> {
   /// Commande pour lister les dossiers sur Linux/macOS
   String _buildUnixCommand(String? basePath) {
     if (basePath == null) {
-      return 'cd \$HOME && pwd && echo "___SEP___" && ls -1 -d --color=never */ 2>/dev/null';
+      return 'cd \$HOME && pwd && echo "___SEP___" && ls -1 -d */ 2>/dev/null';
     }
-    // Échapper tous les caractères spéciaux shell
-    final safePath = basePath.replaceAll(r'\', r'\\')
-        .replaceAll("'", r"'\''")
-        .replaceAll(r'$', r'\$')
-        .replaceAll('`', r'\`')
-        .replaceAll('!', r'\!');
-    return "cd '$safePath' && pwd && echo '___SEP___' && ls -1 -d --color=never */ 2>/dev/null";
+    // En single quotes bash, seul ' nécessite un échappement via '\''
+    // Tous les autres caractères ($, `, !, \) sont déjà littéraux
+    final safePath = basePath.replaceAll("'", r"'\''");
+    return "cd '$safePath' && pwd && echo '___SEP___' && ls -1 -d */ 2>/dev/null";
   }
 
   /// Commande pour lister les dossiers sur Windows (cmd.exe)
@@ -166,7 +171,10 @@ class FolderNotifier extends Notifier<FolderState> {
   }
 
   /// Navigue vers un dossier et actualise la liste
-  Future<void> navigateToFolder(String folderName, SilentCommandExecutor execute) async {
+  Future<void> navigateToFolder(
+    String folderName,
+    SilentCommandExecutor execute,
+  ) async {
     state = state.copyWith(isLoading: true);
 
     try {
@@ -179,7 +187,8 @@ class FolderNotifier extends Notifier<FolderState> {
         final currentPath = state.currentPath;
         if (currentPath == '/' || currentPath == '~') {
           targetPath = currentPath;
-        } else if (os == 'windows' && RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
+        } else if (os == 'windows' &&
+            RegExp(r'^[A-Za-z]:\\?$').hasMatch(currentPath)) {
           // Déjà à la racine du lecteur (ex: C:\)
           targetPath = currentPath;
         } else {

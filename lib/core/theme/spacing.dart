@@ -10,8 +10,8 @@ class VibeTermSpacing {
 
 /// Constantes de border radius
 class VibeTermRadius {
-  static const double xs = 4.0;        // Badges
-  static const double sm = 6.0;        // Boutons, toggles
-  static const double md = 8.0;        // Blocs, cartes
-  static const double lg = 12.0;       // Logo
+  static const double xs = 4.0; // Badges
+  static const double sm = 6.0; // Boutons, toggles
+  static const double md = 8.0; // Blocs, cartes
+  static const double lg = 12.0; // Logo
 }

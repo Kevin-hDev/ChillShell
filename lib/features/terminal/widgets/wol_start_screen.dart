@@ -207,10 +207,7 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: theme.border,
-                        width: 3,
-                      ),
+                      border: Border.all(color: theme.border, width: 3),
                     ),
                   ),
                   // Indicateur de progression circulaire animé
@@ -223,18 +220,12 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
                         value: _progress?.progress,
                         strokeWidth: 4,
                         backgroundColor: Colors.transparent,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.accent,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(theme.accent),
                       ),
                     ),
                   ),
                   // Icône d'éclair au centre
-                  Icon(
-                    Icons.bolt,
-                    size: 40,
-                    color: theme.accent,
-                  ),
+                  Icon(Icons.bolt, size: 40, color: theme.accent),
                 ],
               ),
             ),
@@ -255,7 +246,10 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
             // Tentative X/30
             if (_progress != null)
               Text(
-                l10n.wolAttempt(_progress!.attempt.toString(), _progress!.maxAttempts.toString()),
+                l10n.wolAttempt(
+                  _progress!.attempt.toString(),
+                  _progress!.maxAttempts.toString(),
+                ),
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 13,
                   color: theme.textMuted,
@@ -317,11 +311,7 @@ class _WolStartScreenState extends ConsumerState<WolStartScreen>
                 shape: BoxShape.circle,
                 color: theme.success.withValues(alpha: 0.2),
               ),
-              child: Icon(
-                Icons.check_circle,
-                size: 50,
-                color: theme.success,
-              ),
+              child: Icon(Icons.check_circle, size: 50, color: theme.success),
             ),
             const SizedBox(height: VibeTermSpacing.lg),
 

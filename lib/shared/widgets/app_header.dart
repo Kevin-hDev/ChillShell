@@ -22,11 +22,14 @@ class AppHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(activeSessionProvider);
-    final connectionState = ref.watch(sshProvider.select((s) => s.connectionState));
+    final connectionState = ref.watch(
+      sshProvider.select((s) => s.connectionState),
+    );
     final theme = ref.watch(vibeTermThemeProvider);
 
     // Afficher le bouton déconnexion si session SSH OU Local Shell connecté
-    final isConnected = session != null || connectionState == SSHConnectionState.connected;
+    final isConnected =
+        session != null || connectionState == SSHConnectionState.connected;
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -35,9 +38,7 @@ class AppHeader extends ConsumerWidget {
       ),
       decoration: BoxDecoration(
         color: theme.bg,
-        border: Border(
-          bottom: BorderSide(color: theme.border),
-        ),
+        border: Border(bottom: BorderSide(color: theme.border)),
       ),
       child: SafeArea(
         bottom: false,
@@ -127,20 +128,19 @@ class _NavButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        width: 33,   // Réduit de 44 → 33 (25%)
+        width: 33, // Réduit de 44 → 33 (25%)
         height: 33,
         decoration: BoxDecoration(
           color: isActive ? theme.bgElevated : theme.bgBlock,
-          borderRadius: BorderRadius.circular(VibeTermRadius.sm),  // Radius réduit aussi
-          border: Border.all(
-            color: borderColor,
-            width: isActive ? 1.5 : 1,
-          ),
+          borderRadius: BorderRadius.circular(
+            VibeTermRadius.sm,
+          ), // Radius réduit aussi
+          border: Border.all(color: borderColor, width: isActive ? 1.5 : 1),
         ),
         child: Icon(
           icon,
           color: iconColor,
-          size: 17,  // Réduit de 22 → 17
+          size: 17, // Réduit de 22 → 17
         ),
       ),
     );
