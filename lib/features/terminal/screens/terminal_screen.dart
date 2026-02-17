@@ -17,6 +17,7 @@ import '../../../features/settings/providers/settings_provider.dart';
 import '../../../features/settings/providers/wol_provider.dart';
 import '../providers/providers.dart';
 import '../widgets/widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../widgets/wol_start_screen.dart';
 
 /// Hauteur fixe de la zone overlay (boutons ESC/newline + GhostTextInput)
@@ -640,6 +641,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
             Text(
               l10n.connectToServer,
               style: VibeTermTypography.caption.copyWith(color: theme.textMuted),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: VibeTermSpacing.lg),
             // Bouton WOL START
@@ -662,6 +664,20 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
               onPressed: _showConnectionDialog,
               icon: const Icon(Icons.add),
               label: Text(l10n.newConnection),
+            ),
+            const SizedBox(height: VibeTermSpacing.md),
+            InkWell(
+              onTap: () async {
+                final uri = Uri.parse('https://github.com/Kevin-hdev/ChillShell');
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/icons_github.png',
+                height: 36,
+              ),
             ),
           ],
         ),
