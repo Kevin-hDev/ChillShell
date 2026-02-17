@@ -723,4 +723,66 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get folderParent => 'Übergeordnet';
+
+  @override
+  String get deviceProtection => 'Geräteschutz';
+
+  @override
+  String get deviceProtectionDesc =>
+      'Erkennt Sicherheitsbedrohungen (Root, Hooking, Debugger)';
+
+  @override
+  String get raspModeWarn => 'Warnen';
+
+  @override
+  String get raspModeBlock => 'Blockieren';
+
+  @override
+  String get raspModeDesc => 'Aktion bei erkannter Bedrohung';
+
+  @override
+  String get deviceSecure => 'Gerät sicher';
+
+  @override
+  String get deviceThreatDetected => 'Bedrohung erkannt';
+
+  @override
+  String get raspThreatRoot => 'Gerootetes/Jailbreak-Gerät';
+
+  @override
+  String get raspThreatHook => 'Hooking-Tool erkannt';
+
+  @override
+  String get raspThreatDebugger => 'Debugger angehängt';
+
+  @override
+  String get raspThreatEmulator => 'Emulator erkannt';
+
+  @override
+  String get raspThreatTampering => 'App-Manipulation erkannt';
+
+  @override
+  String get raspThreatUnofficialStore => 'Inoffizielle Installation';
+
+  @override
+  String get raspBlockedTitle => 'Sicherheitswarnung';
+
+  @override
+  String get raspBlockedMessage =>
+      'Auf diesem Gerät wurde eine Sicherheitsbedrohung erkannt. Die App kann in diesem Zustand nicht verwendet werden.';
+
+  @override
+  String get clipboardAutoClear => 'Zwischenablage auto-löschen';
+
+  @override
+  String get clipboardAutoClearDesc =>
+      'Löscht die Zwischenablage automatisch nach dem Kopieren sensibler Daten';
+
+  @override
+  String get clipboardClearDelay => 'Löschverzögerung';
+
+  @override
+  String clipboardSeconds(int count) {
+    return '${count}s';
+  }
 }

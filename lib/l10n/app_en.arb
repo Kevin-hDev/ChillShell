@@ -337,5 +337,31 @@
   "biometricError": "Biometric authentication failed",
   "folderNoResults": "No results",
   "folderNoSubfolders": "No subfolders",
-  "folderParent": "Parent"
+  "folderParent": "Parent",
+  "deviceProtection": "Device protection",
+  "deviceProtectionDesc": "Detect security threats (root, hooking, debugger)",
+  "raspModeWarn": "Warn",
+  "raspModeBlock": "Block",
+  "raspModeDesc": "Action when a threat is detected",
+  "deviceSecure": "Device secure",
+  "deviceThreatDetected": "Threat detected",
+  "raspThreatRoot": "Rooted/jailbroken device",
+  "raspThreatHook": "Hooking tool detected",
+  "raspThreatDebugger": "Debugger attached",
+  "raspThreatEmulator": "Emulator detected",
+  "raspThreatTampering": "App tampering detected",
+  "raspThreatUnofficialStore": "Unofficial installation",
+  "raspBlockedTitle": "Security alert",
+  "raspBlockedMessage": "A security threat has been detected on this device. The app cannot be used in this state.",
+  "clipboardAutoClear": "Auto-clear clipboard",
+  "clipboardAutoClearDesc": "Automatically erase clipboard after copying sensitive data",
+  "clipboardClearDelay": "Clear delay",
+  "clipboardSeconds": "{count}s",
+  "@clipboardSeconds": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -714,4 +714,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get folderParent => 'Parent';
+
+  @override
+  String get deviceProtection => 'Device protection';
+
+  @override
+  String get deviceProtectionDesc =>
+      'Detect security threats (root, hooking, debugger)';
+
+  @override
+  String get raspModeWarn => 'Warn';
+
+  @override
+  String get raspModeBlock => 'Block';
+
+  @override
+  String get raspModeDesc => 'Action when a threat is detected';
+
+  @override
+  String get deviceSecure => 'Device secure';
+
+  @override
+  String get deviceThreatDetected => 'Threat detected';
+
+  @override
+  String get raspThreatRoot => 'Rooted/jailbroken device';
+
+  @override
+  String get raspThreatHook => 'Hooking tool detected';
+
+  @override
+  String get raspThreatDebugger => 'Debugger attached';
+
+  @override
+  String get raspThreatEmulator => 'Emulator detected';
+
+  @override
+  String get raspThreatTampering => 'App tampering detected';
+
+  @override
+  String get raspThreatUnofficialStore => 'Unofficial installation';
+
+  @override
+  String get raspBlockedTitle => 'Security alert';
+
+  @override
+  String get raspBlockedMessage =>
+      'A security threat has been detected on this device. The app cannot be used in this state.';
+
+  @override
+  String get clipboardAutoClear => 'Auto-clear clipboard';
+
+  @override
+  String get clipboardAutoClearDesc =>
+      'Automatically erase clipboard after copying sensitive data';
+
+  @override
+  String get clipboardClearDelay => 'Clear delay';
+
+  @override
+  String clipboardSeconds(int count) {
+    return '${count}s';
+  }
 }

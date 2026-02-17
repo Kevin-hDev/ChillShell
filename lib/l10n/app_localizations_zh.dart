@@ -704,4 +704,63 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get folderParent => '上级';
+
+  @override
+  String get deviceProtection => '设备保护';
+
+  @override
+  String get deviceProtectionDesc => '检测安全威胁（root、挂钩、调试器）';
+
+  @override
+  String get raspModeWarn => '警告';
+
+  @override
+  String get raspModeBlock => '阻止';
+
+  @override
+  String get raspModeDesc => '检测到威胁时的操作';
+
+  @override
+  String get deviceSecure => '设备安全';
+
+  @override
+  String get deviceThreatDetected => '检测到威胁';
+
+  @override
+  String get raspThreatRoot => '已root/越狱的设备';
+
+  @override
+  String get raspThreatHook => '检测到挂钩工具';
+
+  @override
+  String get raspThreatDebugger => '已附加调试器';
+
+  @override
+  String get raspThreatEmulator => '检测到模拟器';
+
+  @override
+  String get raspThreatTampering => '检测到应用篡改';
+
+  @override
+  String get raspThreatUnofficialStore => '非官方安装';
+
+  @override
+  String get raspBlockedTitle => '安全警报';
+
+  @override
+  String get raspBlockedMessage => '此设备上检测到安全威胁。应用程序无法在此状态下使用。';
+
+  @override
+  String get clipboardAutoClear => '自动清除剪贴板';
+
+  @override
+  String get clipboardAutoClearDesc => '复制敏感数据后自动清除剪贴板';
+
+  @override
+  String get clipboardClearDelay => '清除延迟';
+
+  @override
+  String clipboardSeconds(int count) {
+    return '$count秒';
+  }
 }

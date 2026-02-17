@@ -721,4 +721,66 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get folderParent => 'Parent';
+
+  @override
+  String get deviceProtection => 'Protection de l\'appareil';
+
+  @override
+  String get deviceProtectionDesc =>
+      'Détecte les menaces de sécurité (root, hooking, débogueur)';
+
+  @override
+  String get raspModeWarn => 'Avertir';
+
+  @override
+  String get raspModeBlock => 'Bloquer';
+
+  @override
+  String get raspModeDesc => 'Action lorsqu\'une menace est détectée';
+
+  @override
+  String get deviceSecure => 'Appareil sécurisé';
+
+  @override
+  String get deviceThreatDetected => 'Menace détectée';
+
+  @override
+  String get raspThreatRoot => 'Appareil rooté/jailbreaké';
+
+  @override
+  String get raspThreatHook => 'Outil de hooking détecté';
+
+  @override
+  String get raspThreatDebugger => 'Débogueur attaché';
+
+  @override
+  String get raspThreatEmulator => 'Émulateur détecté';
+
+  @override
+  String get raspThreatTampering => 'Falsification de l\'app détectée';
+
+  @override
+  String get raspThreatUnofficialStore => 'Installation non officielle';
+
+  @override
+  String get raspBlockedTitle => 'Alerte de sécurité';
+
+  @override
+  String get raspBlockedMessage =>
+      'Une menace de sécurité a été détectée sur cet appareil. L\'application ne peut pas être utilisée dans cet état.';
+
+  @override
+  String get clipboardAutoClear => 'Nettoyage auto du presse-papier';
+
+  @override
+  String get clipboardAutoClearDesc =>
+      'Efface automatiquement le presse-papier après copie de données sensibles';
+
+  @override
+  String get clipboardClearDelay => 'Délai de nettoyage';
+
+  @override
+  String clipboardSeconds(int count) {
+    return '${count}s';
+  }
 }

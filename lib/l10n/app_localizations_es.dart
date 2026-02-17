@@ -719,4 +719,66 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get folderParent => 'Superior';
+
+  @override
+  String get deviceProtection => 'Protección del dispositivo';
+
+  @override
+  String get deviceProtectionDesc =>
+      'Detecta amenazas de seguridad (root, hooking, depurador)';
+
+  @override
+  String get raspModeWarn => 'Advertir';
+
+  @override
+  String get raspModeBlock => 'Bloquear';
+
+  @override
+  String get raspModeDesc => 'Acción cuando se detecta una amenaza';
+
+  @override
+  String get deviceSecure => 'Dispositivo seguro';
+
+  @override
+  String get deviceThreatDetected => 'Amenaza detectada';
+
+  @override
+  String get raspThreatRoot => 'Dispositivo rooteado/jailbroken';
+
+  @override
+  String get raspThreatHook => 'Herramienta de hooking detectada';
+
+  @override
+  String get raspThreatDebugger => 'Depurador conectado';
+
+  @override
+  String get raspThreatEmulator => 'Emulador detectado';
+
+  @override
+  String get raspThreatTampering => 'Manipulación de la app detectada';
+
+  @override
+  String get raspThreatUnofficialStore => 'Instalación no oficial';
+
+  @override
+  String get raspBlockedTitle => 'Alerta de seguridad';
+
+  @override
+  String get raspBlockedMessage =>
+      'Se ha detectado una amenaza de seguridad en este dispositivo. La app no puede usarse en este estado.';
+
+  @override
+  String get clipboardAutoClear => 'Limpieza auto del portapapeles';
+
+  @override
+  String get clipboardAutoClearDesc =>
+      'Borra automáticamente el portapapeles tras copiar datos sensibles';
+
+  @override
+  String get clipboardClearDelay => 'Tiempo de limpieza';
+
+  @override
+  String clipboardSeconds(int count) {
+    return '${count}s';
+  }
 }

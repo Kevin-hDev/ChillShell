@@ -1399,6 +1399,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Parent'**
   String get folderParent;
+
+  /// No description provided for @deviceProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Device protection'**
+  String get deviceProtection;
+
+  /// No description provided for @deviceProtectionDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect security threats (root, hooking, debugger)'**
+  String get deviceProtectionDesc;
+
+  /// No description provided for @raspModeWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn'**
+  String get raspModeWarn;
+
+  /// No description provided for @raspModeBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get raspModeBlock;
+
+  /// No description provided for @raspModeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Action when a threat is detected'**
+  String get raspModeDesc;
+
+  /// No description provided for @deviceSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Device secure'**
+  String get deviceSecure;
+
+  /// No description provided for @deviceThreatDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Threat detected'**
+  String get deviceThreatDetected;
+
+  /// No description provided for @raspThreatRoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooted/jailbroken device'**
+  String get raspThreatRoot;
+
+  /// No description provided for @raspThreatHook.
+  ///
+  /// In en, this message translates to:
+  /// **'Hooking tool detected'**
+  String get raspThreatHook;
+
+  /// No description provided for @raspThreatDebugger.
+  ///
+  /// In en, this message translates to:
+  /// **'Debugger attached'**
+  String get raspThreatDebugger;
+
+  /// No description provided for @raspThreatEmulator.
+  ///
+  /// In en, this message translates to:
+  /// **'Emulator detected'**
+  String get raspThreatEmulator;
+
+  /// No description provided for @raspThreatTampering.
+  ///
+  /// In en, this message translates to:
+  /// **'App tampering detected'**
+  String get raspThreatTampering;
+
+  /// No description provided for @raspThreatUnofficialStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Unofficial installation'**
+  String get raspThreatUnofficialStore;
+
+  /// No description provided for @raspBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security alert'**
+  String get raspBlockedTitle;
+
+  /// No description provided for @raspBlockedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A security threat has been detected on this device. The app cannot be used in this state.'**
+  String get raspBlockedMessage;
+
+  /// No description provided for @clipboardAutoClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-clear clipboard'**
+  String get clipboardAutoClear;
+
+  /// No description provided for @clipboardAutoClearDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically erase clipboard after copying sensitive data'**
+  String get clipboardAutoClearDesc;
+
+  /// No description provided for @clipboardClearDelay.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear delay'**
+  String get clipboardClearDelay;
+
+  /// No description provided for @clipboardSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}s'**
+  String clipboardSeconds(int count);
 }
 
 class _AppLocalizationsDelegate
