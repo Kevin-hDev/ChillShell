@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:wake_on_lan/wake_on_lan.dart';
 
 import '../models/wol_config.dart';
+import '../core/security/wol_tailscale_only.dart';
+import '../core/security/secure_logger.dart';
 
 /// Progression du polling Wake-on-LAN.
 ///
@@ -43,6 +45,16 @@ class WolProgress {
 /// Ce service gère l'envoi des magic packets et le polling pour
 /// vérifier quand le PC est prêt à accepter une connexion SSH.
 ///
+/// SÉCURITÉ (FIX-018) :
+/// Quand une IP Tailscale est disponible dans [WolConfig], le magic packet
+/// est envoyé via [SecureWolViaTailscale] (tunnel WireGuard chiffré).
+/// Si [WolConfig.tailscaleIP] est renseigné et valide, la voie sécurisée
+/// est utilisée en priorité. Le broadcast UDP classique reste en fallback
+/// temporaire UNIQUEMENT si aucune IP Tailscale n'est configurée.
+///
+/// TODO FIX-018 (migration complète) : Supprimer le fallback broadcast UDP
+/// une fois que tous les WolConfig auront un champ tailscaleIP obligatoire.
+///
 /// Usage typique:
 /// ```dart
 /// final wolService = WolService();
@@ -71,6 +83,9 @@ class WolService {
   /// Nombre maximum de tentatives (30 × 10s = 5 minutes)
   static const int _maxAttempts = 30;
 
+  /// Instance du service WOL sécurisé via Tailscale (FIX-018)
+  final SecureWolViaTailscale _secureWol = SecureWolViaTailscale();
+
   /// Completer pour annuler le polling en cours
   Completer<void>? _cancelCompleter;
 
@@ -80,13 +95,60 @@ class WolService {
 
   /// Envoie un magic packet Wake-on-LAN.
   ///
+  /// SÉCURITÉ (FIX-018) :
+  /// - Si [config.tailscaleIP] est renseigné et dans le range 100.64.0.0/10,
+  ///   le magic packet est envoyé via Tailscale (WireGuard chiffré).
+  /// - Sinon, fallback sur le broadcast UDP classique avec un avertissement.
+  ///
   /// Retourne `true` si le paquet a été envoyé avec succès,
-  /// `false` en cas d'erreur (format MAC invalide, réseau indisponible, etc.)
+  /// `false` en cas d'erreur (format MAC invalide, Tailscale non connecté,
+  /// réseau indisponible, etc.)
   ///
   /// Note: Le succès de l'envoi ne garantit pas que le PC va se réveiller.
   /// UDP est un protocole sans connexion, donc on ne peut pas confirmer
   /// la réception du paquet.
   Future<bool> sendMagicPacket(WolConfig config) async {
+    // ── Voie sécurisée : Tailscale disponible ──────────────────────────────
+    final tailscaleIP = config.tailscaleIP;
+    if (tailscaleIP != null && tailscaleIP.isNotEmpty) {
+      // Vérifier que l'IP est dans le range Tailscale avant de tenter l'envoi
+      if (_secureWol.isValidTailscaleIP(tailscaleIP)) {
+        SecureLogger.logOperation(
+          'WolService',
+          'Envoi magic packet via Tailscale',
+        );
+        final sent = await _secureWol.wakeViaTailscale(
+          tailscaleIP,
+          config.macAddress,
+        );
+        if (!sent) {
+          SecureLogger.log(
+            'WolService',
+            'Échec envoi magic packet via Tailscale',
+          );
+        }
+        return sent;
+      } else {
+        // IP fournie mais hors range Tailscale — fail CLOSED, on refuse
+        SecureLogger.log(
+          'WolService',
+          'IP Tailscale invalide (hors range 100.64.0.0/10) — envoi refusé',
+        );
+        return false;
+      }
+    }
+
+    // ── Fallback temporaire : broadcast UDP classique ──────────────────────
+    // TODO FIX-018 (migration complète) : Supprimer ce bloc quand tous les
+    // WolConfig auront un champ tailscaleIP obligatoire.
+    // Le WOL broadcast UDP est un protocole non authentifié et non chiffré.
+    // Un attaquant sur le réseau local peut intercepter ou rejouer les paquets.
+    SecureLogger.log(
+      'WolService',
+      'AVERTISSEMENT : Envoi WOL via broadcast UDP (non Tailscale) — '
+          'configurer tailscaleIP pour activer le transport sécurisé',
+    );
+
     try {
       // Valider l'adresse MAC
       final macValidation = MACAddress.validate(config.macAddress);
@@ -115,6 +177,7 @@ class WolService {
 
       return true;
     } catch (e) {
+      SecureLogger.logError('WolService', e);
       return false;
     }
   }

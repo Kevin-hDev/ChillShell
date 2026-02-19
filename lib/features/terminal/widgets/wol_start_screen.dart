@@ -10,6 +10,10 @@ import '../../../core/l10n/l10n.dart';
 import '../../../models/wol_config.dart';
 import '../../../services/wol_service.dart';
 
+// TODO FIX-018 (UI) : Afficher un badge "Tailscale" ou "UDP" selon le transport
+// actif (config.tailscaleIP != null). Informer l'utilisateur du niveau de
+// sécurité du transport WOL en cours.
+
 /// Écran d'animation pendant le réveil WOL.
 ///
 /// Affiche une animation de chargement et les infos de progression

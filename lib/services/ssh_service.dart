@@ -29,6 +29,10 @@ import '../core/security/ssh_algorithm_config.dart';
 //     4. if (ShutdownGuard.confirmShutdown(token, userInput)) → appeler shutdown()
 // ignore: unused_import
 import '../core/security/shutdown_guard.dart';
+// NOTE FIX-016: Voir post_quantum_roadmap.dart pour le plan de migration
+// vers les algorithmes post-quantiques quand dartssh2 les supportera.
+// Algorithme cible : sntrup761x25519-sha512@openssh.com (ML-KEM hybride).
+// Risque actuel : "harvest now, decrypt later" par des adversaires étatiques.
 
 enum SSHError {
   connectionFailed,

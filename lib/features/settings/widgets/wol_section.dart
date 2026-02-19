@@ -11,6 +11,10 @@ import '../providers/wol_provider.dart';
 import 'section_header.dart';
 import 'selection_mixin.dart';
 
+// TODO FIX-018 (UI) : Ajouter un champ "IP Tailscale" dans le formulaire
+// d'ajout/édition d'une configuration WOL (WolConfig.tailscaleIP).
+// Afficher un indicateur visuel quand Tailscale est configuré (transport sécurisé).
+
 /// Section Wake-on-LAN dans les paramètres.
 ///
 /// Permet d'activer/désactiver le WOL et de gérer les configurations

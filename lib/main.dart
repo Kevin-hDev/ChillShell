@@ -27,12 +27,54 @@ import 'services/rasp_service.dart';
 //     if (ReconnectAuthGuard.instance.needsReAuthentication()) { ... }
 // ignore: unused_import
 import 'core/security/reconnect_auth_guard.dart';
+// FIX-019 — CanaryTokenManager : pièges de détection d'intrusion
+// ignore: unused_import
+import 'core/security/canary_tokens.dart';
+// FIX-021 — BehavioralAnalyzer : analyse comportementale des commandes
+// ignore: unused_import
+import 'core/security/behavioral_analyzer.dart';
+// FIX-022 — AIAgentDetector / AIRateLimiter / SecurityTarpit : détection agents IA
+// ignore: unused_import
+import 'core/security/ai_detection.dart';
+// FIX-024 — EmergencyKillSwitch / DuressPin : effacement d'urgence et PIN de contrainte
+// ignore: unused_import
+import 'core/security/kill_switch.dart';
+// FIX-025 — DependencyMonitor : surveillance des dependances critiques (supply chain)
+// ignore: unused_import
+import 'core/security/dependency_monitor.dart';
+// TODO FIX-025: Lancer DependencyMonitor.checkAll() au demarrage
+// ou en CI pour verifier les dependances
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   ForegroundSSHService.init();
   // Migrer l'ancien PIN (v1 en clair) vers le nouveau format hashé si nécessaire
   await PinService.migrateIfNeeded();
+
+  // ==========================================================================
+  // SÉCURITÉ — Modules en attente d'activation (préparés, non actifs)
+  // ==========================================================================
+  //
+  // TODO FIX-019: Activer les canary tokens au premier demarrage
+  // await CanaryTokenManager(deploymentDir: '/home/user/.ssh/').deployAll();
+  // Verifier periodiquement: manager.checkAll(onAlert: auditLog.write);
+  //
+  // TODO FIX-021: Initialiser le BehavioralAnalyzer au demarrage
+  // BehavioralAnalyzer() — instancier et passer au provider SSH
+  // Alimenter avec: analyzer.recordEvent(BehaviorEvent(command: cmd, ...));
+  // Analyser avant execution: analyzer.analyzeEvent(event) → action block/warn
+  //
+  // TODO FIX-022: Activer la detection d'agents IA autonomes
+  // AIAgentDetector() — instancier et brancher sur le flux de commandes
+  // AIRateLimiter() — limiter les requetes excessives par session
+  // SecurityTarpit() — appliquer le delai exponentiel aux sessions suspectes
+  //
+  // TODO FIX-024: Configurer le kill switch et le duress PIN
+  // EmergencyKillSwitch(authenticateBiometric: ..., wipeSSHKeys: ..., ...)
+  // DuressPin.validatePinPair(normalPin, duressPin) a la configuration du PIN
+  // DuressPin.verifyPin(entered, realPin, duressPin) dans lock_screen.dart
+  // ==========================================================================
+
   runApp(const ProviderScope(child: VibeTermApp()));
 }
 

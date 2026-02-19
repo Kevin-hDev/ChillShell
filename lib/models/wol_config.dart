@@ -28,6 +28,15 @@ class WolConfig {
   /// Valeurs possibles: "linux", "macos", "windows", null
   final String? detectedOS;
 
+  /// Adresse IP Tailscale du PC cible (range 100.64.0.0/10).
+  ///
+  /// FIX-018 : Quand ce champ est renseigné, le magic packet est envoyé
+  /// via le tunnel WireGuard Tailscale (chiffré et authentifié) au lieu
+  /// du broadcast UDP classique non sécurisé.
+  ///
+  /// Format attendu : "100.64.x.y" (range CGNAT Tailscale, RFC 6598).
+  final String? tailscaleIP;
+
   const WolConfig({
     required this.id,
     required this.name,
@@ -36,6 +45,7 @@ class WolConfig {
     this.broadcastAddress = '255.255.255.255',
     this.port = 9,
     this.detectedOS,
+    this.tailscaleIP,
   });
 
   WolConfig copyWith({
@@ -46,6 +56,7 @@ class WolConfig {
     String? broadcastAddress,
     int? port,
     String? detectedOS,
+    String? tailscaleIP,
   }) {
     return WolConfig(
       id: id ?? this.id,
@@ -55,6 +66,7 @@ class WolConfig {
       broadcastAddress: broadcastAddress ?? this.broadcastAddress,
       port: port ?? this.port,
       detectedOS: detectedOS ?? this.detectedOS,
+      tailscaleIP: tailscaleIP ?? this.tailscaleIP,
     );
   }
 
@@ -66,6 +78,7 @@ class WolConfig {
     'broadcastAddress': broadcastAddress,
     'port': port,
     'detectedOS': detectedOS,
+    'tailscaleIP': tailscaleIP,
   };
 
   factory WolConfig.fromJson(Map<String, dynamic> json) => WolConfig(
@@ -76,5 +89,6 @@ class WolConfig {
     broadcastAddress: json['broadcastAddress'] as String? ?? '255.255.255.255',
     port: json['port'] as int? ?? 9,
     detectedOS: json['detectedOS'] as String?,
+    tailscaleIP: json['tailscaleIP'] as String?,
   );
 }

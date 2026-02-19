@@ -1,6 +1,11 @@
 import 'package:flutter/services.dart';
 import '../models/tailscale_device.dart';
 import '../core/security/secure_logger.dart';
+// FIX-023 — TailscalePrivacy & TailscaleMonitor
+// ignore: unused_import
+import '../core/security/tailscale_privacy.dart';
+// TODO FIX-023: Integrer TailscalePrivacy.monitorTraffic() pour detecter
+// les patterns de botnet (SSHStalker, AyySSHush, burst patterns)
 
 /// Service de communication avec le plugin natif Tailscale via MethodChannel.
 ///
