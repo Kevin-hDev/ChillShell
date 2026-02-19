@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:vibeterm/core/security/secure_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
@@ -129,7 +129,7 @@ class GhostTextInputState extends ConsumerState<GhostTextInput> {
       final ctrlCode = upperLetter.codeUnitAt(0) - 64; // A=1, B=2, etc.
       final ctrlChar = String.fromCharCode(ctrlCode);
       ref.read(sshProvider.notifier).write(ctrlChar);
-      if (kDebugMode) debugPrint('Sent CTRL+$upperLetter');
+      SecureLogger.logDebugOnly('GhostTextInput', 'Sent CTRL key');
     }
 
     // Désarmer le bouton

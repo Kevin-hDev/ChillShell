@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import '../core/security/secure_logger.dart';
 
 /// Résultat de la vérification de sécurité de l'appareil.
 enum DeviceSecurityStatus { secure, rooted, unknown }
@@ -31,8 +31,7 @@ class DeviceSecurityService {
         _cachedStatus = DeviceSecurityStatus.secure;
       }
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('DeviceSecurityService: Error checking device: $e');
+      SecureLogger.logError('DeviceSecurityService', e);
       _cachedStatus = DeviceSecurityStatus.unknown;
     }
 
@@ -66,8 +65,7 @@ class DeviceSecurityService {
 
     for (final path in [...suPaths, ...rootAppPaths]) {
       if (await File(path).exists()) {
-        if (kDebugMode)
-          debugPrint('DeviceSecurityService: Root indicator found: $path');
+        SecureLogger.log('DeviceSecurityService', 'Root indicator found');
         return DeviceSecurityStatus.rooted;
       }
     }
@@ -77,8 +75,7 @@ class DeviceSecurityService {
       final result = await Process.run('getprop', ['ro.build.tags']);
       final tags = result.stdout.toString().trim().toLowerCase();
       if (tags.contains('test-keys')) {
-        if (kDebugMode)
-          debugPrint('DeviceSecurityService: test-keys detected in build tags');
+        SecureLogger.log('DeviceSecurityService', 'test-keys detected in build tags');
         return DeviceSecurityStatus.rooted;
       }
     } catch (_) {
@@ -102,8 +99,7 @@ class DeviceSecurityService {
 
     for (final path in jailbreakPaths) {
       if (File(path).existsSync()) {
-        if (kDebugMode)
-          debugPrint('DeviceSecurityService: Jailbreak indicator found: $path');
+        SecureLogger.log('DeviceSecurityService', 'Jailbreak indicator found');
         return DeviceSecurityStatus.rooted;
       }
     }

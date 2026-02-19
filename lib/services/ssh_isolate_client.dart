@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'ssh_isolate_messages.dart';
 import 'ssh_isolate_worker.dart';
 import 'ssh_service.dart';
+import '../core/security/secure_logger.dart';
 
 /// Facade côté main-isolate pour communiquer avec le background SSH isolate.
 ///
@@ -124,34 +124,26 @@ class SSHIsolateClient {
     _errorPort = ReceivePort();
     _isolate!.addErrorListener(_errorPort!.sendPort);
     _errorSubscription = _errorPort!.listen((error) {
-      if (kDebugMode) {
-        debugPrint('SSHClient: isolate error: $error');
-      }
+      SecureLogger.logError('SSHClient', error);
       _onIsolateCrash('Isolate error: $error');
     });
 
     _exitPort = ReceivePort();
     _isolate!.addOnExitListener(_exitPort!.sendPort);
     _exitSubscription = _exitPort!.listen((_) {
-      if (kDebugMode) {
-        debugPrint('SSHClient: isolate exited');
-      }
+      SecureLogger.log('SSHClient', 'Isolate exited');
       _onIsolateCrash('Isolate exited unexpectedly');
     });
 
     _workerSendPort = await completer.future;
     _isSpawned = true;
 
-    if (kDebugMode) {
-      debugPrint('SSHClient: background isolate spawned');
-    }
+    SecureLogger.log('SSHClient', 'Background isolate spawned');
   }
 
   /// Nettoyage après crash ou exit inattendu de l'isolate.
   void _onIsolateCrash(String reason) {
-    if (kDebugMode) {
-      debugPrint('SSHClient: crash cleanup — $reason');
-    }
+    SecureLogger.log('SSHClient', 'Crash cleanup initiated');
 
     _isSpawned = false;
     _workerSendPort = null;
@@ -186,20 +178,14 @@ class SSHIsolateClient {
   /// Dispatche un message reçu du worker vers le callback approprié.
   void _handleWorkerMessage(dynamic message) {
     if (message is! Map) {
-      if (kDebugMode) {
-        debugPrint(
-          'SSHClient: unexpected message type: ${message.runtimeType}',
-        );
-      }
+      SecureLogger.log('SSHClient', 'Unexpected message type received');
       return;
     }
 
     final map = Map<String, dynamic>.from(message);
     final type = map['type'] as String?;
 
-    if (kDebugMode) {
-      debugPrint('SSHClient: received event: $type');
-    }
+    SecureLogger.logDebugOnly('SSHClient', 'Received event');
 
     switch (type) {
       case IsolateEvent.connected:
@@ -290,9 +276,7 @@ class SSHIsolateClient {
         onError?.call(error, requestId);
 
       default:
-        if (kDebugMode) {
-          debugPrint('SSHClient: unknown event type: $type');
-        }
+        SecureLogger.log('SSHClient', 'Unknown event type received');
     }
   }
 
@@ -309,9 +293,7 @@ class SSHIsolateClient {
 
     if (callback == null) {
       // Pas de callback → auto-accept.
-      if (kDebugMode) {
-        debugPrint('SSHClient: no TOFU callback, auto-accepting host key');
-      }
+      SecureLogger.log('SSHClient', 'No TOFU callback, auto-accepting host key');
       _workerSendPort?.send(
         buildHostKeyResponseMessage(requestId: requestId, accepted: true),
       );
@@ -326,9 +308,7 @@ class SSHIsolateClient {
           buildHostKeyResponseMessage(requestId: requestId, accepted: accepted),
         );
       } catch (e) {
-        if (kDebugMode) {
-          debugPrint('SSHClient: TOFU callback error: $e');
-        }
+        SecureLogger.logError('SSHClient', e);
         // En cas d'erreur, rejeter la clé par sécurité.
         _workerSendPort?.send(
           buildHostKeyResponseMessage(requestId: requestId, accepted: false),
@@ -411,10 +391,7 @@ class SSHIsolateClient {
 
   /// Déconnecte toutes les sessions SSH.
   Future<void> disconnect() async {
-    if (kDebugMode)
-      debugPrint(
-        'SSHClient: disconnect() — cancelling ${_pendingRequests.length} pending requests',
-      );
+    SecureLogger.log('SSHClient', 'Disconnect called, cancelling pending requests');
 
     // Annuler tous les timers de timeout.
     for (final timer in _pendingTimers.values) {
@@ -555,9 +532,7 @@ class SSHIsolateClient {
 
   /// Libère toutes les ressources : isolate, ports, controllers.
   Future<void> dispose() async {
-    if (kDebugMode) {
-      debugPrint('SSHClient: disposing');
-    }
+    SecureLogger.log('SSHClient', 'Disposing');
 
     // Demander au worker de se cleanup.
     _workerSendPort?.send(buildDisposeMessage());
@@ -604,9 +579,7 @@ class SSHIsolateClient {
     _workerSendPort = null;
     _isSpawned = false;
 
-    if (kDebugMode) {
-      debugPrint('SSHClient: disposed');
-    }
+    SecureLogger.log('SSHClient', 'Disposed');
   }
 
   // ── Helpers privés ─────────────────────────────────────────────────────
@@ -695,11 +668,7 @@ class SSHIsolateClient {
     _pendingTimers[requestId] = Timer(timeout, () {
       _pendingTimers.remove(requestId);
       if (_pendingRequests.containsKey(requestId) && !completer.isCompleted) {
-        if (kDebugMode) {
-          debugPrint(
-            'SSHClient: request $requestId ($debugLabel) timed out after ${timeout.inSeconds}s',
-          );
-        }
+        SecureLogger.log('SSHClient', 'Request timed out');
         completer.completeError(
           TimeoutException('SSHClient: request timed out', timeout),
         );

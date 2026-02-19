@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/models.dart';
 import '../../../services/storage_service.dart';
 import '../../../services/secure_storage_service.dart';
 import '../../../services/audit_log_service.dart';
+import '../../../core/security/secure_logger.dart';
 
 class SettingsState {
   final List<SSHKey> sshKeys;
@@ -69,9 +69,9 @@ class SettingsNotifier extends Notifier<SettingsState> {
         savedConnections: savedConnections,
         isLoading: false,
       );
-      if (kDebugMode) debugPrint('Settings loaded');
+      SecureLogger.log('SettingsProvider', 'Settings loaded');
     } catch (e) {
-      if (kDebugMode) debugPrint('Error loading settings: $e');
+      SecureLogger.logError('SettingsProvider', e);
       state = state.copyWith(isLoading: false);
     }
   }
@@ -89,7 +89,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
       AuditEventType.keyImport,
       details: {'name': key.name, 'type': key.type.name},
     );
-    if (kDebugMode) debugPrint('SSH key added');
+    SecureLogger.log('SettingsProvider', 'SSH key added');
   }
 
   Future<void> updateSSHKeyLastUsed(String keyId) async {
@@ -118,7 +118,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
       AuditEventType.keyDelete,
       details: {'name': removedKey?.name ?? id},
     );
-    if (kDebugMode) debugPrint('SSH key removed');
+    SecureLogger.log('SettingsProvider', 'SSH key removed');
   }
 
   void updateTheme(AppTheme theme) {

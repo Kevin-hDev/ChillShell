@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import '../core/security/secure_logger.dart';
 
 /// Service pour activer/désactiver la protection contre les captures d'écran
 /// via les API natives (FLAG_SECURE sur Android, privacy screen sur iOS).
@@ -12,8 +12,7 @@ class ScreenshotProtectionService {
     try {
       await _channel.invokeMethod('setScreenshotProtection', enabled);
     } on PlatformException catch (e) {
-      if (kDebugMode)
-        debugPrint('ScreenshotProtectionService: setEnabled failed: $e');
+      SecureLogger.logError('ScreenshotProtectionService', e);
     }
   }
 
@@ -23,8 +22,7 @@ class ScreenshotProtectionService {
     try {
       await _channel.invokeMethod('clearClipboard');
     } on PlatformException catch (e) {
-      if (kDebugMode)
-        debugPrint('ScreenshotProtectionService: clearClipboard failed: $e');
+      SecureLogger.logError('ScreenshotProtectionService', e);
     }
   }
 }

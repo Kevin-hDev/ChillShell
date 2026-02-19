@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../models/tailscale_device.dart';
+import '../core/security/secure_logger.dart';
 
 /// Service de communication avec le plugin natif Tailscale via MethodChannel.
 ///
@@ -33,7 +33,7 @@ class TailscaleService {
       }
       return null;
     } on PlatformException catch (e) {
-      if (kDebugMode) debugPrint('TailscaleService: login error: $e');
+      SecureLogger.logError('TailscaleService', e);
       return null;
     }
   }
@@ -43,7 +43,7 @@ class TailscaleService {
     try {
       await _channel.invokeMethod<void>('logout');
     } on PlatformException catch (e) {
-      if (kDebugMode) debugPrint('TailscaleService: logout error: $e');
+      SecureLogger.logError('TailscaleService', e);
     }
   }
 
@@ -57,7 +57,7 @@ class TailscaleService {
       }
       return {'isConnected': false};
     } on PlatformException catch (e) {
-      if (kDebugMode) debugPrint('TailscaleService: getStatus error: $e');
+      SecureLogger.logError('TailscaleService', e);
       return {'isConnected': false};
     }
   }
@@ -79,7 +79,7 @@ class TailscaleService {
         );
       }).toList();
     } on PlatformException catch (e) {
-      if (kDebugMode) debugPrint('TailscaleService: getPeers error: $e');
+      SecureLogger.logError('TailscaleService', e);
       return [];
     }
   }

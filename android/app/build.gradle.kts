@@ -36,6 +36,10 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.vibeterm.vibeterm"
         minSdk = 31
@@ -57,13 +61,21 @@ android {
 
     buildTypes {
         release {
-            // Use production keystore if key.properties exists, otherwise debug keys
-            signingConfig = if (keyPropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                // TODO: Configure key.properties for production signing
-                signingConfigs.getByName("debug")
+            // SECURITY FIX-010: Le build DOIT echouer si key.properties est absent.
+            // Pas de fallback sur les cles debug — un APK release non signe avec le
+            // keystore de production pourrait etre clone par n'importe qui.
+            if (!keyPropertiesFile.exists()) {
+                throw GradleException(
+                    "ERREUR DE SECURITE : key.properties introuvable !\n" +
+                    "Un APK release DOIT etre signe avec le keystore de production.\n" +
+                    "Creez android/key.properties avec :\n" +
+                    "  storeFile=chemin/vers/keystore.jks\n" +
+                    "  storePassword=...\n" +
+                    "  keyAlias=...\n" +
+                    "  keyPassword=..."
+                )
             }
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

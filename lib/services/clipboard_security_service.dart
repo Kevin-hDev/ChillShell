@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'screenshot_protection_service.dart';
+import '../core/security/secure_logger.dart';
 
 /// Centralized secure clipboard management service.
 ///
@@ -58,11 +58,7 @@ class ClipboardSecurityService {
       await ScreenshotProtectionService.clearClipboard();
     } catch (e) {
       // Fallback to Flutter standard API
-      if (kDebugMode) {
-        debugPrint(
-          'ClipboardSecurityService: native clear failed, using fallback: $e',
-        );
-      }
+      SecureLogger.logError('ClipboardSecurityService', e);
       try {
         await Clipboard.setData(const ClipboardData(text: ''));
       } catch (_) {}

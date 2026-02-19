@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:vibeterm/core/security/secure_logger.dart';
 
 import '../../../models/saved_connection.dart';
 import '../../../models/wol_config.dart';
@@ -53,10 +53,9 @@ class WolNotifier extends Notifier<WolState> {
           .toList();
 
       state = state.copyWith(configs: configs, isLoading: false);
-      if (kDebugMode)
-        debugPrint('WOL configs loaded: ${configs.length} configurations');
+      SecureLogger.log('WolProvider', 'WOL configs loaded');
     } catch (e) {
-      if (kDebugMode) debugPrint('Error loading WOL configs: $e');
+      SecureLogger.logError('WolProvider', e);
       state = state.copyWith(isLoading: false);
     }
   }
@@ -66,9 +65,9 @@ class WolNotifier extends Notifier<WolState> {
     try {
       final jsonList = state.configs.map((c) => c.toJson()).toList();
       await _storage.write(key: _wolConfigsKey, value: jsonEncode(jsonList));
-      if (kDebugMode) debugPrint('WOL configs saved');
+      SecureLogger.log('WolProvider', 'WOL configs saved');
     } catch (e) {
-      if (kDebugMode) debugPrint('Error saving WOL configs: $e');
+      SecureLogger.logError('WolProvider', e);
     }
   }
 
@@ -77,7 +76,7 @@ class WolNotifier extends Notifier<WolState> {
     final newConfigs = [...state.configs, config];
     state = state.copyWith(configs: newConfigs);
     await _saveConfigs();
-    if (kDebugMode) debugPrint('WOL config added: ${config.name}');
+    SecureLogger.log('WolProvider', 'WOL config added');
   }
 
   /// Met à jour une configuration existante par son ID.
@@ -87,7 +86,7 @@ class WolNotifier extends Notifier<WolState> {
     }).toList();
     state = state.copyWith(configs: newConfigs);
     await _saveConfigs();
-    if (kDebugMode) debugPrint('WOL config updated: ${config.name}');
+    SecureLogger.log('WolProvider', 'WOL config updated');
   }
 
   /// Supprime une configuration par son ID.
@@ -95,7 +94,7 @@ class WolNotifier extends Notifier<WolState> {
     final newConfigs = state.configs.where((c) => c.id != configId).toList();
     state = state.copyWith(configs: newConfigs);
     await _saveConfigs();
-    if (kDebugMode) debugPrint('WOL config deleted: $configId');
+    SecureLogger.log('WolProvider', 'WOL config deleted');
   }
 
   /// Récupère la configuration associée à une connexion SSH.

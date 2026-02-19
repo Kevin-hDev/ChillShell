@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../models/audit_entry.dart';
+import '../core/security/secure_logger.dart';
 
 /// Service d'audit logging local chiffré.
 ///
@@ -42,10 +42,7 @@ class AuditLogService {
 
       await _saveEntries(entries);
     } catch (e) {
-      if (kDebugMode)
-        debugPrint(
-          'AuditLogService: CRITICAL — failed to log security event: $e',
-        );
+      SecureLogger.logError('AuditLogService', e);
     }
   }
 
@@ -69,7 +66,7 @@ class AuditLogService {
           .map((e) => AuditEntry.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      if (kDebugMode) debugPrint('AuditLogService: Error decoding entries: $e');
+      SecureLogger.logError('AuditLogService', e);
       return [];
     }
   }

@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:vibeterm/core/security/secure_logger.dart';
 
 /// État de la navigation dans les dossiers
 class FolderState {
@@ -98,12 +98,9 @@ class FolderNotifier extends Notifier<FolderState> {
         error: null,
       );
 
-      if (kDebugMode)
-        debugPrint(
-          'FolderProvider: path=$currentPath, folders=${folders.length}, os=$os',
-        );
+      SecureLogger.log('FolderProvider', 'Folders loaded successfully');
     } catch (e) {
-      if (kDebugMode) debugPrint('FolderProvider: Error: $e');
+      SecureLogger.logError('FolderProvider', e);
       state = state.copyWith(isLoading: false, error: 'Erreur: $e');
     }
   }
@@ -219,7 +216,7 @@ class FolderNotifier extends Notifier<FolderState> {
       // Charger les dossiers du nouveau chemin
       await loadFolders(execute, basePath: targetPath);
     } catch (e) {
-      if (kDebugMode) debugPrint('FolderProvider: Navigate error: $e');
+      SecureLogger.logError('FolderProvider', e);
       state = state.copyWith(isLoading: false, error: 'Erreur: $e');
     }
   }

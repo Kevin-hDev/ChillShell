@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:flutter_pty/flutter_pty.dart';
+import '../core/security/secure_logger.dart';
 
 class LocalShellService {
   Pty? _pty;
@@ -15,7 +16,7 @@ class LocalShellService {
   /// Démarre un shell local
   Future<void> startShell({int width = 80, int height = 24}) async {
     if (_pty != null) {
-      if (kDebugMode) debugPrint('LocalShell: Shell already running');
+      SecureLogger.log('LocalShellService', 'Shell already running');
       return;
     }
 
@@ -24,7 +25,7 @@ class LocalShellService {
         ? 'sh'
         : Platform.environment['SHELL'] ?? '/bin/sh';
 
-    if (kDebugMode) debugPrint('LocalShell: Starting shell: $shell');
+    SecureLogger.log('LocalShellService', 'Starting shell');
 
     final pty = Pty.start(shell, columns: width, rows: height);
     _pty = pty;
@@ -35,16 +36,16 @@ class LocalShellService {
         _outputController.add(data);
       },
       onError: (error) {
-        if (kDebugMode) debugPrint('LocalShell: Error: $error');
+        SecureLogger.logError('LocalShellService', error);
         _outputController.addError(error);
       },
       onDone: () {
-        if (kDebugMode) debugPrint('LocalShell: Shell exited');
+        SecureLogger.log('LocalShellService', 'Shell exited');
         _pty = null;
       },
     );
 
-    if (kDebugMode) debugPrint('LocalShell: Shell started successfully');
+    SecureLogger.log('LocalShellService', 'Shell started successfully');
   }
 
   /// Écrit des données dans le shell
@@ -53,7 +54,7 @@ class LocalShellService {
     if (pty != null) {
       pty.write(utf8.encode(data));
     } else {
-      if (kDebugMode) debugPrint('LocalShell: PTY is NULL, data not sent');
+      SecureLogger.log('LocalShellService', 'PTY is NULL, data not sent');
     }
   }
 
@@ -74,7 +75,7 @@ class LocalShellService {
       pty.kill();
       _pty = null;
     }
-    if (kDebugMode) debugPrint('LocalShell: Closed');
+    SecureLogger.log('LocalShellService', 'Closed');
   }
 
   /// Libère les ressources

@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import '../core/security/secure_logger.dart';
 
 /// Service pour maintenir les connexions SSH actives en arrière-plan
 class ForegroundSSHService {
@@ -48,7 +48,7 @@ class ForegroundSSHService {
     );
 
     _isRunning = result is ServiceRequestSuccess;
-    if (kDebugMode) debugPrint('ForegroundSSHService: Started = $_isRunning');
+    SecureLogger.log('ForegroundSSHService', 'Service started');
     return _isRunning;
   }
 
@@ -68,6 +68,6 @@ class ForegroundSSHService {
 
     await FlutterForegroundTask.stopService();
     _isRunning = false;
-    if (kDebugMode) debugPrint('ForegroundSSHService: Stopped');
+    SecureLogger.log('ForegroundSSHService', 'Service stopped');
   }
 }

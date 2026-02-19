@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:freerasp/freerasp.dart';
 
+import '../core/security/rasp_activation.dart';
+import '../core/security/secure_logger.dart';
 import '../models/audit_entry.dart';
 import 'audit_log_service.dart';
 
@@ -52,25 +54,47 @@ class RaspService {
 
     // Skip in debug mode (freeRASP detects the debugger)
     if (kDebugMode) {
-      debugPrint('RaspService: skipped in debug mode');
+      SecureLogger.log('RaspService', 'skipped in debug mode');
       return;
     }
 
     _onThreatDetected = onThreatDetected;
 
     try {
-      // Platform-specific configuration.
-      // PLACEHOLDER hashes/IDs must be replaced before production release.
+      // FIX-008: Verification anti-placeholder AVANT de demarrer freeRASP.
+      // Les hashes et IDs doivent etre remplaces par les vraies valeurs
+      // AVANT le build release. Voir RaspActivationGuide.generateSigningHashInstructions().
+      const packageName = 'com.vibeterm.vibeterm';
+      const signingCertHashes = <String>[
+        // TODO: Remplacer par le vrai hash genere avec keytool.
+        // Voir RaspActivationGuide.generateSigningHashInstructions()
+        'PLACEHOLDER_REPLACE_WITH_ACTUAL_HASH',
+      ];
+      const teamId = 'PLACEHOLDER_REPLACE_WITH_TEAM_ID';
+      const bundleIds = <String>['com.vibeterm.vibeterm'];
+
+      final configErrors = RaspActivationGuide.verifyConfig(
+        packageName: packageName,
+        signingCertHashes: signingCertHashes,
+        teamId: teamId,
+        bundleIds: bundleIds,
+      );
+      if (configErrors.isNotEmpty) {
+        SecureLogger.log('RaspService', 'Config RASP invalide — placeholders detectes');
+        // Ne pas demarrer RASP avec des placeholders — c'est inutile.
+        return;
+      }
+
       final config = TalsecConfig(
         androidConfig: AndroidConfig(
-          packageName: 'com.vibeterm.app',
-          signingCertHashes: ['PLACEHOLDER_REPLACE_WITH_ACTUAL_HASH'],
+          packageName: packageName,
+          signingCertHashes: signingCertHashes,
         ),
         iosConfig: IOSConfig(
-          bundleIds: ['com.vibeterm.app'],
-          teamId: 'PLACEHOLDER_REPLACE_WITH_TEAM_ID',
+          bundleIds: bundleIds,
+          teamId: teamId,
         ),
-        watcherMail: 'security@chillshell.app',
+        watcherMail: RaspActivationGuide.securityWatcherEmail,
         isProd: true,
       );
 
@@ -97,16 +121,16 @@ class RaspService {
       Talsec.instance.attachListener(callback);
 
       _initialized = true;
-      debugPrint('RaspService: initialized successfully');
+      SecureLogger.log('RaspService', 'initialized successfully');
     } catch (e) {
       // Do not crash the app if RASP fails to start — log and continue.
-      debugPrint('RaspService: initialization failed: $e');
+      SecureLogger.logError('RaspService', e);
     }
   }
 
   /// Handle a detected threat: log to audit trail and notify the callback.
   static void _handleThreat(RaspThreatType threat) {
-    debugPrint('RaspService: threat detected: ${threat.name}');
+    SecureLogger.log('RaspService', 'threat detected: ${threat.name}');
 
     // Log to encrypted audit trail for forensic review.
     AuditLogService.log(

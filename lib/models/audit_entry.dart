@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:vibeterm/core/security/secure_logger.dart';
 
 /// Types d'événements de sécurité enregistrés dans l'audit log.
 enum AuditEventType {
@@ -44,10 +44,7 @@ class AuditEntry {
   factory AuditEntry.fromJson(Map<String, dynamic> json) {
     final typeIndex = json['e'] as int;
     if (typeIndex >= AuditEventType.values.length) {
-      if (kDebugMode)
-        debugPrint(
-          'AuditEntry: unknown event type index $typeIndex, falling back to sshConnect',
-        );
+      SecureLogger.log('AuditEntry', 'Unknown event type index, falling back to sshConnect');
     }
     return AuditEntry(
       timestamp: json['t'] as int,

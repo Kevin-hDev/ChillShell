@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../services/ssh_isolate_client.dart';
 import '../../../services/ssh_service.dart'; // For HostKeyVerifyCallback typedef
@@ -7,6 +7,7 @@ import '../../../services/local_shell_service.dart';
 import '../../../services/foreground_ssh_service.dart';
 import '../../../services/audit_log_service.dart';
 import '../../../models/audit_entry.dart';
+import '../../../core/security/secure_logger.dart';
 import '../../settings/providers/settings_provider.dart';
 
 enum SSHConnectionState {
@@ -255,8 +256,7 @@ class SSHNotifier extends Notifier<SSHState> {
     // Échec de connexion (provient de reconnectTab/reconnectAll)
     client.onConnectionFailed = (error, tabId) {
       if (_isDisposed) return;
-      if (kDebugMode)
-        debugPrint('SSH isolate connection failed: $error (tab: $tabId)');
+      SecureLogger.log('SSHNotifier', 'SSH isolate connection failed');
       // Si on est en reconnexion, passer en état d'erreur
       if (state.connectionState == SSHConnectionState.reconnecting) {
         state = state.copyWith(
@@ -269,7 +269,7 @@ class SSHNotifier extends Notifier<SSHState> {
     // Erreur générique
     client.onError = (error, requestId) {
       if (_isDisposed) return;
-      if (kDebugMode) debugPrint('SSH isolate error: $error');
+      SecureLogger.log('SSHNotifier', 'SSH isolate error received');
     };
   }
 
@@ -282,8 +282,7 @@ class SSHNotifier extends Notifier<SSHState> {
     HostKeyVerifyCallback? onFirstHostKey,
     HostKeyVerifyCallback? onHostKeyMismatch,
   }) async {
-    if (kDebugMode)
-      debugPrint('SSHNotifier: connect() called — host=$host port=$port');
+    SecureLogger.log('SSHNotifier', 'connect() called');
 
     state = state.copyWith(
       connectionState: SSHConnectionState.connecting,
@@ -296,10 +295,7 @@ class SSHNotifier extends Notifier<SSHState> {
 
     // Vérifier si annulé
     if (state.connectionState != SSHConnectionState.connecting) {
-      if (kDebugMode)
-        debugPrint(
-          'SSHNotifier: connect cancelled before start (state changed)',
-        );
+      SecureLogger.log('SSHNotifier', 'connect cancelled before start (state changed)');
       return false;
     }
 
@@ -329,15 +325,11 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Vérifier si annulé pendant la connexion SSH
       if (state.connectionState != SSHConnectionState.connecting) {
-        if (kDebugMode)
-          debugPrint(
-            'SSHNotifier: connect cancelled DURING SSH handshake (state=${state.connectionState})',
-          );
+        SecureLogger.log('SSHNotifier', 'connect cancelled DURING SSH handshake');
         client.closeTab(tabId);
         return false;
       }
-      if (kDebugMode)
-        debugPrint('SSHNotifier: connect SUCCESS to $host:$port (tab=$tabId)');
+      SecureLogger.log('SSHNotifier', 'connect SUCCESS');
 
       state = state.copyWith(
         connectionState: SSHConnectionState.connected,
@@ -357,10 +349,7 @@ class SSHNotifier extends Notifier<SSHState> {
       ref.read(settingsProvider.notifier).updateSSHKeyLastUsed(keyId);
       return true;
     } catch (e) {
-      if (kDebugMode)
-        debugPrint(
-          'SSHNotifier: connect FAILED to $host:$port — ${e.runtimeType}: $e',
-        );
+      SecureLogger.logError('SSHNotifier', e);
       AuditLogService.log(
         AuditEventType.sshAuthFail,
         success: false,
@@ -410,7 +399,7 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Démarrer le foreground service
       await ForegroundSSHService.start(connectionInfo: 'Shell local actif');
-      if (kDebugMode) debugPrint('Local shell connected: $tabId');
+      SecureLogger.log('SSHNotifier', 'Local shell connected');
     } catch (e) {
       state = state.copyWith(
         connectionState: SSHConnectionState.error,
@@ -433,7 +422,7 @@ class SSHNotifier extends Notifier<SSHState> {
   Future<String?> createNewTab() async {
     // Guard contre les créations simultanées
     if (_isCreatingTab) {
-      if (kDebugMode) debugPrint('Tab creation already in progress, ignoring');
+      SecureLogger.log('SSHNotifier', 'Tab creation already in progress, ignoring');
       return null;
     }
 
@@ -458,14 +447,14 @@ class SSHNotifier extends Notifier<SSHState> {
         tabId: tabId,
       );
       if (resultTabId != null) {
-        if (kDebugMode) debugPrint('Tab $tabId created via isolate');
+        SecureLogger.log('SSHNotifier', 'Tab created via isolate');
         return tabId;
       } else {
         _rollbackTab(tabId);
         return null;
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('Failed to create new tab: $e');
+      SecureLogger.logError('SSHNotifier', e);
       _rollbackTab(tabId);
       return null;
     } finally {
@@ -547,10 +536,7 @@ class SSHNotifier extends Notifier<SSHState> {
 
   /// Gère la perte de connexion détectée par le worker
   void _handleDisconnection() {
-    if (kDebugMode)
-      debugPrint(
-        'SSHNotifier: _handleDisconnection() called (state=${state.connectionState})',
-      );
+    SecureLogger.log('SSHNotifier', '_handleDisconnection() called');
     if (state.connectionState == SSHConnectionState.disconnected) return;
 
     final wasConnected = state.connectionState == SSHConnectionState.connected;
@@ -583,10 +569,7 @@ class SSHNotifier extends Notifier<SSHState> {
   }
 
   Future<void> disconnect() async {
-    if (kDebugMode)
-      debugPrint(
-        'SSHNotifier: disconnect() called (state=${state.connectionState})',
-      );
+    SecureLogger.log('SSHNotifier', 'disconnect() called');
     final info = state.lastConnectionInfo;
 
     // Déconnecter toutes les sessions SSH via l'isolate
@@ -631,17 +614,15 @@ class SSHNotifier extends Notifier<SSHState> {
 
   /// Marque un onglet comme ayant une connexion morte (stream fermé)
   void markTabAsDead(String tabId) {
-    if (kDebugMode) debugPrint('markTabAsDead: Tab $tabId marked as dead');
+    SecureLogger.log('SSHNotifier', 'Tab marked as dead');
     state = state.copyWith(deadTabIds: {...state.deadTabIds, tabId});
   }
 
   /// Vérifie et reconnecte les onglets SSH si la connexion est perdue
   /// Appelé quand l'app revient au premier plan
   Future<void> checkAndReconnectIfNeeded() async {
-    if (kDebugMode)
-      debugPrint('checkAndReconnectIfNeeded: Checking SSH connections...');
-    if (kDebugMode)
-      debugPrint('checkAndReconnectIfNeeded: Dead tabs: ${state.deadTabIds}');
+    SecureLogger.log('SSHNotifier', 'Checking SSH connections');
+    SecureLogger.log('SSHNotifier', 'Checking dead tabs');
 
     // Pour chaque onglet SSH (pas local)
     for (final tabId in state.tabIds) {
@@ -649,14 +630,10 @@ class SSHNotifier extends Notifier<SSHState> {
 
       // Vérifier si l'onglet est marqué comme mort
       final isDead = state.deadTabIds.contains(tabId);
-      if (kDebugMode)
-        debugPrint('checkAndReconnectIfNeeded: Tab $tabId - isDead: $isDead');
+      SecureLogger.logDebugOnly('SSHNotifier', 'Checking tab dead status');
 
       if (isDead && state.lastConnectionInfo != null) {
-        if (kDebugMode)
-          debugPrint(
-            'checkAndReconnectIfNeeded: Tab $tabId needs reconnection',
-          );
+        SecureLogger.log('SSHNotifier', 'Tab needs reconnection');
         // Demander au worker de reconnecter cet onglet
         _isolateClient?.reconnectTab(tabId);
       }
@@ -665,12 +642,11 @@ class SSHNotifier extends Notifier<SSHState> {
 
   void write(String data) {
     final currentTabId = state.currentTabId;
-    if (kDebugMode) debugPrint('SSH write: tabId=$currentTabId');
+    SecureLogger.logDebugOnly('SSHNotifier', 'SSH write');
     if (currentTabId != null) {
       writeToTab(currentTabId, data);
     } else {
-      if (kDebugMode)
-        debugPrint('SSH write: currentTabId is NULL, data not sent!');
+      SecureLogger.log('SSHNotifier', 'SSH write: currentTabId is NULL, data not sent');
     }
   }
 
@@ -690,7 +666,7 @@ class SSHNotifier extends Notifier<SSHState> {
         command: command,
       );
     } catch (e) {
-      if (kDebugMode) debugPrint('executeCommandSilently error: $e');
+      SecureLogger.logError('SSHNotifier', e);
       return null;
     }
   }
@@ -892,7 +868,7 @@ class SSHNotifier extends Notifier<SSHState> {
         remotePath: remotePath,
       );
     } catch (e) {
-      if (kDebugMode) debugPrint('uploadFile error: $e');
+      SecureLogger.logError('SSHNotifier', e);
       return null;
     }
   }

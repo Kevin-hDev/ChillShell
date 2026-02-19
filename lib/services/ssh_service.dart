@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'secure_storage_service.dart';
 import 'audit_log_service.dart';
 import '../models/audit_entry.dart';
+import '../core/security/secure_logger.dart';
 
 enum SSHError {
   connectionFailed,
@@ -57,19 +58,13 @@ class SSHService {
   }) async {
     try {
       // Parsing de la clé dans un ISOLATE SÉPARÉ (ne bloque pas le thread UI)
-      if (kDebugMode) debugPrint('SSHService: Parsing SSH key...');
+      SecureLogger.logSensitive('SSHService', 'Parsing SSH key');
       final keys = await compute(_parseSSHKeys, privateKey);
-      if (kDebugMode)
-        debugPrint(
-          'SSHService: Key parsed OK, connecting TCP to $host:$port...',
-        );
+      SecureLogger.log('SSHService', 'Key parsed OK, connecting TCP');
 
       // Connexion TCP (async, ne bloque pas)
       final socket = await SSHSocket.connect(host, port);
-      if (kDebugMode)
-        debugPrint(
-          'SSHService: TCP connected to $host:$port, starting SSH handshake...',
-        );
+      SecureLogger.log('SSHService', 'TCP connected, starting SSH handshake');
 
       // Handshake SSH + authentification (avec vérification TOFU de la clé d'hôte)
       _client = SSHClient(
@@ -103,37 +98,26 @@ class SSHService {
                     port,
                     hexFingerprint,
                   );
-                  if (kDebugMode)
-                    debugPrint(
-                      'SSH TOFU: User accepted host key for $host:$port',
-                    );
+                  SecureLogger.log('SSHService', 'SSH TOFU: User accepted host key');
                 } else {
-                  if (kDebugMode)
-                    debugPrint(
-                      'SSH TOFU: User rejected host key for $host:$port',
-                    );
+                  SecureLogger.log('SSHService', 'SSH TOFU: User rejected host key');
                 }
                 return accepted;
               }
               // Pas de callback → rejeter par défaut (sécurité)
-              if (kDebugMode)
-                debugPrint(
-                  'SSH TOFU: No callback for first host key, rejecting by default',
-                );
+              SecureLogger.log('SSHService', 'SSH TOFU: No callback, rejecting by default');
               return false;
             }
 
             // Contact suivant → vérifier (constant-time pour éviter les timing attacks)
             final match = _constantTimeEquals(stored, hexFingerprint);
             if (match) {
-              if (kDebugMode)
-                debugPrint('SSH TOFU: Host key OK for $host:$port');
+              SecureLogger.log('SSHService', 'SSH TOFU: Host key OK');
               return true;
             }
 
             // MISMATCH: clé changée → avertir l'utilisateur
-            if (kDebugMode)
-              debugPrint('SSH TOFU: Host key MISMATCH for $host:$port');
+            SecureLogger.log('SSHService', 'SSH TOFU: Host key MISMATCH');
             AuditLogService.log(
               AuditEventType.hostKeyMismatch,
               success: false,
@@ -145,31 +129,25 @@ class SSHService {
             return false;
           } catch (e) {
             // En cas d'erreur de stockage, rejeter par défaut (sécurité)
-            if (kDebugMode)
-              debugPrint('SSH TOFU: Storage error, rejecting: $e');
+            SecureLogger.logError('SSHService', e);
             return false;
           }
         },
       );
-      if (kDebugMode)
-        debugPrint(
-          'SSHService: Waiting for SSH authentication on $host:$port...',
-        );
+      SecureLogger.log('SSHService', 'Waiting for SSH authentication');
       await _client!.authenticated;
       _isConnectionAlive = true;
-      if (kDebugMode)
-        debugPrint('SSHService: SSH authenticated OK on $host:$port');
+      SecureLogger.log('SSHService', 'SSH authenticated OK');
 
       // Écouter la fermeture de connexion
       _client!.done
           .then((_) {
-            if (kDebugMode)
-              debugPrint('SSHService: Connection closed normally');
+            SecureLogger.log('SSHService', 'Connection closed normally');
             _isConnectionAlive = false;
             onDisconnected?.call();
           })
-          .onError((error, stackTrace) {
-            if (kDebugMode) debugPrint('SSHService: Connection error: $error');
+          .onError((Object error, StackTrace stackTrace) {
+            SecureLogger.logError('SSHService', error);
             _isConnectionAlive = false;
             onDisconnected?.call();
           });
@@ -177,10 +155,7 @@ class SSHService {
       return true;
     } catch (e) {
       _isConnectionAlive = false;
-      if (kDebugMode)
-        debugPrint(
-          'SSHService: Connection FAILED to $host:$port — ${e.runtimeType}: $e',
-        );
+      SecureLogger.logError('SSHService', e);
       throw SSHException(SSHError.connectionFailed, 'SSH Error: $e');
     }
   }
@@ -212,13 +187,10 @@ class SSHService {
   /// Redimensionne le PTY distant pour correspondre à la taille du terminal
   void resizeTerminal(int width, int height) {
     if (_session != null) {
-      if (kDebugMode)
-        debugPrint(
-          'SSH RESIZE: Sending SIGWINCH ${width}x$height to remote PTY',
-        );
+      SecureLogger.logDebugOnly('SSHService', 'Sending SIGWINCH to remote PTY');
       _session!.resizeTerminal(width, height);
     } else {
-      if (kDebugMode) debugPrint('SSH RESIZE: No session available!');
+      SecureLogger.log('SSHService', 'SSH RESIZE: No session available');
     }
   }
 
@@ -239,7 +211,7 @@ class SSHService {
       );
       return child;
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHService: Multiplexed shell failed: $e');
+      SecureLogger.logError('SSHService', e);
       return null;
     }
   }
@@ -279,8 +251,7 @@ class SSHService {
       final result = await _client!.run(command);
       return String.fromCharCodes(result);
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('SSHService: executeCommandSilently error: $e');
+      SecureLogger.logError('SSHService', e);
       return null;
     }
   }
@@ -296,7 +267,7 @@ class SSHService {
       final result = await _client!.run('uname -s');
       final output = String.fromCharCodes(result).trim().toLowerCase();
 
-      if (kDebugMode) debugPrint('SSHService: uname -s result: $output');
+      SecureLogger.log('SSHService', 'OS detection completed');
 
       if (output.contains('linux')) {
         return 'linux';
@@ -307,7 +278,7 @@ class SSHService {
         return 'windows';
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHService: Error detecting OS: $e');
+      SecureLogger.logError('SSHService', e);
       // En cas d'erreur (probablement Windows où uname n'existe pas)
       return 'windows';
     }
@@ -331,10 +302,7 @@ class SSHService {
     try {
       // Sécurité : bloquer le path traversal
       if (remotePath.contains('..')) {
-        if (kDebugMode)
-          debugPrint(
-            'SSHService: SFTP upload blocked — path traversal detected in remotePath',
-          );
+        SecureLogger.log('SSHService', 'SFTP upload blocked — path traversal detected');
         throw Exception(
           'Remote path cannot contain ".." (path traversal protection)',
         );
@@ -345,8 +313,7 @@ class SSHService {
       // Sécurité: vérifier la taille avant de lire (limite 30 MB)
       final fileSize = await localFile.length();
       if (fileSize > maxUploadSizeBytes) {
-        if (kDebugMode)
-          debugPrint('SSHService: File too large for upload ($fileSize bytes)');
+        SecureLogger.log('SSHService', 'File too large for upload');
         throw Exception(
           'File too large (${(fileSize / 1024 / 1024).toStringAsFixed(1)} MB). Maximum: 30 MB.',
         );
@@ -380,11 +347,10 @@ class SSHService {
 
       await remoteFile.close();
 
-      if (kDebugMode)
-        debugPrint('SSHService: File uploaded to $remotePath ($offset bytes)');
+      SecureLogger.log('SSHService', 'File uploaded successfully');
       return remotePath;
     } catch (e) {
-      if (kDebugMode) debugPrint('SSHService: SFTP upload error: $e');
+      SecureLogger.logError('SSHService', e);
       return null;
     }
   }
@@ -401,12 +367,10 @@ class SSHService {
           ? 'sudo shutdown -h now\n'
           : 'shutdown /s /t 0\n';
 
-      if (kDebugMode)
-        debugPrint('SSHService: Sending shutdown command for $os: $command');
+      SecureLogger.log('SSHService', 'Sending shutdown command');
       _session!.stdin.add(Uint8List.fromList(command.codeUnits));
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('SSHService: Error sending shutdown command: $e');
+      SecureLogger.logError('SSHService', e);
       rethrow;
     }
   }

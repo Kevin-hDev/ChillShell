@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/models.dart';
+import '../core/security/secure_logger.dart';
 
 class StorageService {
   final _storage = const FlutterSecureStorage();
@@ -32,8 +32,7 @@ class StorageService {
           .map((json) => SSHKey.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('Error decoding SSH keys, returning empty list');
+      SecureLogger.logError('StorageService', e);
       return [];
     }
   }
@@ -74,7 +73,7 @@ class StorageService {
     try {
       return AppSettings.fromJson(jsonDecode(data) as Map<String, dynamic>);
     } catch (e) {
-      if (kDebugMode) debugPrint('Error decoding settings, returning defaults');
+      SecureLogger.logError('StorageService', e);
       return const AppSettings();
     }
   }
@@ -105,8 +104,7 @@ class StorageService {
           .map((json) => SavedConnection.fromJson(json as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('Error decoding saved connections, returning empty list');
+      SecureLogger.logError('StorageService', e);
       return [];
     }
   }
@@ -174,8 +172,7 @@ class StorageService {
       // V2 format: objects with 'c' and 't'
       return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('Error decoding command history, returning empty list');
+      SecureLogger.logError('StorageService', e);
       return [];
     }
   }

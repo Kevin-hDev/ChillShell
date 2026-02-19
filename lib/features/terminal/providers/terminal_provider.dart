@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/models.dart';
 import '../../../services/storage_service.dart';
+import '../../../core/security/secure_logger.dart';
 import 'ghost_text_engine.dart';
 
 class TerminalState {
@@ -184,8 +184,7 @@ class TerminalNotifier extends Notifier<TerminalState> {
 
     // NE JAMAIS enregistrer les commandes sensibles (mots de passe, tokens, etc.)
     if (_isSensitiveCommand(command)) {
-      if (kDebugMode)
-        debugPrint('SECURITY: Sensitive command NOT added to history');
+      SecureLogger.log('TerminalProvider', 'Sensitive command NOT added to history');
       return;
     }
 
@@ -233,7 +232,7 @@ class TerminalNotifier extends Notifier<TerminalState> {
     _historyTimestamps = [];
     state = state.copyWith(commandHistory: []);
     await _storage.saveCommandHistoryV2([]);
-    if (kDebugMode) debugPrint('Command history cleared');
+    SecureLogger.log('TerminalProvider', 'Command history cleared');
   }
 
   /// Commande en attente de validation (avant vérification via output)
@@ -331,8 +330,7 @@ class TerminalNotifier extends Notifier<TerminalState> {
   void setPendingCommand(String command) {
     // SÉCURITÉ CRITIQUE: Si le shell attend un mot de passe, on n'enregistre PAS l'input
     if (_isWaitingForSensitiveInput) {
-      if (kDebugMode)
-        debugPrint('SECURITY: Sensitive input detected, NOT saving to history');
+      SecureLogger.log('TerminalProvider', 'Sensitive input detected, NOT saving to history');
       _isWaitingForSensitiveInput = false; // Reset pour le prochain input
       _pendingCommand = null;
       _pendingCommandTime = null;
@@ -355,10 +353,7 @@ class TerminalNotifier extends Notifier<TerminalState> {
     for (final pattern in _passwordPromptPatterns) {
       if (lowerOutput.contains(pattern.toLowerCase())) {
         _isWaitingForSensitiveInput = true;
-        if (kDebugMode)
-          debugPrint(
-            'SECURITY: Password prompt detected, next input will NOT be saved',
-          );
+        SecureLogger.log('TerminalProvider', 'Password prompt detected, next input will NOT be saved');
         // Annuler aussi la commande en attente si c'était une commande qui demande un password
         _pendingCommand = null;
         _pendingCommandTime = null;
@@ -373,8 +368,7 @@ class TerminalNotifier extends Notifier<TerminalState> {
     for (final pattern in _errorPatterns) {
       if (lowerOutput.contains(pattern.toLowerCase())) {
         // Erreur détectée → ne pas ajouter à l'historique
-        if (kDebugMode)
-          debugPrint('ERROR DETECTED in output, command NOT added to history');
+        SecureLogger.log('TerminalProvider', 'Error detected in output, command NOT added to history');
         _pendingCommand = null;
         _pendingCommandTime = null;
         return;
@@ -391,8 +385,7 @@ class TerminalNotifier extends Notifier<TerminalState> {
       final elapsed = DateTime.now().difference(_pendingCommandTime!);
       if (elapsed.inMilliseconds >= 500) {
         // Pas d'erreur détectée après le délai → ajouter à l'historique
-        if (kDebugMode)
-          debugPrint('No error detected, adding command to history');
+        SecureLogger.log('TerminalProvider', 'No error detected, adding command to history');
         addToHistory(_pendingCommand!);
         _pendingCommandValidated = true;
         _pendingCommand = null;

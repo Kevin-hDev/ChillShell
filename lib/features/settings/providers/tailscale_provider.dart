@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/tailscale_device.dart';
 import '../../../services/tailscale_service.dart';
+import '../../../core/security/secure_logger.dart';
 import 'settings_provider.dart';
 
 class TailscaleState {
@@ -109,7 +109,7 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
         await _fetchPeers();
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('TailscaleNotifier: init error: $e');
+      SecureLogger.logError('TailscaleNotifier', e);
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -158,7 +158,7 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
         await _fetchPeers();
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('TailscaleNotifier: login error: $e');
+      SecureLogger.logError('TailscaleNotifier', e);
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -177,7 +177,7 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
 
       state = const TailscaleState();
     } catch (e) {
-      if (kDebugMode) debugPrint('TailscaleNotifier: logout error: $e');
+      SecureLogger.logError('TailscaleNotifier', e);
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -198,7 +198,7 @@ class TailscaleNotifier extends Notifier<TailscaleState> {
       });
       state = state.copyWith(devices: devices);
     } catch (e) {
-      if (kDebugMode) debugPrint('TailscaleNotifier: fetchPeers error: $e');
+      SecureLogger.logError('TailscaleNotifier', e);
     }
   }
 }
