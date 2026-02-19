@@ -2,9 +2,14 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/models.dart';
 import '../core/security/secure_logger.dart';
+import '../core/security/secure_command_history.dart';
 
 class StorageService {
   final _storage = const FlutterSecureStorage();
+
+  // Limites de l'historique de commandes — alignées sur SecureCommandHistory
+  static const int _maxHistoryEntries = SecureCommandHistory.maxEntries; // 500
+  static const int _historyTtlDays = SecureCommandHistory.ttlDays;       // 30
 
   // SSH Keys
   Future<void> saveSSHKey(SSHKey key) async {
@@ -148,12 +153,36 @@ class StorageService {
 
   /// Saves command history with per-entry timestamps (V2 format).
   /// Each entry: {"c": "command", "t": timestamp_ms}
+  ///
+  /// Applique automatiquement avant la sauvegarde :
+  ///   1. Purge des entrees de plus de [_historyTtlDays] jours
+  ///   2. Troncature a [_maxHistoryEntries] entrees (les plus recentes sont conservees)
   Future<void> saveCommandHistoryV2(List<Map<String, dynamic>> entries) async {
-    await _storage.write(key: 'command_history', value: jsonEncode(entries));
+    // 1. Filtrer les entrees expirees (plus vieilles que _historyTtlDays jours)
+    final cutoffMs = DateTime.now()
+        .subtract(Duration(days: _historyTtlDays))
+        .millisecondsSinceEpoch;
+    final fresh = entries.where((e) {
+      final t = e['t'];
+      // Une entree sans timestamp valide est consideree expiree (fail closed)
+      return t is int && t >= cutoffMs;
+    }).toList();
+
+    // 2. Tronquer a _maxHistoryEntries (garder les plus recentes = fin de liste)
+    final limited = fresh.length > _maxHistoryEntries
+        ? fresh.sublist(fresh.length - _maxHistoryEntries)
+        : fresh;
+
+    // 3. Sauvegarder le resultat nettoye
+    await _storage.write(key: 'command_history', value: jsonEncode(limited));
   }
 
   /// Loads command history with timestamps (V2 format).
   /// Handles migration from V1 (plain strings) to V2 automatically.
+  ///
+  /// Applique automatiquement apres le chargement :
+  ///   1. Purge des entrees de plus de [_historyTtlDays] jours
+  ///   2. Limitation a [_maxHistoryEntries] entrees (les plus recentes)
   Future<List<Map<String, dynamic>>> getCommandHistoryV2() async {
     final data = await _storage.read(key: 'command_history');
     if (data == null) return [];
@@ -161,16 +190,35 @@ class StorageService {
       final list = jsonDecode(data) as List;
       if (list.isEmpty) return [];
 
+      List<Map<String, dynamic>> entries;
+
       // V1 migration: plain strings → add current timestamp
       if (list.first is String) {
         final now = DateTime.now().millisecondsSinceEpoch;
-        return list
+        entries = list
             .map((e) => <String, dynamic>{'c': e.toString(), 't': now})
             .toList();
+      } else {
+        // V2 format: objects with 'c' and 't'
+        entries =
+            list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       }
 
-      // V2 format: objects with 'c' and 't'
-      return list.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      // Filtrer les entrees expirees (> _historyTtlDays jours)
+      final cutoffMs = DateTime.now()
+          .subtract(Duration(days: _historyTtlDays))
+          .millisecondsSinceEpoch;
+      final fresh = entries.where((e) {
+        final t = e['t'];
+        // Entree sans timestamp valide = expiree (fail closed)
+        return t is int && t >= cutoffMs;
+      }).toList();
+
+      // Limiter a _maxHistoryEntries entrees (garder les plus recentes)
+      if (fresh.length > _maxHistoryEntries) {
+        return fresh.sublist(fresh.length - _maxHistoryEntries);
+      }
+      return fresh;
     } catch (e) {
       SecureLogger.logError('StorageService', e);
       return [];

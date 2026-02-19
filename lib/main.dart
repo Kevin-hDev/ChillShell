@@ -18,6 +18,15 @@ import 'services/foreground_ssh_service.dart';
 import 'services/screenshot_protection_service.dart';
 import 'services/pin_service.dart';
 import 'services/rasp_service.dart';
+// FIX-011 — ReconnectAuthGuard : re-authentification obligatoire après arrière-plan
+// TODO(FIX-011): Enregistrer ReconnectAuthGuard.instance comme WidgetsBindingObserver
+//   dans _AppRootState.initState() et appeler recordAuthentication() après unlock.
+//   Exemple :
+//     WidgetsBinding.instance.addObserver(ReconnectAuthGuard.instance);
+//   Puis dans _handleReconnectTab (ssh_isolate_worker.dart), vérifier :
+//     if (ReconnectAuthGuard.instance.needsReAuthentication()) { ... }
+// ignore: unused_import
+import 'core/security/reconnect_auth_guard.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

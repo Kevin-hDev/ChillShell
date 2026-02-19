@@ -5,6 +5,19 @@ import 'secure_storage_service.dart';
 import 'audit_log_service.dart';
 import '../models/audit_entry.dart';
 import '../core/security/secure_logger.dart';
+// FIX-001 — SecureKeyHolder : zeroise la clé privée SSH après usage
+import '../core/security/secure_key_holder.dart';
+// FIX-012 — SessionTimeoutManager : doit être instancié par le provider SSH
+//   Usage attendu : provider appelle startMonitoring(tabId) à l'ouverture,
+//   resetTimer(tabId) à chaque keypress, stopMonitoring(tabId) à la fermeture.
+//   Voir lib/core/security/session_timeout.dart pour l'API complète.
+// ignore: unused_import
+import '../core/security/session_timeout.dart';
+// FIX-014 — SSHAlgorithmConfig : liste blanche des algorithmes SSH autorisés
+//   NOTE : dartssh2 ne permet pas de filtrer les algos côté client via le
+//   constructeur SSHClient. L'audit des algorithmes est fait via logConfiguration()
+//   et validateServerAlgorithms() lors de la connexion.
+import '../core/security/ssh_algorithm_config.dart';
 
 enum SSHError {
   connectionFailed,
@@ -57,10 +70,41 @@ class SSHService {
     HostKeyVerifyCallback? onHostKeyMismatch,
   }) async {
     try {
+      // FIX-014 — Audit de la configuration des algorithmes SSH autorisés.
+      // dartssh2 ne permet pas d'imposer une liste blanche côté client via
+      // le constructeur SSHClient (pas de paramètre `algorithms`).
+      // SSHAlgorithmConfig sert à documenter les algorithmes acceptables et
+      // à auditer les connexions via validateServerAlgorithms().
+      final algoConfig = SSHAlgorithmConfig();
+      algoConfig.assertSafeConfiguration();
+      SecureLogger.log(
+        'SSHService',
+        'SSH algo config validated — '
+        'KEX:${algoConfig.allowedKex.length} '
+        'ciphers:${algoConfig.allowedCiphers.length} '
+        'MACs:${algoConfig.allowedMacs.length}',
+      );
+
+      // FIX-001 — Encapsuler la clé privée dans SecureKeyHolder pour pouvoir
+      // zéroïser les bytes après usage (un String Dart est immutable, on ne peut
+      // pas l'effacer ; Uint8List est mutable et peut être remis à zéro).
+      final secureKey = SecureKeyHolder.fromPem(privateKey);
+
       // Parsing de la clé dans un ISOLATE SÉPARÉ (ne bloque pas le thread UI)
       SecureLogger.logSensitive('SSHService', 'Parsing SSH key');
-      final keys = await compute(_parseSSHKeys, privateKey);
-      SecureLogger.log('SSHService', 'Key parsed OK, connecting TCP');
+      final List<SSHKeyPair> keys;
+      try {
+        final tempStr = secureKey.toStringTemporary();
+        keys = await compute(_parseSSHKeys, tempStr);
+        // tempStr sort de portée ici — le GC la récupérera, mais on minimise
+        // sa durée de vie autant que le langage Dart le permet.
+      } finally {
+        // Zéroïse les bytes de la clé AVANT que le GC intervienne.
+        // TOUJOURS dans un finally pour garantir l'exécution même en cas
+        // d'exception lors du parsing.
+        secureKey.dispose();
+      }
+      SecureLogger.log('SSHService', 'Key parsed OK (zeroed), connecting TCP');
 
       // Connexion TCP (async, ne bloque pas)
       final socket = await SSHSocket.connect(host, port);

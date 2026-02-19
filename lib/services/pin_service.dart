@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../core/security/pin_rate_limiter.dart';
 
 /// Service de gestion du code PIN sécurisé.
 /// Stocke un hash PBKDF2-HMAC-SHA256 salé du PIN (jamais le PIN en clair).
@@ -87,8 +88,21 @@ class PinService {
     return 8;
   }
 
-  /// Vérifie si le PIN entré correspond au PIN stocké
+  /// Vérifie si le PIN entré correspond au PIN stocké.
+  ///
+  /// Integre le rate limiting via [PinRateLimiter] :
+  ///   - Leve [PinLockedException] si trop d'echecs consecutifs
+  ///   - Enregistre chaque echec/succes pour ajuster le verrou
+  ///
+  /// Peut lever [PinLockedException] si le PIN est verrouille.
   static Future<bool> verifyPin(String pin) async {
+    // --- Verifier si une tentative est autorisee (rate limiting) ---
+    final check = await PinRateLimiter.instance.canAttempt();
+    if (!check.allowed) {
+      // Le PIN est verrouille — lever une exception avec le temps restant
+      throw PinLockedException(check.waitTime!);
+    }
+
     final storedSalt = await _storage.read(key: _saltKey);
     final storedHash = await _storage.read(key: _hashKey);
     if (storedSalt == null || storedHash == null) return false;
@@ -100,16 +114,29 @@ class PinService {
       // Ancien format SHA-256 — vérifier avec l'ancien algo
       final legacyHash = await _legacyHashPin(pin, salt);
       if (_constantTimeEquals(legacyHash, storedHash)) {
-        // Migration transparente vers PBKDF2
+        // Migration transparente vers PBKDF2 + enregistrer le succes
         await savePin(pin);
+        await PinRateLimiter.instance.recordSuccess();
         return true;
       }
+      // Echec — enregistrer l'echec pour le rate limiter
+      await PinRateLimiter.instance.recordFailure();
       return false;
     }
 
     // Format actuel PBKDF2
     final hash = await _hashPin(pin, salt);
-    return _constantTimeEquals(hash, storedHash);
+    final isValid = _constantTimeEquals(hash, storedHash);
+
+    if (isValid) {
+      // Succes — reinitialiser les compteurs d'echec
+      await PinRateLimiter.instance.recordSuccess();
+    } else {
+      // Echec — incrementer le compteur, potentiellement verrouiller
+      await PinRateLimiter.instance.recordFailure();
+    }
+
+    return isValid;
   }
 
   /// Supprime le PIN stocké (hash, salt, version et longueur)
