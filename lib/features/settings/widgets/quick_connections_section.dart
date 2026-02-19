@@ -155,11 +155,9 @@ class _QuickConnectionsSectionState
                           onSelect: () => ref
                               .read(settingsProvider.notifier)
                               .selectAutoConnection(connection.id),
-                          onDelete: () => _showDeleteDialog(
-                            context,
-                            connection.id,
-                            connection.name,
-                          ),
+                          onDelete: () => ref
+                              .read(settingsProvider.notifier)
+                              .deleteSavedConnection(connection.id),
                           onLongPress: () => enterSelectionMode(connection.id),
                           onSelectionToggle: () =>
                               toggleSelection(connection.id),
@@ -173,37 +171,6 @@ class _QuickConnectionsSectionState
     );
   }
 
-  void _showDeleteDialog(BuildContext context, String id, String name) {
-    final l10n = context.l10n;
-    final theme = ref.read(vibeTermThemeProvider);
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: theme.bgElevated,
-        title: Text(
-          l10n.deleteConnectionConfirm,
-          style: TextStyle(color: theme.text),
-        ),
-        content: Text(
-          l10n.deleteConnectionConfirmMessage(name),
-          style: TextStyle(color: theme.textMuted),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.cancel, style: TextStyle(color: theme.textMuted)),
-          ),
-          TextButton(
-            onPressed: () {
-              ref.read(settingsProvider.notifier).deleteSavedConnection(id);
-              Navigator.pop(dialogContext);
-            },
-            child: Text(l10n.delete, style: TextStyle(color: theme.danger)),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _SettingsToggle extends StatelessWidget {

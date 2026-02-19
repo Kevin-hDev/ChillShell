@@ -151,6 +151,10 @@ class SSHNotifier extends Notifier<SSHState> {
   bool get isCreatingTab => _isCreatingTab;
   bool _isDisposed = false;
 
+  /// Drapeau pour distinguer une déconnexion volontaire (bouton) d'une perte de connexion.
+  /// Quand true, _handleDisconnection() ne tente PAS de reconnexion automatique.
+  bool _isManualDisconnect = false;
+
   // Callbacks pour les settings (définis par terminal_screen)
   bool Function()? shouldReconnect;
   bool Function()? shouldNotifyOnDisconnect;
@@ -536,8 +540,17 @@ class SSHNotifier extends Notifier<SSHState> {
 
   /// Gère la perte de connexion détectée par le worker
   void _handleDisconnection() {
-    SecureLogger.log('SSHNotifier', '_handleDisconnection() called');
+    SecureLogger.log('SSHNotifier', '_handleDisconnection() called'
+        ' (manual=$_isManualDisconnect)');
     if (state.connectionState == SSHConnectionState.disconnected) return;
+
+    // Si l'utilisateur a cliqué "Déconnecter", ne PAS tenter de reconnexion.
+    // disconnect() va réinitialiser l'état proprement.
+    if (_isManualDisconnect) {
+      SecureLogger.log('SSHNotifier',
+          'Déconnexion volontaire — reconnexion automatique ignorée');
+      return;
+    }
 
     final wasConnected = state.connectionState == SSHConnectionState.connected;
 
@@ -572,6 +585,12 @@ class SSHNotifier extends Notifier<SSHState> {
     SecureLogger.log('SSHNotifier', 'disconnect() called');
     final info = state.lastConnectionInfo;
 
+    // Marquer comme déconnexion volontaire AVANT d'envoyer la commande au worker.
+    // Ainsi, quand le worker signale "allDisconnected", _handleDisconnection()
+    // sait que c'est l'utilisateur qui a demandé la déconnexion et ne tente
+    // pas de reconnexion automatique.
+    _isManualDisconnect = true;
+
     // Déconnecter toutes les sessions SSH via l'isolate
     await _isolateClient?.disconnect();
 
@@ -592,6 +611,9 @@ class SSHNotifier extends Notifier<SSHState> {
     }
 
     state = const SSHState();
+
+    // Réinitialiser le drapeau après la déconnexion complète
+    _isManualDisconnect = false;
   }
 
   /// Teste la connectivité SSH sans modifier l'état UI.

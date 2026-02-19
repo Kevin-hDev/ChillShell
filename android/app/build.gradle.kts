@@ -61,25 +61,33 @@ android {
 
     buildTypes {
         release {
-            // SECURITY FIX-010: Le build DOIT echouer si key.properties est absent.
-            // Pas de fallback sur les cles debug — un APK release non signe avec le
-            // keystore de production pourrait etre clone par n'importe qui.
-            if (!keyPropertiesFile.exists()) {
-                throw GradleException(
-                    "ERREUR DE SECURITE : key.properties introuvable !\n" +
-                    "Un APK release DOIT etre signe avec le keystore de production.\n" +
-                    "Creez android/key.properties avec :\n" +
-                    "  storeFile=chemin/vers/keystore.jks\n" +
-                    "  storePassword=...\n" +
-                    "  keyAlias=...\n" +
-                    "  keyPassword=..."
-                )
+            // SECURITY FIX-010: Pas de fallback sur les cles debug.
+            // Le signingConfig release n'est defini QUE si key.properties existe.
+            // La verification explicite est dans gradle.taskGraph.whenReady ci-dessous.
+            if (keyPropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             }
-            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+}
+
+// SECURITY FIX-010: Verification au moment de l'EXECUTION (pas de la configuration).
+// Ainsi, les builds debug fonctionnent normalement, mais un build release
+// sans key.properties echoue avec un message clair.
+gradle.taskGraph.whenReady {
+    if (allTasks.any { it.name.contains("Release") } && !keyPropertiesFile.exists()) {
+        throw GradleException(
+            "ERREUR DE SECURITE : key.properties introuvable !\n" +
+            "Un APK release DOIT etre signe avec le keystore de production.\n" +
+            "Creez android/key.properties avec :\n" +
+            "  storeFile=chemin/vers/keystore.jks\n" +
+            "  storePassword=...\n" +
+            "  keyAlias=...\n" +
+            "  keyPassword=..."
+        )
     }
 }
 

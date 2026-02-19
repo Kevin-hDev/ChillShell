@@ -255,7 +255,7 @@
   "raspThreatUnofficialStore": "Installation non officielle",
   "raspBlockedTitle": "Alerte de sécurité",
   "raspBlockedMessage": "Une menace de sécurité a été détectée sur cet appareil. L'application ne peut pas être utilisée dans cet état.",
-  "clipboardAutoClear": "Nettoyage auto du presse-papier",
+  "clipboardAutoClear": "Presse-papier sécurisé",
   "clipboardAutoClearDesc": "Efface automatiquement le presse-papier après copie de données sensibles",
   "clipboardClearDelay": "Délai de nettoyage",
   "clipboardSeconds": "{count}s"

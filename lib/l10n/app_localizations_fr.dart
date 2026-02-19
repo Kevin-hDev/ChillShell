@@ -770,7 +770,7 @@ class AppLocalizationsFr extends AppLocalizations {
       'Une menace de sécurité a été détectée sur cet appareil. L\'application ne peut pas être utilisée dans cet état.';
 
   @override
-  String get clipboardAutoClear => 'Nettoyage auto du presse-papier';
+  String get clipboardAutoClear => 'Presse-papier sécurisé';
 
   @override
   String get clipboardAutoClearDesc =>
