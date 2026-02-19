@@ -21,19 +21,19 @@ dependencies:
   flutter_riverpod: ^3.2.1          # State management
   
   # === Terminal & SSH ===
-  dartssh2: ^2.13.0                 # Client SSH (Ed25519)
+  dartssh2: 2.13.0                  # SECURITE: version exacte verrouillee (FIX-017)
   xterm:                              # Rendu terminal (fork local — fix buffer crash)
     path: packages/xterm
   flutter_pty: ^0.4.2               # Terminal local (shell Android)
 
   # === Cryptography ===
-  cryptography: ^2.7.0              # Génération clés Ed25519
-  pointycastle: ^3.7.3              # Génération clés RSA
-  
+  cryptography: 2.9.0               # SECURITE: version exacte verrouillee (FIX-015)
+  pointycastle: 3.9.1               # SECURITE: version exacte verrouillee (FIX-015)
+
   # === Storage & Security ===
-  flutter_secure_storage: ^10.0.0   # Stockage sécurisé clés SSH
-  local_auth: ^3.0.0                # Auth biométrique
-  freerasp: ^6.6.0                  # RASP - Runtime Application Self-Protection (Talsec)
+  flutter_secure_storage: 10.0.0    # SECURITE: version exacte verrouillee (FIX-015)
+  local_auth: 3.0.0                 # SECURITE: version exacte verrouillee (FIX-015)
+  freerasp: 6.12.0                  # SECURITE: version exacte verrouillee (FIX-015)
 
   # === Utils ===
   uuid: ^4.2.1                      # IDs uniques

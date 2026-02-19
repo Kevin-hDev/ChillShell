@@ -18,6 +18,17 @@ import '../core/security/session_timeout.dart';
 //   constructeur SSHClient. L'audit des algorithmes est fait via logConfiguration()
 //   et validateServerAlgorithms() lors de la connexion.
 import '../core/security/ssh_algorithm_config.dart';
+// FIX-006 — ShutdownGuard : confirmation double avant l'extinction distante.
+//   IMPORTANT : ShutdownGuard.requestShutdown() et ShutdownGuard.confirmShutdown()
+//   DOIVENT être appelés par le provider ou l'UI AVANT d'appeler shutdown() ici.
+//   Cette méthode n'effectue que l'envoi de la commande (déjà validée).
+//   Workflow attendu dans le provider/UI :
+//     1. token = ShutdownGuard.requestShutdown()
+//     2. Afficher ShutdownConfirmationDialog(token: token) à l'utilisateur
+//     3. L'utilisateur saisit "SHUTDOWN" + voit le code à 6 chiffres
+//     4. if (ShutdownGuard.confirmShutdown(token, userInput)) → appeler shutdown()
+// ignore: unused_import
+import '../core/security/shutdown_guard.dart';
 
 enum SSHError {
   connectionFailed,
@@ -403,6 +414,10 @@ class SSHService {
   ///
   /// - Linux/macOS: `sudo shutdown -h now`
   /// - Windows: `shutdown /s /t 0`
+  ///
+  /// SECURITE (FIX-006) : Cette méthode suppose que ShutdownGuard.confirmShutdown()
+  /// a déjà été appelé et a retourné true dans le provider/UI appelant.
+  /// Ne jamais appeler cette méthode directement sans passer par ShutdownGuard.
   Future<void> shutdown(String os) async {
     if (_session == null) return;
 
@@ -410,6 +425,14 @@ class SSHService {
       final command = (os == 'linux' || os == 'macos')
           ? 'sudo shutdown -h now\n'
           : 'shutdown /s /t 0\n';
+
+      // Audit obligatoire : toute extinction distante est tracée (FIX-006).
+      // En cas d'incident, cette entrée permet de remonter à la cause.
+      AuditLogService.log(
+        AuditEventType.sshConnect,
+        success: true,
+        details: {'action': 'shutdown', 'os': os},
+      );
 
       SecureLogger.log('SSHService', 'Sending shutdown command');
       _session!.stdin.add(Uint8List.fromList(command.codeUnits));

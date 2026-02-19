@@ -667,9 +667,11 @@ class _VerifyPinDialogState extends State<_VerifyPinDialog> {
     _loadPinLength();
   }
 
-  Future<void> _loadPinLength() async {
-    final length = await PinService.getPinLength();
-    if (mounted) setState(() => _storedPinLength = length);
+  /// La longueur du PIN est fixée à 8 (valeur par défaut non révélée).
+  /// FIX-005 : getPinLength() supprimé car il révélait la longueur du PIN
+  /// stocké, réduisant l'espace de brute-force pour un attaquant.
+  void _loadPinLength() {
+    if (mounted) setState(() => _storedPinLength = 8);
   }
 
   void _addDigit(String digit) {
