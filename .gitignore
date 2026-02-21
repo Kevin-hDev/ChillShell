@@ -59,3 +59,10 @@ Thumbs.db
 docs/PREPARATION_GITHUB/
 .phase_working/
 .playwright-mcp/
+
+# Fichiers de développement interne (restent sur le PC local, pas sur GitHub)
+CLAUDE.md
+docs/
+PREPARATION_GITHUB/
+BUG.MD
+test.md
