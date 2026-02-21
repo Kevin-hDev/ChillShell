@@ -581,30 +581,33 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
               ),
             ),
             const SizedBox(height: VibeTermSpacing.sm),
-            Row(
-              children: [
-                // Carte Chill App (SSH/Tailscale/WoL)
-                Expanded(
-                  child: _GuideCard(
-                    imagePath: 'assets/images/icon.png',
-                    label: l10n.wolGuideApp,
-                    // TODO: Remplacer par l'URL definitive
-                    url: 'https://chillshell.dev/download',
-                    theme: theme,
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Carte Chill App (SSH/Tailscale/WoL)
+                  Expanded(
+                    child: _GuideCard(
+                      imagePath: 'assets/images/icon.png',
+                      label: l10n.wolGuideApp,
+                      // TODO: Remplacer par l'URL definitive
+                      url: 'https://chillshell.dev/download',
+                      theme: theme,
+                    ),
                   ),
-                ),
-                const SizedBox(width: VibeTermSpacing.sm),
-                // Carte BIOS
-                Expanded(
-                  child: _GuideCard(
-                    imagePath: 'assets/images/logo_bios.png',
-                    label: l10n.wolGuideBios,
-                    // TODO: Remplacer par l'URL definitive
-                    url: 'https://chillshell.dev/tuto/bios',
-                    theme: theme,
+                  const SizedBox(width: VibeTermSpacing.sm),
+                  // Carte BIOS
+                  Expanded(
+                    child: _GuideCard(
+                      imagePath: 'assets/images/logo_bios.png',
+                      label: l10n.wolGuideBios,
+                      // TODO: Remplacer par l'URL definitive
+                      url: 'https://chillshell.dev/tuto/bios',
+                      theme: theme,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
