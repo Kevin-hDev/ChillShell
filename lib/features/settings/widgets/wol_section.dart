@@ -590,8 +590,7 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
                     child: _GuideCard(
                       imagePath: 'assets/images/icon.png',
                       label: l10n.wolGuideApp,
-                      // TODO: Remplacer par l'URL definitive
-                      url: 'https://chillshell.dev/download',
+                      url: 'https://chill-black.vercel.app/fr/chill',
                       theme: theme,
                     ),
                   ),
@@ -601,8 +600,7 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
                     child: _GuideCard(
                       imagePath: 'assets/images/logo_bios.png',
                       label: l10n.wolGuideBios,
-                      // TODO: Remplacer par l'URL definitive
-                      url: 'https://chillshell.dev/tuto/bios',
+                      url: 'https://chill-black.vercel.app/tutos/bios',
                       theme: theme,
                     ),
                   ),
