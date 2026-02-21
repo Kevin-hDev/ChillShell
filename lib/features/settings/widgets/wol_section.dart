@@ -490,7 +490,7 @@ class _AddConfigButton extends StatelessWidget {
             Flexible(
               child: Text(
                 l10n.addWolConfig,
-                style: VibeTermTypography.itemTitle.copyWith(
+                style: VibeTermTypography.caption.copyWith(
                   color: theme.accent,
                   fontWeight: FontWeight.w600,
                 ),
@@ -668,6 +668,7 @@ class _GuideCard extends StatelessWidget {
                 style: VibeTermTypography.caption.copyWith(
                   color: theme.text,
                   fontWeight: FontWeight.w600,
+                  fontSize: 11,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
