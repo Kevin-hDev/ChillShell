@@ -62,6 +62,7 @@ docs/PREPARATION_GITHUB/
 
 # Fichiers de développement interne (restent sur le PC local, pas sur GitHub)
 CLAUDE.md
+.claude/
 docs/
 PREPARATION_GITHUB/
 BUG.MD
