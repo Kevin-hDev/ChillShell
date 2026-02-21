@@ -10,24 +10,26 @@ void main() {
       );
     });
 
-    test('existing types preserve their index after adding raspThreatDetected',
-        () {
-      // Critical: existing audit logs use index-based serialization.
-      // Adding to the END of the enum preserves backward compatibility.
-      expect(AuditEventType.sshConnect.index, 0);
-      expect(AuditEventType.sshDisconnect.index, 1);
-      expect(AuditEventType.sshAuthFail.index, 2);
-      expect(AuditEventType.sshReconnect.index, 3);
-      expect(AuditEventType.keyImport.index, 4);
-      expect(AuditEventType.keyDelete.index, 5);
-      expect(AuditEventType.pinCreated.index, 6);
-      expect(AuditEventType.pinDeleted.index, 7);
-      expect(AuditEventType.biometricFail.index, 8);
-      expect(AuditEventType.hostKeyMismatch.index, 9);
-      expect(AuditEventType.rootDetected.index, 10);
-      expect(AuditEventType.pinFail.index, 11);
-      expect(AuditEventType.raspThreatDetected.index, 12);
-    });
+    test(
+      'existing types preserve their index after adding raspThreatDetected',
+      () {
+        // Critical: existing audit logs use index-based serialization.
+        // Adding to the END of the enum preserves backward compatibility.
+        expect(AuditEventType.sshConnect.index, 0);
+        expect(AuditEventType.sshDisconnect.index, 1);
+        expect(AuditEventType.sshAuthFail.index, 2);
+        expect(AuditEventType.sshReconnect.index, 3);
+        expect(AuditEventType.keyImport.index, 4);
+        expect(AuditEventType.keyDelete.index, 5);
+        expect(AuditEventType.pinCreated.index, 6);
+        expect(AuditEventType.pinDeleted.index, 7);
+        expect(AuditEventType.biometricFail.index, 8);
+        expect(AuditEventType.hostKeyMismatch.index, 9);
+        expect(AuditEventType.rootDetected.index, 10);
+        expect(AuditEventType.pinFail.index, 11);
+        expect(AuditEventType.raspThreatDetected.index, 12);
+      },
+    );
   });
 
   group('AuditEntry', () {

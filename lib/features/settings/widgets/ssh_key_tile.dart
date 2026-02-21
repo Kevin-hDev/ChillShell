@@ -115,9 +115,9 @@ class SSHKeyTile extends ConsumerWidget {
       clearAfterSeconds: settings.appSettings.clipboardClearSeconds,
     );
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.keyCopied)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.keyCopied)));
     }
   }
 

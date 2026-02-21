@@ -614,7 +614,6 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
       ),
     );
   }
-
 }
 
 /// Carte de redirection (Chill App ou Tutoriel BIOS)
@@ -659,11 +658,7 @@ class _GuideCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-                child: Image.asset(
-                  imagePath,
-                  width: 72,
-                  height: 72,
-                ),
+                child: Image.asset(imagePath, width: 72, height: 72),
               ),
               const SizedBox(height: VibeTermSpacing.sm),
               Text(

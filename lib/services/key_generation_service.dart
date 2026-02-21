@@ -18,7 +18,9 @@ class KeyGenerationService {
     final keyPair = await algorithm.newKeyPair();
 
     // Copie modifiable pour pouvoir effacer les octets après usage
-    final privateKeyBytes = List<int>.of(await keyPair.extractPrivateKeyBytes());
+    final privateKeyBytes = List<int>.of(
+      await keyPair.extractPrivateKeyBytes(),
+    );
     final publicKey = await keyPair.extractPublicKey();
 
     // Formatter en format OpenSSH

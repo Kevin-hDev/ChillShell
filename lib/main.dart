@@ -179,12 +179,17 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
         settings.appSettings.fingerprintEnabled;
   }
 
-  void _setLockState({required bool isLocked, bool? pinEnabled, bool? fingerprintEnabled}) {
+  void _setLockState({
+    required bool isLocked,
+    bool? pinEnabled,
+    bool? fingerprintEnabled,
+  }) {
     if (mounted) {
       setState(() {
         _isLocked = isLocked;
         if (pinEnabled != null) _pinEnabled = pinEnabled;
-        if (fingerprintEnabled != null) _fingerprintEnabled = fingerprintEnabled;
+        if (fingerprintEnabled != null)
+          _fingerprintEnabled = fingerprintEnabled;
         _lockStatusReady = true;
       });
     }
@@ -195,7 +200,11 @@ class _AppRootState extends ConsumerState<AppRoot> with WidgetsBindingObserver {
     final fingerprintAvailable = settings.appSettings.fingerprintEnabled
         ? await BiometricService.isAvailable()
         : false;
-    _setLockState(isLocked: true, pinEnabled: pinEnabled, fingerprintEnabled: fingerprintAvailable);
+    _setLockState(
+      isLocked: true,
+      pinEnabled: pinEnabled,
+      fingerprintEnabled: fingerprintAvailable,
+    );
   }
 
   /// Vérifie le verrouillage une fois les paramètres chargés
