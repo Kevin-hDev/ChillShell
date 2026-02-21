@@ -37,6 +37,9 @@
 -dontwarn kotlinx.coroutines.**
 -keep class kotlinx.coroutines.** { *; }
 
+# Apache Tika (transitive dependency from libtailscale)
+-dontwarn javax.xml.stream.XMLStreamException
+
 # Keep annotations
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
