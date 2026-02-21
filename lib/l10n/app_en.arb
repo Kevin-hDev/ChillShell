@@ -119,6 +119,8 @@
   "turnOnCableRequired": "Turn on: Ethernet cable required",
   "turnOffWifiOrCable": "Turn off: WiFi or cable",
   "fullGuide": "Full guide",
+  "wolGuideApp": "SSH / Tailscale / WoL",
+  "wolGuideBios": "BIOS Tutorial",
   "linkCopied": "Link copied",
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "Wake up a PC",

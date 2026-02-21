@@ -818,6 +818,18 @@ abstract class AppLocalizations {
   /// **'Full guide'**
   String get fullGuide;
 
+  /// No description provided for @wolGuideApp.
+  ///
+  /// In en, this message translates to:
+  /// **'SSH / Tailscale / WoL'**
+  String get wolGuideApp;
+
+  /// No description provided for @wolGuideBios.
+  ///
+  /// In en, this message translates to:
+  /// **'BIOS Tutorial'**
+  String get wolGuideBios;
+
   /// No description provided for @linkCopied.
   ///
   /// In en, this message translates to:

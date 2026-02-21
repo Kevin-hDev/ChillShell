@@ -119,6 +119,8 @@
   "turnOnCableRequired": "Allumer : câble Ethernet requis",
   "turnOffWifiOrCable": "Éteindre : WiFi ou câble",
   "fullGuide": "Guide complet",
+  "wolGuideApp": "SSH / Tailscale / WoL",
+  "wolGuideBios": "Tutoriel BIOS",
   "linkCopied": "Lien copié",
   "terminalTab": "Terminal {number}",
   "wakeUpPc": "Allumer un PC",

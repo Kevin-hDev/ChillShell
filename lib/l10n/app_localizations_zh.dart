@@ -376,6 +376,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get fullGuide => '完整指南';
 
   @override
+  String get wolGuideApp => 'SSH / Tailscale / WoL';
+
+  @override
+  String get wolGuideBios => 'BIOS Tutorial';
+
+  @override
   String get linkCopied => '链接已复制';
 
   @override

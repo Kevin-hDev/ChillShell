@@ -382,6 +382,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullGuide => 'Full guide';
 
   @override
+  String get wolGuideApp => 'SSH / Tailscale / WoL';
+
+  @override
+  String get wolGuideBios => 'BIOS Tutorial';
+
+  @override
   String get linkCopied => 'Link copied';
 
   @override

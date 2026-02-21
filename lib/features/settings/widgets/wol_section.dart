@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/typography.dart';
 import '../../../core/theme/spacing.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/l10n/l10n.dart';
-import '../../../services/clipboard_security_service.dart';
 import '../providers/settings_provider.dart';
 import '../../../models/wol_config.dart';
 import '../providers/wol_provider.dart';
@@ -515,9 +515,6 @@ class _WolInstructionsCard extends StatefulWidget {
 }
 
 class _WolInstructionsCardState extends State<_WolInstructionsCard> {
-  bool _windowsExpanded = false;
-  bool _macExpanded = false;
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -575,64 +572,39 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
             ),
             const SizedBox(height: VibeTermSpacing.md),
 
-            // Card Windows
-            _buildExpandableCard(
-              title: 'Windows',
-              icon: Icons.window,
-              isExpanded: _windowsExpanded,
-              onTap: () => setState(() => _windowsExpanded = !_windowsExpanded),
-              content: _buildWindowsInstructions(theme),
-              theme: theme,
+            // Guide complet — deux cartes côte à côte
+            Text(
+              l10n.fullGuide,
+              style: VibeTermTypography.itemTitle.copyWith(
+                color: theme.text,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: VibeTermSpacing.sm),
-
-            // Card Mac
-            _buildExpandableCard(
-              title: 'Mac',
-              icon: Icons.apple,
-              isExpanded: _macExpanded,
-              onTap: () => setState(() => _macExpanded = !_macExpanded),
-              content: _buildMacInstructions(theme),
-              theme: theme,
-            ),
-            const SizedBox(height: VibeTermSpacing.md),
-
-            // Lien vers guide complet
-            GestureDetector(
-              onTap: () async {
-                await ClipboardSecurityService.copyWithAutoClear(
-                  text: 'https://chillshell.app/wol',
-                  autoClearEnabled: true,
-                  clearAfterSeconds: 5,
-                );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        l10n.linkCopied,
-                        style: TextStyle(color: theme.text),
-                      ),
-                      backgroundColor: theme.bgElevated,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              },
-              child: Row(
-                children: [
-                  Icon(Icons.menu_book, color: theme.accent, size: 16),
-                  const SizedBox(width: VibeTermSpacing.xs),
-                  Flexible(
-                    child: Text(
-                      '${l10n.fullGuide} : chillshell.app/wol',
-                      style: VibeTermTypography.caption.copyWith(
-                        color: theme.accent,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+            Row(
+              children: [
+                // Carte Chill App (SSH/Tailscale/WoL)
+                Expanded(
+                  child: _GuideCard(
+                    imagePath: 'assets/images/icon.png',
+                    label: l10n.wolGuideApp,
+                    // TODO: Remplacer par l'URL definitive
+                    url: 'https://chillshell.dev/download',
+                    theme: theme,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: VibeTermSpacing.sm),
+                // Carte BIOS
+                Expanded(
+                  child: _GuideCard(
+                    imagePath: 'assets/images/logo_bios.png',
+                    label: l10n.wolGuideBios,
+                    // TODO: Remplacer par l'URL definitive
+                    url: 'https://chillshell.dev/tuto/bios',
+                    theme: theme,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -640,128 +612,71 @@ class _WolInstructionsCardState extends State<_WolInstructionsCard> {
     );
   }
 
-  Widget _buildExpandableCard({
-    required String title,
-    required IconData icon,
-    required bool isExpanded,
-    required VoidCallback onTap,
-    required Widget content,
-    required VibeTermThemeData theme,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.bg,
-        borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-        border: Border.all(color: theme.border),
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(VibeTermRadius.sm),
-            child: Padding(
-              padding: const EdgeInsets.all(VibeTermSpacing.sm),
-              child: Row(
-                children: [
-                  Icon(icon, color: theme.accent, size: 18),
-                  const SizedBox(width: VibeTermSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: VibeTermTypography.itemTitle.copyWith(
-                        color: theme.text,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    isExpanded ? Icons.expand_less : Icons.expand_more,
-                    color: theme.textMuted,
-                    size: 20,
-                  ),
-                ],
-              ),
-            ),
+}
+
+/// Carte de redirection (Chill App ou Tutoriel BIOS)
+class _GuideCard extends StatelessWidget {
+  final String imagePath;
+  final String label;
+  final String url;
+  final VibeTermThemeData theme;
+
+  const _GuideCard({
+    required this.imagePath,
+    required this.label,
+    required this.url,
+    required this.theme,
+  });
+
+  Future<void> _open() async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _open,
+        borderRadius: BorderRadius.circular(VibeTermRadius.md),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            vertical: VibeTermSpacing.md,
+            horizontal: VibeTermSpacing.sm,
           ),
-          if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.only(
-                left: VibeTermSpacing.md,
-                right: VibeTermSpacing.md,
-                bottom: VibeTermSpacing.md,
+          decoration: BoxDecoration(
+            color: theme.bg,
+            borderRadius: BorderRadius.circular(VibeTermRadius.md),
+            border: Border.all(color: theme.border),
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(VibeTermRadius.sm),
+                child: Image.asset(
+                  imagePath,
+                  width: 72,
+                  height: 72,
+                ),
               ),
-              child: content,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWindowsInstructions(VibeTermThemeData theme) {
-    final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStep(l10n.wolBiosTitle, [
-          '• ${l10n.wolBiosEnablePcie}',
-          '• ${l10n.wolBiosDisableErp}',
-        ], theme),
-        const SizedBox(height: VibeTermSpacing.sm),
-        _buildStep(l10n.wolFastStartupTitle, [
-          '• ${l10n.wolFastStep1}',
-          '• ${l10n.wolFastStep2}',
-          '• ${l10n.wolFastStep3}',
-        ], theme),
-        const SizedBox(height: VibeTermSpacing.sm),
-        _buildStep(l10n.wolDeviceManagerTitle, [
-          '• ${l10n.wolDevStep1}',
-          '• ${l10n.wolDevStep2}',
-          '• ${l10n.wolDevStep3}',
-          '• ${l10n.wolDevStep4}',
-        ], theme),
-      ],
-    );
-  }
-
-  Widget _buildMacInstructions(VibeTermThemeData theme) {
-    final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStep(l10n.wolMacConfigTitle, [
-          l10n.wolMacStep1,
-          l10n.wolMacStep2,
-          l10n.wolMacStep3,
-        ], theme),
-      ],
-    );
-  }
-
-  Widget _buildStep(String title, List<String> items, VibeTermThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: VibeTermTypography.caption.copyWith(
-            color: theme.text,
-            fontWeight: FontWeight.w600,
+              const SizedBox(height: VibeTermSpacing.sm),
+              Text(
+                label,
+                style: VibeTermTypography.caption.copyWith(
+                  color: theme.text,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: VibeTermSpacing.xs),
-        ...items.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(left: VibeTermSpacing.sm),
-            child: Text(
-              item,
-              style: VibeTermTypography.caption.copyWith(
-                color: theme.textMuted,
-                fontSize: 11,
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
