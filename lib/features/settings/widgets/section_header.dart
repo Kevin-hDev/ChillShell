@@ -12,7 +12,13 @@ class SectionHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: VibeTermTypography.sectionLabel),
+        Flexible(
+          child: Text(
+            title,
+            style: VibeTermTypography.sectionLabel,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
         ?trailing,
       ],
     );
