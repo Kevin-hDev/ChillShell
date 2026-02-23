@@ -33,7 +33,7 @@ dependencies:
   # === Storage & Security ===
   flutter_secure_storage: ^10.0.0   # Stockage sécurisé clés SSH
   local_auth: ^3.0.0                # Auth biométrique
-  freerasp: ^6.6.0                  # RASP - Runtime Application Self-Protection (Talsec)
+  freerasp: ^7.4.0                  # RASP - Runtime Application Self-Protection (Talsec)
 
   # === Utils ===
   uuid: ^4.2.1                      # IDs uniques
