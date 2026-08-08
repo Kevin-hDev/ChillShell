@@ -36,7 +36,7 @@ dependencies:
   freerasp: ^6.6.0                  # RASP - Runtime Application Self-Protection (Talsec)
 
   # === Utils ===
-  uuid: ^4.2.1                      # IDs uniques
+  uuid: ^4.5.3                      # IDs uniques
   path_provider: ^2.1.1             # Dossiers système
   image_picker: ^1.0.7              # Sélecteur d'images (import pour IA CLI)
   file_picker: ^10.0.0               # Sélecteur de fichiers (import clés SSH)
