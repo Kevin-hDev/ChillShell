@@ -14,7 +14,7 @@ dependencies:
   intl: any
 
   # === UI & Theming ===
-  google_fonts: ^8.0.0              # JetBrains Mono font
+  google_fonts: ^8.0.2              # JetBrains Mono font
   flutter_svg: ^2.0.9               # SVG support
   
   # === State Management ===
